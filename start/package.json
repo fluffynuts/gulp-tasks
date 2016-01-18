@@ -8,7 +8,7 @@
     "gulp-nunit-runner": "^0.4.1",
     "gulp-util": "^3.0.6",
     "jasmine-core": "^2.3.4",
-    "karma": "^0.12.37",
+    "karma": "^0.13.19",
     "karma-chrome-launcher": "^0.2.0",
     "karma-cli": "^0.1.0",
     "karma-coverage": "^0.4.2",
