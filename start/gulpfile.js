@@ -14,4 +14,6 @@ if (!fs.existsSync('package.json')) {
     console.log('a package.json has been made for you. Please \'npm install\' and run \'gulp\'');
     process.exit();
 }
-require('require-dir')('gulp-tasks');
+var requireDir = require('require-dir');
+requireDir('gulp-tasks');
+requireDir('override-tasks');
