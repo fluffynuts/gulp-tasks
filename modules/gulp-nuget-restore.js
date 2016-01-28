@@ -7,6 +7,7 @@ var testUtilFinder = require('./testutil-finder');
 var spawn = require('./spawn');
 var exec = require('./exec');
 var log = require('./log');
+var path = require('path');
 
 var PLUGIN_NAME = 'gulp-dotcover';
 var DEBUG = true;
@@ -19,7 +20,9 @@ function projectPathFor(path) {
 function nugetRestore(options) {
   options = options || { }
   DEBUG = options.debug || false;
-  
+  if (DEBUG) {
+      log.setThreshold(log.LogLevels.Debug);
+  }
   var solutionFiles = [];
   
   var stream = es.through(function write(file) {
@@ -55,11 +58,26 @@ function checkIfNugetIsAvailable(nugetPath, stream) {
 }
 
 function runNugetRestoreWith(stream, solutionFiles, options) {
+    var ignored = 0;
     var solutions = solutionFiles.map(function(file) {
         return file.path.replace(/\\/g, '/');
-    });
+    }).reduce(function(accumulator, item) {
+        var solutionDir = path.dirname(item);
+        if (fs.existsSync(path.join(solutionDir, '.nuget'))) {
+            accumulator.push(item);
+        } else {
+            log.debug('Ignoring solution "' + item + '": no .nuget folder found alongside it');
+            ignored++;
+        }
+        return accumulator;
+    }, []);
     if (solutions.length === 0) {
-        return fail(stream, 'No test assemblies defined');
+        if (solutionFiles.length == 0) {
+            return fail(stream, 'No solutions defined for nuget restore');
+        } else {
+            log.info('Nothing to do: all found solutions use msbuild to restore nuget packages');
+            end(stream);
+        }
     }
     var nuget = options.nuget || 'nuget.exe';
     checkIfNugetIsAvailable(nuget, stream).then(function() {

@@ -5,6 +5,6 @@ var nugetRestore = require('./modules/gulp-nuget-restore');
 gulp.task('nuget-restore', function(done) {
     return gulp.src('**/*.sln')
             .pipe(nugetRestore({
-                debug: true
+                debug: false
             }));
 });

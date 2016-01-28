@@ -7,7 +7,8 @@ gulp.task('test-dotnet', function() {
     if (!fs.existsSync('buildreports')) {
         fs.mkdir('buildreports');
     }
-    return gulp.src(['**/bin/Debug/**/*.Tests.dll', '**/bin/*.Tests.dll'], { read: false })
+    return gulp.src(['**/bin/Debug/**/*.Tests.dll', 
+                        '**/bin/*.Tests.dll'], { read: false })
                 .pipe(nunit({
                     executable: testUtilFinder.latestNUnit({architecture: 'x86'}),
                     options: {
