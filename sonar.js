@@ -8,7 +8,8 @@ var format = function(str) {
 
 gulp.task('sonar', ['cover-dotnet'], function(done) {
     log.info('Running sonar');
-    exec('C:/sonar/sonar-runner-2.4/bin/sonar-runner.bat').then(function() {
+    exec('C:/sonar/sonar-runner-2.4/bin/sonar-runner.bat').then(function(stdout) {
+        log.info(format(stdout));
         done();
     }).catch(function(err) {
         if (!err || !err.error) {

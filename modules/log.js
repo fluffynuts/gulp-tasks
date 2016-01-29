@@ -26,6 +26,7 @@ LogLevels.prototype = {
 var Logger = function() {
     this.LogLevels = new LogLevels();
     this.setThreshold(INFO);
+    this._timestamp = true;
 };
 Logger.prototype = {
     setThreshold: function(value) {
@@ -48,7 +49,7 @@ Logger.prototype = {
     warning: function(message) {
         if (this._threshold > WARNING)
             return;
-        this._print(message, 'red');
+        this._print(message, 'magenta');
     },
     error: function(message) {
         this._print(message, 'red', 'bold');
@@ -63,6 +64,12 @@ Logger.prototype = {
         if (this._threshold > NOTICE)
             return;
         this._print(message, 'cyan');
+    },
+    suppressTimeStamps: function() {
+      this._timestamp = false;
+    },
+    showTimeStamps: function() {
+      this._timestamp = true;
     },
     _print: function() {
         var message = arguments[0];
@@ -79,7 +86,11 @@ Logger.prototype = {
                 return fn(acc(s));
             };
         }, function(s) { return s; });
-        gutil.log(styleFunction(message));
+        if (this._timestamp) {
+          gutil.log(styleFunction(message));
+        } else {
+          console.log(styleFunction(message));
+        }
     }
 };
 var logger = new Logger();
