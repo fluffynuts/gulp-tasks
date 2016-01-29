@@ -1,6 +1,6 @@
 var gulp = require('gulp');
 var karma = require('karma');
-var karmaUtils = require('./modules/karma-utils');
+var karmaUtils = requireModule('karma-utils');
 
 (function() {
     gulp.task('karma', function(done) {

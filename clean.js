@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 var msbuild = require('gulp-msbuild');
 var debug = require('gulp-debug');
-var log = require('./modules/log');
+var log = requireModule('log');
 var fs = require('fs');
 
 gulp.task('clean', function() {

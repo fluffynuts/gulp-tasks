@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 var fs = require('fs');
 var nunit = require('gulp-nunit-runner');
-var testUtilFinder = require('./modules/testutil-finder');
+var testUtilFinder = requireModule('testutil-finder');
 
 gulp.task('test-dotnet', function() {
     if (!fs.existsSync('buildreports')) {

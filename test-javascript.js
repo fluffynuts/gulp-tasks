@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 var karma = require('karma');
-var karmaUtils = require('./modules/karma-utils');
-var log = require('./modules/log');
+var karmaUtils = requireModule('karma-utils');
+var log = requireModule('log');
 
 (function() {
     gulp.task('test-javascript', function(done) {

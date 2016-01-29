@@ -1,6 +1,6 @@
 var gulp = require('gulp');
-var exec = require('./modules/exec');
-var log = require('./modules/log');
+var exec = requireModule('exec');
+var log = requireModule('log');
 
 gulp.task('sonar', ['cover-dotnet'], function(done) {
     log.info('Running sonar');
