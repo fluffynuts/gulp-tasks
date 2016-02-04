@@ -8,6 +8,7 @@
  * 
  * To add or change tasks, do so one task per file in the gulp-tasks folder
  */
+var fs = require('fs');
 var gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
 global.requireModule = function(module) {
     var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
@@ -21,4 +22,7 @@ if (!fs.existsSync('package.json')) {
 }
 var requireDir = require('require-dir');
 requireDir('gulp-tasks');
-requireDir('override-tasks');
+var overridesFolder = 'override-tasks';
+if (fs.existsSync(overridesFolder)) {
+    requireDir(overridesFolder);
+}
