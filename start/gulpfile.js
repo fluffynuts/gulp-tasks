@@ -1,11 +1,16 @@
 /*
- * Welcome new user! To get started, run this file like so
- * > node gulpfile.js
- * to generate a very basic packages.json. You will be instructed to:
+ * Welcome new user! To get started, ensure that you have copied
+ * the start/packages.json alongside this file, in the root of your repo.
+ * Then do:
  * > npm install
- * after that, you can:
+ * After that, you can:
+ * > node node_modules/gulp/bin/gulp.js
+ * OR, install gulp globally:
+ * > npm install -g gulp
+ * and then you can just:
  * > gulp
- * 
+ * I HIGHLY recommend using the first method at your build server
+ *
  * To add or change tasks, do so one task per file in the gulp-tasks folder
  */
 var fs = require('fs');
@@ -16,13 +21,20 @@ global.requireModule = function(module) {
 };
 var fs = require('fs');
 if (!fs.existsSync('package.json')) {
-    fs.writeFileSync('package.json', '{\n"devDependencies":\n{"event-stream": "^3.3.1",\n"gulp": "^3.9.0",\n"gulp-msbuild": "^0.2.11",\n"gulp-nunit-runner": "^0.4.1",\n"gulp-util": "^3.0.6",\n"require-dir": "^0.3.0",\n"run-sequence": "^1.1.0",\n"through2": "^2.0.0",\n"tmp": "0.0.26"\n,"q": "^1.4.1"\n}\n}');
-    console.log('a package.json has been made for you. Please \'npm install\' and run \'gulp\'');
-    process.exit();
+    ['You\'re nearly there!',
+     'Please copy the package.json from the start folder alongside your gulpfile.js',
+     'then run `npm install` to install the required packages'].forEach(function(s) {
+        console.log(s);
+     });
+    process.exit(1);
 }
-var requireDir = require('require-dir');
-requireDir('gulp-tasks');
-var overridesFolder = 'override-tasks';
-if (fs.existsSync(overridesFolder)) {
-    requireDir(overridesFolder);
+try {
+    var requireDir = require('require-dir');
+    requireDir('gulp-tasks');
+    var overridesFolder = 'override-tasks';
+    if (fs.existsSync(overridesFolder)) {
+        requireDir(overridesFolder);
+    }
+} catch (e) {
+    process.exit(1);
 }
