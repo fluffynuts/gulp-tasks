@@ -3,7 +3,6 @@ var gutil = require('gulp-util');
 var es = require('event-stream');
 var fs = require('fs');
 var q = require('q');
-var testUtilFinder = require('./testutil-finder');
 var spawn = require('./spawn');
 var exec = require('./exec');
 var log = require('./log');
@@ -20,6 +19,7 @@ function projectPathFor(path) {
 function nugetRestore(options) {
   options = options || { }
   DEBUG = options.debug || false;
+  options.force = options.force || false;
   if (DEBUG) {
       log.setThreshold(log.LogLevels.Debug);
   }
@@ -63,7 +63,7 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
         return file.path.replace(/\\/g, '/');
     }).reduce(function(accumulator, item) {
         var solutionDir = path.dirname(item);
-        if (fs.existsSync(path.join(solutionDir, '.nuget'))) {
+        if (options.force || fs.existsSync(path.join(solutionDir, '.nuget'))) {
             accumulator.push(item);
         } else {
             log.debug('Ignoring solution "' + item + '": no .nuget folder found alongside it');
@@ -76,14 +76,14 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
             return fail(stream, 'No solutions defined for nuget restore');
         } else {
             log.info('Nothing to do: all found solutions use msbuild to restore nuget packages');
+            if (process.env['EnableNuGetPackageRestore'] !== 'true') {
+                log.warning('WARNING: EnableNugetPackageRestore environment variable should be set to "true" if you want msbuild to restore packages');
+            }
             end(stream);
         }
     }
     var nuget = options.nuget || 'nuget.exe';
     checkIfNugetIsAvailable(nuget, stream).then(function() {
-        var puts = function(str) {
-            gutil.log(gutil.colors.yellow(str));
-        };
         var opts = {
             stdio: [process.stdin, process.stdout, process.stderr, 'pipe'],
             cwd: process.cwd()

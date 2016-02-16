@@ -54,7 +54,6 @@ var doSpawn = function(cmd, args, opts) {
   var deferred = q.defer();
   var cmdArgs = ['/c', cmd];
   cmdArgs.push.apply(cmdArgs, args);
-  console.log(cmdArgs);
   log.suppressTimeStamps();
   var proc = child_process.spawn('cmd.exe', cmdArgs, opts);
   proc.stdout.on('data', function(data) {
