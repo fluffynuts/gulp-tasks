@@ -17,7 +17,7 @@ function projectPathFor(path) {
 }
 
 function dotCover(options) {
-    options = options || { }
+    options = options || {};
     options.exec = options.exec || {};
     options.exec.dotCover = options.exec.dotCover || testUtilFinder.latestDotCover(options);
     options.exec.nunit = options.exec.nunit || testUtilFinder.latestNUnit(options);
@@ -26,7 +26,13 @@ function dotCover(options) {
     options.nunitOptions = options.nunitOptions || '/framework:net-4.5 /labels';
     options.nunitOutput = projectPathFor(options.nunitOutput || 'buildreports/nunit-result.xml');
     options.coverageReportBase = projectPathFor(options.coverageReportBase || 'buildreports/coverage');
-    options.coverageOutput = projectPathFor(options.coverageOutput || 'buildreports/coveragesnapshot')
+    options.coverageOutput = projectPathFor(options.coverageOutput || 'buildreports/coveragesnapshot');
+    if (typeof options.testAssemblyFilter !== 'function') {
+        var regex = options.testAssemblyFilter;
+        options.testAssemblyFilter = function(file) {
+            return !!file.match(regex);
+        }
+    }
     DEBUG = options.debug || false;
 
     var mkdir = function(dir) {
@@ -43,7 +49,7 @@ function dotCover(options) {
         });
     }
 
-    var testAssemblies = [];
+    var assemblies = [];
 
     var stream = es.through(function write(file) {
         if (!file) {
@@ -63,7 +69,7 @@ function dotCover(options) {
         var isProjectMatch = parts.indexOf(projectName) > -1;
         var include = isBin && isDebugOrAgnostic && isProjectMatch;
         if (include) {
-            testAssemblies.push(file);
+            assemblies.push(file);
         } else if(DEBUG) {
             log.debug('ignore: ' + filePath);
             log.debug('isBin: ' + isBin);
@@ -72,7 +78,7 @@ function dotCover(options) {
         }
         this.emit('data', file);
     }, function end() {
-        runDotCoverWith(this, testAssemblies, options);
+        runDotCoverWith(this, assemblies, options);
     }); 
     return stream;
 };
@@ -133,11 +139,16 @@ function updateLabelsOptionFor(nunitOptions, nunitRunner) {
     return nunitOptions.replace(/\/labels/, '/labels:All');
 }
 
-function runDotCoverWith(stream, testAssemblies, options) {
-    var assemblies = testAssemblies.map(function(file) {
-        return file.path.replace(/\\/g, '/');
+function runDotCoverWith(stream, allAssemblies, options) {
+    var scopeAssemblies = [];
+    var testAssemblies = allAssemblies.map(function(file) {
+        return file.path;
+    }).filter(function(file) {
+        return options.testAssemblyFilter(file) || !scopeAssemblies.push(file);
+    }).map(function(file) {
+        return file.replace(/\\/g, '/');
     });
-    if (assemblies.length === 0) {
+    if (testAssemblies.length === 0) {
         return fail(stream, 'No test assemblies defined');
     }
     var dotCover = findDotCover(stream, options);
@@ -154,7 +165,7 @@ function runDotCoverWith(stream, testAssemblies, options) {
         generateXmlOutputSwitchFor(nunit, options),
         generateNoShadowFor(nunit),
         generatePlatformSwitchFor(nunit),
-        assemblies.join(' ')].join(' ');
+        testAssemblies.join(' ')].join(' ');
     var dotCoverOptions = ['cover',
         '/TargetExecutable=' + nunit,
         '/AnalyseTargetArguments=False',
@@ -162,6 +173,9 @@ function runDotCoverWith(stream, testAssemblies, options) {
         '/Filters=' + filters,
         '/TargetArguments=""' + nunitOptions + '""'
     ];
+    if (scopeAssemblies.length) {
+        dotCoverOptions.push('/Scope=' + scopeAssemblies.join(';'));
+    }
     var reportArgsFor = function(reportType) {
         return ['report', 
             '/ReportType=' + reportType, 
