@@ -1,9 +1,8 @@
 'use strict';
 var gutil = require('gulp-util');
 var es = require('event-stream');
+var path = require('path');
 var fs = require('fs');
-var child_process = require('child_process');
-var q = require('q');
 var testUtilFinder = require('./testutil-finder');
 var spawn = require('./spawn');
 var log = require('./log');
@@ -11,9 +10,8 @@ var log = require('./log');
 var PLUGIN_NAME = 'gulp-dotcover';
 var DEBUG = true;
 
-var CWD = process.cwd();
-function projectPathFor(path) {
-    return [CWD, path].join('/');
+function projectPathFor(p) {
+    return path.resolve(p);
 }
 
 function dotCover(options) {
@@ -182,10 +180,6 @@ function runDotCoverWith(stream, allAssemblies, options) {
             '/Source=' + options.coverageOutput,
             '/Output=' + options.coverageReportBase + '.' + reportType.toLowerCase()];
     }
-    var opts = {
-        stdio: [process.stdin, process.stdout, process.stderr, 'pipe'],
-        cwd: process.cwd()
-    };
 
 
     log.info('running testing with coverage...');
