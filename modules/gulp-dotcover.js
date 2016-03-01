@@ -64,7 +64,7 @@ function dotCover(options) {
         var projectName = projectParts.slice(0, projectParts.length-1).join('.');
         var isBin = parts.indexOf('bin') > -1;
         var isDebugOrAgnostic = parts.indexOf('Debug') > -1 || parts.indexOf('bin') === parts.length-2;
-        var isProjectMatch = parts.indexOf(projectName) > -1;
+        var isProjectMatch = options.allowProjectAssemblyMismatch || parts.indexOf(projectName) > -1;
         var include = isBin && isDebugOrAgnostic && isProjectMatch;
         if (include) {
             assemblies.push(file);
