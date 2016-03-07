@@ -10,7 +10,7 @@ var defaultOptions = {
 
 var run = function(executable, args, opts) {
     args = args || [];
-    opts = opts || defaultOptions;
+    opts = Object.assign({}, defaultOptions, opts);
     var deferred = q.defer();
     var result = {
         executable: executable,
