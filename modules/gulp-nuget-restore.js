@@ -63,23 +63,12 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
         return file.path.replace(/\\/g, '/');
     }).reduce(function(accumulator, item) {
         var solutionDir = path.dirname(item);
-        if (options.force || fs.existsSync(path.join(solutionDir, '.nuget'))) {
-            accumulator.push(item);
-        } else {
-            log.debug('Ignoring solution "' + item + '": no .nuget folder found alongside it');
-            ignored++;
-        }
+        accumulator.push(item);
         return accumulator;
     }, []);
     if (solutions.length === 0) {
         if (solutionFiles.length == 0) {
             return fail(stream, 'No solutions defined for nuget restore');
-        } else {
-            log.info('Nothing to do: all found solutions use msbuild to restore nuget packages');
-            if (process.env['EnableNuGetPackageRestore'] !== 'true') {
-                log.warning('WARNING: EnableNugetPackageRestore environment variable should be set to "true" if you want msbuild to restore packages');
-            }
-            end(stream);
         }
     }
     var nuget = options.nuget || 'nuget.exe';
