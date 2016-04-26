@@ -56,7 +56,7 @@ function checkIfNugetIsAvailable(nugetPath, stream) {
     var finder = process.platform == 'win32' ? 'where' : 'which';
     return exec(finder, [nugetPath]);
 }
-
+ 
 function runNugetRestoreWith(stream, solutionFiles, options) {
     var ignored = 0;
     var solutions = solutionFiles.map(function(file) {
