@@ -59,6 +59,13 @@ var findNUnit3 = function() {
 
 var testUtilFinder = {
     latestNUnit: function(options) {
+        if (process.env.NUNIT) {
+           var result = process.env.NUNIT;
+           if (!fs.existsSync(result)) {
+               throw new Error('nunit specified by NUNIT environment variable not found at: ' + result);
+           }
+           return result;
+        }
         options = options || {};
         var isX86 = (options.x86 || ((options.platform || options.architecture) === 'x86'));
         var runner = isX86 ? '/bin/nunit-console-x86.exe' : '/bin/nunit-console.exe';
@@ -67,6 +74,13 @@ var testUtilFinder = {
         }, 'nunit-console runner');
     },
     latestDotCover: function(options) {
+        if (process.env.DOTCOVER) {
+           var result = process.env.DOTCOVER;
+           if (!fs.existsSync(result)) {
+               throw new Error('dotCover specified by DOTCOVER environment variable not found at: ' + result);
+           }
+           return result;
+        }
         options = options || {};
         return findWrapper(function() {
             return finder('v', '/bin/dotCover.exe', options, programFilesFolder + '/JetBrains/dotCover', 'dotCover');
