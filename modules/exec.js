@@ -65,7 +65,7 @@ var doSpawn = function(cmd, args, opts) {
   proc.on('close', function(code) {
     log.showTimeStamps();
     if (code) {
-      deferred.reject(code);
+      deferred.reject({ error: new Error('Exit code ' + code) });
     } else {
       deferred.resolve();
     }
@@ -74,7 +74,7 @@ var doSpawn = function(cmd, args, opts) {
     log.showTimeStamps();
     log.error('failed to start process');
     log.error(err);
-    deferred.reject();
+    deferred.reject({ error: err });
   });
   return deferred.promise;
 };
