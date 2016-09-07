@@ -6,7 +6,7 @@ var log = require('./log');
 var child_process = require('child_process');
 
 var defaultOptions = {
-    cwd: process.cwd(),
+  cwd: process.cwd(),
 };
 
 var doExecFile = function(cmd, args, opts) {
@@ -84,11 +84,10 @@ var doExec = function(cmd, args, opts) {
 };
 
 var exec = function(cmd, args, opts) {
-    var deferred = q.defer();
-    args = args || [];
-    opts = opts || defaultOptions;
-    opts.maxBuffer = Number.MAX_SAFE_INTEGER;
-    return doExec(cmd, args, opts);
+  args = args || [];
+  opts = Object.assign({}, defaultOptions, opts);
+  opts.maxBuffer = Number.MAX_SAFE_INTEGER;
+  return doExec(cmd, args, opts);
 };
 
 module.exports = exec;
