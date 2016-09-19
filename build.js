@@ -1,7 +1,10 @@
-var gulp = require('gulp');
-var msbuild = require('gulp-msbuild');
+var
+  gulp = require('gulp'),
+  msbuild = require('gulp-msbuild'),
+  gulpIgnore = require('gulp-ignore');
 gulp.task('build', ['nuget-restore'], function() {
     return gulp.src('**/*.sln')
+            .pipe(gulpIgnore.exclude('**/node_modules/**'))
             .pipe(msbuild({
                 toolsVersion: 14.0,
                 targets: ['Clean', 'Build'],

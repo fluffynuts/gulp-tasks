@@ -1,5 +1,6 @@
 {
-  "name": "Please set your own project name here",
+  "name": "gulp-tasks",
+  "description": "Gulp build for .net-based systems, should work with little or no changes",
   "devDependencies": {
     "event-stream": "^3.3.1",
     "gulp": "^3.9.0",
