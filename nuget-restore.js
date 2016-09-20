@@ -3,7 +3,7 @@ var child_process = require('child_process');
 var nugetRestore = requireModule('gulp-nuget-restore');
 
 gulp.task('nuget-restore', function(done) {
-    return gulp.src('**/*.sln')
+    return gulp.src(['**/*.sln', '!**/node_modules/**/*.sln'])
             .pipe(nugetRestore({
                 debug: false
             }));
