@@ -7,6 +7,7 @@ var spawn = require('./spawn');
 var exec = require('./exec');
 var log = require('./log');
 var path = require('path');
+var which = require('which');
 
 var PLUGIN_NAME = 'gulp-dotcover';
 var DEBUG = true;
@@ -53,8 +54,17 @@ function trim() {
 }
 
 function checkIfNugetIsAvailable(nugetPath, stream) {
-    var finder = process.platform == 'win32' ? 'where' : 'which';
-    return exec(finder, [nugetPath]);
+    return new Promise(function(resolve, reject) {
+        try {
+            var nuget = which.sync('nuget');
+            log.info('Using nuget.exe from: ' + nuget);
+            resolve(nuget);
+        } catch (ignore) {
+            var message = 'Can\'t find nuget.exe. Either make sure it\'s in your path or explicitly provide a path in your nuget restore task options with the option "nuget"';
+            log.error(message);
+            reject(message);
+        }
+    });
 }
  
 function runNugetRestoreWith(stream, solutionFiles, options) {
@@ -95,9 +105,8 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
         });
 
         deferred.resolve();
-    }).catch(function() {
-    log.error('Can\'t find nuget.exe. Either make sure it\'s in your path or explicitly provide a path in your nuget restore task options with the option "nuget"');
-    fail(stream, 'Can\'t restore packages: no nuget )\':');
+    }).catch(function(err) {
+        fail(stream, err);
     });
 }
 
