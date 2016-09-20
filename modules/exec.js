@@ -9,7 +9,8 @@ var defaultOptions = {
   cwd: process.cwd(),
 };
 
-var doExecFile = function(cmd, args, opts) {
+var doExecFile = function(cmd, args, opts, handlers) {
+  // TODO: implement handlers for stdout, stderr
   var deferred = q.defer();
   child_process.execFile(cmd, args, opts, function(error, stdout, stderr) {
     if (error) {
@@ -50,18 +51,24 @@ var printLines = function(data) {
   });
 };
 
-var doSpawn = function(cmd, args, opts) {
+var doSpawn = function(cmd, args, opts, handlers) {
+  handlers = handlers || {};
   var deferred = q.defer();
   var cmdArgs = ['/c', cmd];
   cmdArgs.push.apply(cmdArgs, args);
   log.suppressTimeStamps();
   var proc = child_process.spawn('cmd.exe', cmdArgs, opts);
-  proc.stdout.on('data', function(data) {
-    printLines(data);
-  });
-  proc.stderr.on('data', function(data) {
-    log.error(trim(data));
-  });
+  var stdoutHandler = handlers.stdout || printLines;
+  if (proc.stdout) {
+    proc.stdout.on('data', function(data) {
+        stdoutHandler(data);
+    });
+  }
+  if (proc.stderr) {
+    proc.stderr.on('data', function(data) {
+        log.error(trim(data));
+    });
+  }
   proc.on('close', function(code) {
     log.showTimeStamps();
     if (code) {
@@ -79,15 +86,15 @@ var doSpawn = function(cmd, args, opts) {
   return deferred.promise;
 };
 
-var doExec = function(cmd, args, opts) {
-  return (opts._useExecFile) ? doExecFile(cmd, args, opts) : doSpawn(cmd, args, opts);
+var doExec = function(cmd, args, opts, handlers) {
+  return (opts._useExecFile) ? doExecFile(cmd, args, opts, handlers) : doSpawn(cmd, args, opts, handlers);
 };
 
-var exec = function(cmd, args, opts) {
+var exec = function(cmd, args, opts, handlers) {
   args = args || [];
   opts = Object.assign({}, defaultOptions, opts);
   opts.maxBuffer = Number.MAX_SAFE_INTEGER;
-  return doExec(cmd, args, opts);
+  return doExec(cmd, args, opts, handlers || {});
 };
 
 module.exports = exec;
