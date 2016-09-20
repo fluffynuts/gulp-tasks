@@ -3,7 +3,8 @@ var child_process = require('child_process'),
     fs = require('fs');
 
 function runNpmScript(target, folder, resolve, reject) {
-  var proc = child_process.spawn(which.sync('npm'), ['run', target], {
+  var start = target === 'install' ? [] : ['run'];
+  var proc = child_process.spawn(which.sync('npm'), start.concat(target), {
     cwd: folder,
     stdio: 'inherit'
   });
