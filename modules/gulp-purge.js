@@ -19,6 +19,9 @@ var CWD = process.cwd();
 function purge(options) {
     options = options || { }
     DEBUG = options.debug || false;
+    if (DEBUG) {
+        log.setThreshold(log.LogLevels.Debug);
+    }
 
     var toRemove = [];
 
