@@ -8,7 +8,7 @@ var exec = require('./exec');
 var log = require('./log');
 var path = require('path');
 var which = require('which');
-var http = require('http');
+var HttpDownloader = require('./http-downloader');
 
 var PLUGIN_NAME = 'gulp-dotcover';
 var DEBUG = true;
@@ -67,52 +67,52 @@ function humanSize(size) {
     return (size / 1024 / 1024).toFixed(2) + 'mb';
 }
 
-function handleNugetDownload(downloadSize, response, localNuget, resolve, reject) {
-    var suffix = '% of ' + humanSize(downloadSize);
-    response.on('end', function() {
-        clearStatus();
-        resolve(localNuget);
-    });
-    response.on('error', function(data) {
-        reject([
-            'download of "',
-            url,
-            '" failed.',
-            '\n',
-            data ? data.toString() : 'unknown error'
-        ].join(''));
-    });
-    var written = 0, lastPerc = -1;
-    response.on('data', function(data) {
-        written += data.length;
-        var perc = Math.round((100 * written) / downloadSize);
-        if (perc !== lastPerc) {
-            writeStatus(perc + suffix);
-        }
-        lastPerc = perc;
-        fs.appendFileSync(localNuget, data);
-    });
+function completedFile(path) {
+    return path + '.completed';
 }
 
-function attemptToDownloadNugetCLI() {
+function wasCompletedWithinADay(completed) {
+    if (!fs.existsSync(completed)) {
+        return false;
+    }
+    try {
+        var ms = Date.parse(fs.readFileSync(completed).toString());
+        if (isNaN(ms)) {
+            return false;
+        }
+        var completedAt = new Date(ms),
+            completedDelta = (new Date()) - completedAt;
+        return completedDelta < 86400000;   // one day. arb.
+    } catch (ignore) {
+        return false;
+    }
+}
+
+function findLocalNuget() {
     var localNuget = path.join(__dirname, 'nuget.exe'),
+        completed = completedFile(localNuget),
         url = 'http://dist.nuget.org/win-x86-commandline/latest/nuget.exe';
     return new Promise(function(resolve, reject) {
-        var request = http.get(url, function(response) {
-            var downloadSize = parseInt(response.headers['content-length']);
-            if (fs.existsSync(localNuget)) {
-                var statInfo = fs.lstatSync(localNuget);
-                if (statInfo.size === downloadSize) {
-                    log.info('local nuget found at: ' + localNuget);
-                    request.destroy();
-                    return resolve(localNuget);
-                }
-                log.info('local nuget incomplete or out of date; re-downloading');
-                fs.unlinkSync(localNuget);
-            } else {
-              log.info('Can\'t find nuget.exe in your path. Attempting to download a fresh copy now...');
+        if (wasCompletedWithinADay(completed)) {
+            return resolve(localNuget);
+        }
+        var lastCompleted = null;
+        if (fs.existsSync(completed)) {
+            lastCompleted = fs.readFileSync(completed);
+            fs.unlinkSync(completed);
+        }
+        var downloader = new HttpDownloader();
+        downloader.download(url, localNuget).then(function(dl) {
+            fs.writeFileSync(completed, new Date());
+            resolve(dl);
+        }).catch(function(err) {
+            if (lastCompleted) {
+                fs.writeFileSync(completed, lastCompleted);
+                log.info(err);
+                log.info('Falling back on last local nuget.exe');
+                return resolve(localNuget);
             }
-            handleNugetDownload(downloadSize, response, localNuget, resolve, reject);
+            reject(err);
         });
     });
 }
@@ -124,7 +124,7 @@ function checkIfNugetIsAvailable(nugetPath, stream) {
             log.info('Using nuget.exe from: ' + nuget);
             resolve(nuget);
         } catch (ignore) {
-            attemptToDownloadNugetCLI().then(function(nuget) {
+            findLocalNuget().then(function(nuget) {
                 resolve(nuget);
             }).catch(function(err) {
                 log.error(err);

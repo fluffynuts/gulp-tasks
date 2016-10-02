@@ -4,3 +4,4 @@ node_modules
 *.un~
 npm-debug.log*
 modules/nuget.exe
+modules/nuget.exe.completed
