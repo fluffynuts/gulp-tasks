@@ -1,7 +1,14 @@
 {
   "name": "gulp-tasks",
   "description": "Gulp build for .net-based systems, should work with little or no changes",
+  "scripts": {
+    "test": "mocha spec/**/*.spec.js",
+    "preautotest-once": "node -e \"console.log('Tests started at: ', new Date());\"",
+    "autotest-once": "mocha spec/**/*.spec.js --reporter mocha-yar",
+    "autotest": "nodemon -q -x \"run-s --silent autotest-once\""
+  },
   "devDependencies": {
+    "chai": "^3.5.0",
     "event-stream": "^3.3.1",
     "gulp": "^3.9.0",
     "gulp-debug": "^2.0.1",
@@ -9,6 +16,7 @@
     "gulp-nunit-runner": "^0.4.1",
     "gulp-util": "^3.0.6",
     "jasmine-core": "^2.3.4",
+    "jsdom": "^9.6.0",
     "karma": "^0.13.19",
     "karma-chrome-launcher": "^0.2.0",
     "karma-cli": "^0.1.0",
@@ -18,18 +26,24 @@
     "karma-nyan-reporter": "^0.1.0",
     "karma-requirejs": "^0.2.2",
     "karma-xml-reporter": "^0.1.4",
+    "mocha": "^3.1.0",
+    "mocha-yar": "^1.0.12",
+    "nodemon": "^1.10.2",
+    "npm-run-all": "^3.1.0",
+    "proxyquire": "^1.7.10",
     "q": "^1.4.1",
+    "request": "^2.75.0",
     "require-dir": "^0.3.0",
     "requirejs": "^2.1.18",
     "run-sequence": "^1.1.0",
+    "sinon": "^1.17.6",
     "through2": "^2.0.0",
     "which": "^1.2.11"
   },
-  "scripts": {},
   "repository": {
     "type": "git",
-    "url": "https://chillisoft.repositoryhosting.com/git/chillisoft/spar_liquor.git"
+    "url": "https://github.com/fluffynuts/gulp-tasks"
   },
-  "author": "Chillisoft",
-  "license": "Commercial"
+  "author": "Space Monkies!",
+  "license": "ISC"
 }
