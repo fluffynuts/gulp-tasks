@@ -69,13 +69,22 @@ HttpDownloader.prototype = {
     _bindOnResponseEnd: function() {
         var self = this;
         this._response.on('end', function() {
-            fs.renameSync(self._tempTarget, self._target);
+            self._rename(self._tempTarget, self._target);
             self._clearStatus();
             var resolve = self._resolve;
             var target = self._target;
             self._clear();
             resolve(target);
         });
+    },
+    _rename: function(src, dst) {
+      for (var i = 0; i < 100; i++) {
+        try {
+          fs.renameSync(src, dst);
+          return;
+        } catch (ignore) { }
+      }
+      fs.renameSync(src, dst);
     },
     _bindOnResponseError: function() {
         var self = this;
