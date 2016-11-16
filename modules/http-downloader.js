@@ -88,7 +88,7 @@ HttpDownloader.prototype = {
           } else {
             var self = this;
             setTimeout(function() {
-              self._rename(src, ds, resolve, reject, attempts++);
+              self._rename(src, dst, resolve, reject, attempts++);
             }, 100);
           }
         }
