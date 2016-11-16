@@ -77,14 +77,27 @@ HttpDownloader.prototype = {
             resolve(target);
         });
     },
-    _rename: function(src, dst) {
-      for (var i = 0; i < 100; i++) {
+    _rename: function(src, dst, resolve, reject, attempts) {
+      if (resolve && reject) {
         try {
-          fs.renameSync(src, dst);
-          return;
-        } catch (ignore) { }
+          fs.renameSync(src, dst)
+          resolve(dst)
+        } catch (e) {
+          if (attempts > 99) {
+            reject(['Unable to rename "', src, '" to "', ds, '": ', e].join(''));
+          } else {
+            var self = this;
+            setTimeout(function() {
+              self._rename(src, ds, resolve, reject, attempts++);
+            }, 100);
+          }
+        }
+      } else {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self._rename(src, dst, resolve, reject, 1);
+        });
       }
-      fs.renameSync(src, dst);
     },
     _bindOnResponseError: function() {
         var self = this;
