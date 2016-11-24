@@ -71,9 +71,17 @@ function completedFile(path) {
     return path + '.completed';
 }
 
-function wasCompletedWithinADay(completed) {
-    if (!fs.existsSync(completed)) {
-        return false;
+function wasCompletedWithinADay(completed, nuget) {
+    var completedExists = fs.existsSync(completed);
+    var nugetExists = fs.existsSync(nuget);
+    if (!completedExists || !nugetExists) {
+      if (completedExists) {
+        fs.unlinkSync(completed);
+      }
+      if (nugetExists) {
+        fs.unlinkSync(nuget);
+      }
+      return false;
     }
     try {
         var ms = Date.parse(fs.readFileSync(completed).toString());
@@ -92,12 +100,13 @@ function findLocalNuget() {
     var localNuget = path.join(__dirname, 'nuget.exe'),
         completed = completedFile(localNuget),
         url = 'http://dist.nuget.org/win-x86-commandline/latest/nuget.exe';
+    var i = 1;
     return new Promise(function(resolve, reject) {
-        if (wasCompletedWithinADay(completed)) {
+        if (wasCompletedWithinADay(completed, localNuget)) {
             return resolve(localNuget);
         }
         var lastCompleted = null;
-        if (fs.existsSync(completed)) {
+        if (fs.existsSync(completed) && fs.existsSync(localNuget)) {
             lastCompleted = fs.readFileSync(completed);
             fs.unlinkSync(completed);
         }
@@ -134,7 +143,7 @@ function checkIfNugetIsAvailable(nugetPath, stream) {
     });
 }
  
-function runNugetRestoreWith(stream, solutionFiles, options) {
+function runNugetRestoreWith(stream, solutionFiles, options, retrying) {
     var ignored = 0;
     var solutions = solutionFiles.map(function(file) {
         return file.path.replace(/\\/g, '/');
@@ -149,7 +158,7 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
         }
     }
     var nuget = options.nuget || 'nuget.exe';
-    checkIfNugetIsAvailable(nuget, stream).then(function(nuget) {
+    return checkIfNugetIsAvailable(nuget, stream).then(function(nuget) {
         var opts = {
             stdio: [process.stdin, process.stdout, process.stderr, 'pipe'],
             cwd: process.cwd()
@@ -160,9 +169,30 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
             log.info('Restoring packages for: ' + item);
             var args = [ 'restore', item];
             return promise.then(function() {
+              try {
                 return spawn(nuget, args, opts).then(function() {
                     'Packages restored for: ' + item;
+                }).catch(function(err) {
+                  console.log(err);
                 });
+              } catch (e) {
+                if (retrying) {
+                  return fail(stream, e);
+                }
+                if (fs.existsSync(nuget) &&
+                    path.dirname(nuget) === __dirname) {
+                    try {
+                      fs.unlinkSync(nuget)
+                      runNugetRestoreWith(stream, solutionFiles, options, true).then(function() {
+                        end(stream);
+                      }).catch(function(e) {
+                        fail(stream, e);
+                      })
+                    } catch (e) {
+                      throw 'Unable to spawn nuget & unable to remove it to attempt re-download: ' + (e || 'UNKNOWN');
+                    }
+                }
+              }
             });
         }, deferred.promise);
         final.then(function() {
