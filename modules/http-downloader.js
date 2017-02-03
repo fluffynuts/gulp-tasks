@@ -37,7 +37,9 @@ HttpDownloader.prototype = {
             this._request.destroy();
             this._resolve(this._target);
         }
-
+        if (fs.existsSync(this._target)) {
+            fs.unlinkSync(this._target);
+        }
         this._statusSuffix = '% of ' + this._humanSize(this._downloadSize);
         this._bindOnResponsedata();
         this._bindOnResponseEnd();
