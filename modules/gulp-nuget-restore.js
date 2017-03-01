@@ -105,7 +105,6 @@ function runNuget(nugetCmd, solutions, stream) {
 }
 
 function runNugetRestoreWith(stream, solutionFiles, options, retrying) {
-  console.log('moo');
   var ignored = 0;
   var solutions = solutionFiles.map(function (file) {
     return file.path.replace(/\\/g, '/');
