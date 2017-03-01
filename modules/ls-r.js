@@ -11,10 +11,19 @@ function push(arr, item) {
   return arr;
 }
 
-module.exports = function ls_R(dir, ignores) {
+var defaultIgnores = [/node_modules/, /\.git/, /bower_components/];
+
+function ls_R(dir, ignores) {
   dir = path.resolve(dir);
-  ignores = ignores || [];
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+  ignores = ignores || defaultIgnores;
   var current = fs.readdirSync(dir);
+  if (!current) {
+    debug(`got nothing for ${dir}`);
+    return [];
+  }
   return current.reduce(function(acc, cur) {
     var fullPath = path.join(dir, cur);
     var shouldIgnore = ignores.reduce(function(acc, cur) {
@@ -27,3 +36,7 @@ module.exports = function ls_R(dir, ignores) {
     return isDir(fullPath) ? acc.concat(ls_R(fullPath, ignores)) : push(acc, fullPath);
   }, []);
 }
+
+ls_R.DEFAULT_IGNORES = defaultIgnores;
+
+module.exports = ls_R;

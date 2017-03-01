@@ -24,7 +24,7 @@ KarmaUtils.prototype = {
         if (fs.existsSync(conf)) {
             return conf;
         }
-        var allFiles = lsR('.', [/node_modules\\/, /\.git\\/, /packages\\/, /bower_components\\/]);
+        var allFiles = lsR('.');
         var karmaConfs = allFiles.filter(function(path) {
           return path.toLowerCase().endsWith(confFile);
         });

@@ -1,9 +1,11 @@
 var fs = require('fs'),
   path = require('path'),
   which = require('which'),
-  config = require('./config');
+  config = require('./config'),
+  lsR = require('./ls-r');
 
-var nugetExe = 'nuget.exe';
+var nugetExe = 'nuget.exe',
+    toolsDir = 'tools';
 
 function findNugetInPath() {
   try {
@@ -28,9 +30,13 @@ function resolveNuget(nugetPath) {
   //  - nuget.exe
   //  - override-tasks/nuget.exe
   //  - local-tasks/nuget.exe
+  var toolsContents = lsR('tools'),
+      toolsNuget = toolsContents.filter(function(path) {
+        return path.toLowerCase().endsWith(nugetExe);
+      })[0];
   var resolved = [
     checkExists(nugetPath),
-    checkExists(path.join(parentOfTasksFolder, 'tools', nugetExe)),
+    checkExists(toolsNuget),
     checkExists(path.join(parentOfTasksFolder, nugetExe)),
     checkExists(path.join(parentOfTasksFolder, 'override-tasks', nugetExe)),
     checkExists(path.join(parentOfTasksFolder, 'local-tasks', nugetExe)),

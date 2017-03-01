@@ -1,14 +1,15 @@
 'use strict';
-var gutil = require('gulp-util');
-var es = require('event-stream');
-var fs = require('fs');
-var q = require('q');
-var spawn = require('./spawn');
-var exec = require('./exec');
-var log = require('./log');
-var path = require('path');
-var which = require('which');
-var resolveNuget = require('./resolve-nuget');
+var gutil = require('gulp-util'),
+  es = require('event-stream'),
+  fs = require('fs'),
+  q = require('q'),
+  spawn = require('./spawn'),
+  exec = require('./exec'),
+  log = require('./log'),
+  path = require('path'),
+  which = require('which'),
+  resolveNuget = require('./resolve-nuget'),
+  debug = require('debug')('gulp-nuget-restore');
 
 var PLUGIN_NAME = 'gulp-dotcover';
 var DEBUG = true;
@@ -83,6 +84,7 @@ function runNuget(nugetCmd, solutions, stream) {
     cwd: process.cwd()
   };
 
+  debug(`nugetCmd: ${nugetCmd}`);
   var deferred = q.defer();
   var final = solutions.reduce(function (promise, item) {
     log.info('Restoring packages for: ' + item);
