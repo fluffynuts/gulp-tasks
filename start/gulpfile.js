@@ -13,28 +13,34 @@
  *
  * To add or change tasks, do so one task per file in the gulp-tasks folder
  */
-var fs = require('fs');
-var gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
-global.requireModule = function(module) {
-    var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
-    return require(modulePath);
+var fs = require('fs'),
+  debug = require('debug')('gulp'),
+  gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
+global.requireModule = function (module) {
+  var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
+  return require(modulePath);
 };
 var fs = require('fs');
 if (!fs.existsSync('package.json')) {
-    ['You\'re nearly there!',
-     'Please copy the package.json from the start folder alongside your gulpfile.js',
-     'then run `npm install` to install the required packages'].forEach(function(s) {
-        console.log(s);
-     });
-    process.exit(1);
+  ['You\'re nearly there!',
+    'Please copy the package.json from the start folder alongside your gulpfile.js',
+    'then run `npm install` to install the required packages'].forEach(function (s) {
+      console.log(s);
+    });
+  process.exit(1);
 }
 try {
-    var requireDir = require('require-dir');
-    requireDir('gulp-tasks');
-    var overridesFolder = 'override-tasks';
-    if (fs.existsSync(overridesFolder)) {
-        requireDir(overridesFolder);
-    }
+  var requireDir = require('require-dir');
+  requireDir('gulp-tasks');
+  var overridesFolder = 'override-tasks';
+  if (fs.existsSync(overridesFolder)) {
+    requireDir(overridesFolder);
+  }
 } catch (e) {
-    process.exit(1);
+  var envDebug = process.env.DEBUG;
+  if (debug !== '*' || debug !== 'gulp') {
+    console.error('Gulp fails. To get more info, set the DEBUG environment variable to "*" or "gulp"');
+  }
+  debug(e);
+  process.exit(1);
 }
