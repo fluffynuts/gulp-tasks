@@ -1,14 +1,14 @@
-var gulp = require('gulp'),
-    config = requireModule('config'),
-    HttpDownloader = requireModule('http-downloader'),
-    verifyExe = requireModule('verify-exe');
+var gulp = requireModule('gulp-with-help'),
+  config = requireModule('config'),
+  HttpDownloader = requireModule('http-downloader'),
+  verifyExe = requireModule('verify-exe');
 
-gulp.task('get-local-nuget', function() {
-    return new Promise(function(resolve, reject) {
-      var downloader = new HttpDownloader();
-      return downloader.download(config.nugetDownloadUrl, config.localNuget).then(function(result) {
-        console.log('attempting to verify downloaded nuget.exe');
-        return verifyExe(result);
-      });
+gulp.task('get-local-nuget', 'Attempts to download the latest nuget.exe to the gulp-tasks folder', function () {
+  return new Promise(function (resolve, reject) {
+    var downloader = new HttpDownloader();
+    return downloader.download(config.nugetDownloadUrl, config.localNuget).then(function (result) {
+      console.log('attempting to verify downloaded nuget.exe');
+      return verifyExe(result);
     });
+  });
 });

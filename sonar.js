@@ -1,12 +1,12 @@
-var gulp = require('gulp');
-var exec = requireModule('exec');
-var log = requireModule('log');
+var gulp = requireModule('gulp-with-help'),
+  exec = requireModule('exec'),
+  log = requireModule('log');
 
 var format = function(str) {
   return (str || '').replace('\\r', '\r').replace('\\n', '\n');
 };
 
-gulp.task('sonar', ['cover-dotnet'], function(done) {
+gulp.task('sonar', 'Runs your coverage results through Sonar for great justice', ['cover-dotnet'], function(done) {
   log.info('Running sonar');
   exec('C:/sonar/sonar-runner-2.4/bin/sonar-runner.bat').then(function(stdout) {
     log.info(format(stdout));

@@ -1,10 +1,10 @@
-var gulp = require('gulp');
-var msbuild = require('gulp-msbuild');
-var debug = require('gulp-debug');
-var log = requireModule('log');
-var fs = require('fs');
+var gulp = requireModule('gulp-with-help'),
+    msbuild = require('gulp-msbuild'),
+    debug = require('gulp-debug'),
+    log = requireModule('log'),
+    fs = require('fs');
 
-gulp.task('clean', function() {
+gulp.task('clean', 'Invokes the "Clean" target on all solutions in the tree', function() {
     return gulp.src('**/*.sln')
             .pipe(msbuild({
                 toolsVersion: 4.0,

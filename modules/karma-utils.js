@@ -1,6 +1,8 @@
-var fs = require('fs');
-var path = require('path');
-var log = require('./log');
+var fs = require('fs'),
+  path = require('path'),
+  lsR = require('./ls-r'),
+  log = require('./log'),
+  confFile = 'karma.conf.js';
 
 var KarmaUtils = function() {
 };
@@ -18,11 +20,23 @@ KarmaUtils.prototype = {
         return this.findGulpFolder(next);
     },
     findKarmaConfUnder: function(folder) {
-        var conf = path.join(folder, 'karma.conf.js');
+        var conf = path.join(folder, confFile);
         if (fs.existsSync(conf)) {
             return conf;
         }
-        throw 'Downward searching for karma.conf.js not implemented yet';
+        var allFiles = lsR('.', [/node_modules\\/, /\.git\\/, /packages\\/, /bower_components\\/]);
+        var karmaConfs = allFiles.filter(function(path) {
+          return path.toLowerCase().endsWith(confFile);
+        });
+        switch (karmaConfs.length) {
+          case 0:
+            throw `No ${confFile} found when traversing downward`;
+          case 1:
+            return karmaConfs[0].replace(/\\/g, '/');
+          default:
+            log.info('Multiple confs found: ' + karmaConfs.join(', '));
+            throw `Multiple instances of ${confFile} not supported (yet)`;
+        }
     },
     findKarmaConf: function() {
         var gulpFolder = this.findGulpFolder();
@@ -30,6 +44,8 @@ KarmaUtils.prototype = {
     },
     findCoverageOutputFolder: function(karmaConf) {
         karmaConf = karmaConf || this.findKarmaConf();
+        // strip .js suffix if it exists
+        karmaConf = karmaConf.replace(/\.js$/, '');
         try {
             var conf = require(karmaConf);
             var options = {};
@@ -59,7 +75,7 @@ KarmaUtils.prototype = {
     	for(var i = 0; i < list.length; i++) {
     		var filename = path.join(dir, list[i]);
     		var stat = fs.statSync(filename);
-    		
+
     		if(filename == "." || filename == "..") {
     			// pass these files
     		} else if(stat.isDirectory()) {
@@ -74,6 +90,9 @@ KarmaUtils.prototype = {
     },
     moveCoverageUpToParentFolderIfPossible: function() {
         var coverageOutputFolder = this.findCoverageOutputFolder();
+        if (!coverageOutputFolder) {
+          return;
+        }
         var parts = coverageOutputFolder.split('/');
         var canMoveUp = parts.length > 1;
         var coverageOutputExists = fs.existsSync(coverageOutputFolder);

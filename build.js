@@ -1,8 +1,8 @@
 var
-  gulp = require('gulp'),
+  gulp = requireModule('gulp-with-help'),
   msbuild = require('gulp-msbuild');
 
-gulp.task('build', ['nuget-restore'], function() {
+gulp.task('build', 'Builds all Visual Studio solutions in tree', ['nuget-restore'], function() {
     return gulp.src(['**/*.sln', '!**/node_modules/**/*.sln'])
             .pipe(msbuild({
                 toolsVersion: 14.0,
