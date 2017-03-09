@@ -1,7 +1,7 @@
 {
   "name": "Please set your own project name here",
   "devDependencies": {
-    "chai": "^3.5.0",
+    "del": "^2.2.2",
     "event-stream": "^3.3.1",
     "gulp": "^3.9.0",
     "gulp-debug": "^3.1.0",
@@ -9,6 +9,7 @@
     "gulp-msbuild": "^0.4.0",
     "gulp-npm-run": "0.0.3",
     "gulp-nunit-runner": "^1.2.1",
+    "gulp-stream-to-promise": "^0.1.0",
     "gulp-util": "^3.0.6",
     "jasmine-core": "^2.3.4",
     "jsdom": "^9.6.0",
