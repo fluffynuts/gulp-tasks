@@ -2,6 +2,7 @@
 const gulp = requireModule('gulp-with-help'),
     path = require('path'),
     del = require('del'),
+    rimraf = require('rimraf'),
     findDirs = requireModule('find-dirs'),
     debug = require('debug')('purge'),
     streamToPromise = require('gulp-stream-to-promise');
@@ -66,7 +67,7 @@ function doPurge(includeRootFolders) {
       './source/**/obj/**',
       './src/**/obj/**'
     ]),
-    doRegularRm('node_modules', includeRootFolders), 
+    doRegularRm('node_modules', includeRootFolders),
     doRegularRm('bower_components', includeRootFolders),
     doRegularRm('packages', includeRootFolders)
   ]).then(() => {
@@ -74,14 +75,14 @@ function doPurge(includeRootFolders) {
   });
 }
 
-gulp.task('purge', 
-    'Purges all bins, objs, node_modules, bower_components and packages not in the root', 
+gulp.task('purge',
+    'Purges all bins, objs, node_modules, bower_components and packages not in the root',
     function () {
     return doPurge(false);
 });
 
-gulp.task('mega-purge', 
-  'Performs regular purge and in the root (you\'ll have to `npm install` afterwards!', 
+gulp.task('mega-purge',
+  'Performs regular purge and in the root (you\'ll have to `npm install` afterwards!',
   function() {
   return doPurge(true);
 });
