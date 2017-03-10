@@ -7,26 +7,6 @@ const gulp = requireModule('gulp-with-help'),
     debug = require('debug')('purge'),
     streamToPromise = require('gulp-stream-to-promise');
 
-
-
-function rm(folder) {
-  return new Promise((resolve, reject) => {
-    try {
-      debug(`purging: ${folder}`);
-      rimraf(folder, rimrafOpts, err => {
-        if (err) {
-          reject(err);
-        } else {
-          debug(`${folder} purged!`);
-          resolve();
-        }
-      });
-    } catch (e) {
-      reject(`whoops! ${e}`);
-    }
-  });
-}
-
 function isNotInRootDir(dir) {
   // where 'root dir' refers to the gulp context current dir
   var inRootDir = path.resolve(path.basename(dir));
