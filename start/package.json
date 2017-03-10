@@ -29,6 +29,7 @@
     "npm-run-all": "^4.0.2",
     "proxyquire": "^1.7.10",
     "q": "^1.4.1",
+    "rimraf": "^2.6.1",
     "request": "^2.75.0",
     "require-dir": "^0.3.0",
     "requirejs": "^2.1.18",
