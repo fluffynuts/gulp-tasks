@@ -73,14 +73,6 @@ function findNunitFromEnvironment() {
   }
 }
 
-function findSolutionToolsNUnit3() {
-  var baseDir = path.resolve(path.join('..', '..', __dirname));
-  return lsR('tools').filter(function(p) {
-    return p.toLowerCase().endsWith('nunit3-console.exe');
-  })[0];
-
-}
-
 function checkExists(somePath) {
   return fs.existsSync(somePath) ? somePath: undefined;
 }
@@ -90,7 +82,7 @@ function tryToFindNUnit(options) {
   if (environmental) {
     return environmental;
   }
-  var toolsNunit = findSolutionToolsNUnit3();
+  var toolsNunit = findTool('nunit3-console.exe');
   if (toolsNunit) {
     return toolsNunit;
   }
@@ -112,6 +104,12 @@ function searchForNunit(options) {
   }, 'nunit-console runner');
 }
 
+function findTool(exeName) {
+  return lsR('tools').filter(function(p) {
+    return p.toLowerCase().endsWith(exeName);
+  })[0];
+}
+
 function latestDotCover(options) {
   if (process.env.DOTCOVER) {
     var result = process.env.DOTCOVER;
@@ -119,6 +117,10 @@ function latestDotCover(options) {
       throw new Error('dotCover specified by DOTCOVER environment variable not found at: ' + result);
     }
     return result;
+  }
+  const toolsDotCover = findTool('dotcover.exe');
+  if (toolsDotCover) {
+    return toolsDotCover;
   }
   options = options || {};
   return findWrapper(function () {
