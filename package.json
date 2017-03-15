@@ -29,6 +29,7 @@
     "karma-nyan-reporter": "^0.1.0",
     "karma-requirejs": "^0.2.2",
     "karma-xml-reporter": "^0.1.4",
+    "mkdirp": "0.5.1",
     "mocha": "^3.2.0",
     "mocha-yar": "^1.0.12",
     "nodemon": "^1.10.2",

@@ -23,6 +23,7 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-requirejs": "^1.1.0",
     "karma-xml-reporter": "^0.1.4",
+    "mkdirp": "0.5.1",
     "mocha": "^3.1.0",
     "mocha-yar": "^1.0.12",
     "nodemon": "^1.10.2",

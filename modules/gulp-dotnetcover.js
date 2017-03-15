@@ -7,6 +7,7 @@ var
   testUtilFinder = require('./testutil-finder'),
   spawn = require('./spawn'),
   debug = require('debug')('gulp-cover'),
+  mkdirp = require('mkdirp'),
   log = require('./log');
 
 var PLUGIN_NAME = 'gulp-dotnetcover';
@@ -28,6 +29,7 @@ function dotCover(options) {
   options.nunitOutput = projectPathFor(options.nunitOutput || 'buildreports/nunit-result.xml');
   options.coverageReportBase = projectPathFor(options.coverageReportBase || 'buildreports/coverage');
   options.coverageOutput = projectPathFor(options.coverageOutput || 'buildreports/coveragesnapshot');
+  mkdirp(options.coverageReportBase); // because open-cover is too lazy to do it itself :/
   if (typeof options.testAssemblyFilter !== 'function') {
     var regex = options.testAssemblyFilter;
     options.testAssemblyFilter = function (file) {
