@@ -16,6 +16,9 @@ function finder(searchFolder, searchBin, options, searchBaseFolder) {
   searchBaseFolder = searchBaseFolder || programFilesFolder;
   var ignoreBetas = options.ignoreBetas === undefined ? true : options.ignoreBetas;
 
+  if (!fs.existsSync(searchBaseFolder)) {
+    return undefined;
+  }
   var programFolders = fs.readdirSync(searchBaseFolder);
   var lsearch = searchFolder.toLowerCase();
   var possibles = programFolders.reduce(function (acc, cur) {
@@ -40,7 +43,6 @@ function finder(searchFolder, searchBin, options, searchBaseFolder) {
       return runner;
     }
   }
-  throw 'not found';
 }
 
 function findWrapper(func, name) {
@@ -63,30 +65,13 @@ var findInstalledNUnit3 = function () {
   return fs.existsSync(search) ? search : null;
 };
 
-function findNunitFromEnvironment() {
-  if (process.env.NUNIT) {
-    var result = checkExists(process.env.NUNIT);
-    if (!result) {
-      throw new Error('nunit specified by NUNIT environment variable not found at: ' + result);
-    }
-    return result;
-  }
-}
-
 function checkExists(somePath) {
-  return fs.existsSync(somePath) ? somePath: undefined;
+  return fs.existsSync(somePath) ? somePath : undefined;
 }
 
 function tryToFindNUnit(options) {
-  var environmental = findNunitFromEnvironment();
-  if (environmental) {
-    return environmental;
-  }
-  var toolsNunit = findTool('nunit3-console.exe');
-  if (toolsNunit) {
-    return toolsNunit;
-  }
-  return searchForNunit(options);
+  return initialToolSearch('nunit3-console.exe', 'NUNIT') ||
+    searchForNunit(options);
 }
 
 function latestNUnit(options) {
@@ -105,29 +90,44 @@ function searchForNunit(options) {
 }
 
 function findTool(exeName) {
-  return lsR('tools').filter(function(p) {
-    return p.toLowerCase().endsWith(exeName);
+  return lsR('tools').filter(function (p) {
+    return p.toLowerCase().endsWith(exeName.toLowerCase());
   })[0];
 }
 
-function latestDotCover(options) {
-  if (process.env.DOTCOVER) {
-    var result = process.env.DOTCOVER;
-    if (!fs.existsSync(result)) {
-      throw new Error('dotCover specified by DOTCOVER environment variable not found at: ' + result);
-    }
-    return result;
-  }
-  const toolsDotCover = findTool('dotcover.exe');
-  if (toolsDotCover) {
-    return toolsDotCover;
-  }
+function locateDotCover(options) {
   options = options || {};
-  return findWrapper(function () {
-    return finder('v', '/bin/dotCover.exe', options, programFilesFolder + '/JetBrains/dotCover', 'dotCover');
-  });
+  return initialToolSearch('dotCover.exe', 'DOTCOVER') ||
+    findWrapper(function () {
+      return finder('v', '/bin/dotCover.exe', options, programFilesFolder + '/JetBrains/dotCover', 'dotCover');
+    });
 }
+
+function latestDotCover(options) {
+  var result = locateDotCover(options);
+  debug(`Using dotCover: ${result || 'NOT FOUND'}`);
+  return result;
+}
+
+function initialToolSearch(toolExe, environmentVariable) {
+  var fromEnvironment = process.env[environmentVariable];
+  if (fromEnvironment) {
+    if (!fs.existsSync(fromEnvironment)) {
+      throw new Error(`${fromEnvironment} specified in environment variable ${environmentVariable} not found`);
+    }
+    return fromEnvironment;
+  }
+  return findTool(toolExe);
+}
+
+function latestOpenCover() {
+  var result = initialToolSearch('OpenCover.Console.exe', 'OPENCOVER');
+  debug(`Using opencover: ${result || 'NOT FOUND'}`);
+  return result;
+}
+
 module.exports = {
   latestNUnit: latestNUnit,
-  latestDotCover: latestDotCover
+  latestDotCover: latestDotCover,
+  latestOpenCover: latestOpenCover
 };

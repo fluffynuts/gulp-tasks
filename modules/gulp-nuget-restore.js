@@ -11,7 +11,7 @@ var gutil = require('gulp-util'),
   resolveNuget = require('./resolve-nuget'),
   debug = require('debug')('gulp-nuget-restore');
 
-var PLUGIN_NAME = 'gulp-dotcover';
+var PLUGIN_NAME = 'gulp-nuget-restore';
 var DEBUG = true;
 
 var CWD = process.cwd();

@@ -17,7 +17,7 @@ Here's what you do:
 1. add this repo as a submodule of your repo, at the root level
 - copy start/\*.js to the root of your repo
 - override tasks by copying them to a new folder in parallel to the gulp-tasks folder, called override-tasks
-  - edit them to your heart's content: you only have to edit the ones you want to change. 
+  - edit them to your heart's content: you only have to edit the ones you want to change.
 - First time: run `npm install` to install required modules
 - Either:
   - run `node node_modules/gulp/bin/gulp.js` OR
@@ -35,7 +35,7 @@ Available tasks (at time of writing) include:
 
 - default
     - this is the default task invoked if you just run gulp from the commandline. It should just contain a sequence of tasks to run for the default build
-    - the default will attempt: 
+    - the default will attempt:
         * purge: remove all binary artifacts in bin and obj folders
         * git-submodules: pull latest for any submodules
         * build: msbuild your solution(s): all .sln files in the repo
@@ -85,7 +85,7 @@ to the gulp-tasks folder and reference them in your default pipeline to have the
 All of this is only possible because of Node, Gulp and all of the contributions for tasks and modules,
 not to mention NUnit and dotCover (both free and excellent).
 Before attempting to write your own pipelining module for Gulp, look online -- someone has quite
-likely already done it. But if you *must*, then I highly recommend having a look at the 
-gulp-nunit-runner module: it was the basis that I ripped off for the gulp-dotcover module (which I
+likely already done it. But if you *must*, then I highly recommend having a look at the
+gulp-nunit-runner module: it was the basis that I ripped off for the gulp-dotnetcover module (which I
 probably should try to get into official npm sources at some point, but for now, it lives
 under gulp-tasks/modules)
