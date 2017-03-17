@@ -129,5 +129,6 @@ function latestOpenCover() {
 module.exports = {
   latestNUnit: latestNUnit,
   latestDotCover: latestDotCover,
-  latestOpenCover: latestOpenCover
+  latestOpenCover: latestOpenCover,
+  findTool: findTool
 };
