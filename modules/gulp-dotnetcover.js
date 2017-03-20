@@ -230,12 +230,22 @@ function spawnOpenCover(stream, exe, cliOptions) {
           .catch(err => handleCoverageFailure(stream, err));
 }
 
+function generateOpenCoverFilter(prefix, namespaces) {
+  return items.reduce((acc, cur) => {
+    acc.push(`${prefix}[*]${cur}`);
+    return acc;
+  }, []).join(' ');
+}
 function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
+  const
+    exclude = options.exclude && options.exclude.length ? options.exclude : ['*.Tests'],
+    excludeFilter = generateOpenCoverFilter('-', exclude);
+
   return [
     `-target:${nunit}`,
     `-targetargs:${nunitOptions}`,
     `-output:${options.coverageReportBase}.xml`,
-    `-filter:"+[*]* -[*.Tests]*"`,  // TODO: embetterment
+    `-filter:"+[*]* ${excludeFilter}"`,  // TODO: embetterment
     `-register:user`,
     `-searchdirs:${getUniqueDirsFrom(options.testAssemblies)}`
   ];
