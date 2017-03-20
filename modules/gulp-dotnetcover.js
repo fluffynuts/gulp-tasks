@@ -231,7 +231,7 @@ function spawnOpenCover(stream, exe, cliOptions) {
 }
 
 function generateOpenCoverFilter(prefix, namespaces) {
-  return items.reduce((acc, cur) => {
+  return namespaces.reduce((acc, cur) => {
     acc.push(`${prefix}[*]${cur}`);
     return acc;
   }, []).join(' ');
