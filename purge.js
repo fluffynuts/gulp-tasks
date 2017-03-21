@@ -4,8 +4,7 @@ const gulp = requireModule('gulp-with-help'),
     del = require('del'),
     rimraf = require('rimraf'),
     findDirs = requireModule('find-dirs'),
-    debug = require('debug')('purge'),
-    streamToPromise = require('gulp-stream-to-promise');
+    debug = require('debug')('purge');
 
 function isNotInRootDir(dir) {
   // where 'root dir' refers to the gulp context current dir
