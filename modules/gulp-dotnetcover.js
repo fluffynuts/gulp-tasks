@@ -190,7 +190,7 @@ var coverageSpawners = {
   opencover: spawnOpenCover
 }
 
-function spawnDotCover(stream, exe, cliOptions) {
+function spawnDotCover(stream, coverageToolExe, cliOptions) {
   var reportArgsFor = function (reportType) {
     return ['report',
       '/ReportType=' + reportType,
@@ -284,24 +284,28 @@ function grokCoverageToolNameFrom(options) {
 }
 
 function getDotCoverOptionsFor(options, nunit, nunitOptions) {
-  var filterJoin = ';-:';
+  var
+    filterJoin = ';-:',
+    scopeAssemblies = options.testAssemblies;
+
   var filters = options.baseFilters;
   if (options.exclude.length) {
     filters = [filters, options.exclude.join(filterJoin)].join(filterJoin);
   }
 
   var dotCoverOptions = ['cover',
-    '/TargetExecutable=' + nunit,
-    '/AnalyseTargetArguments=False',
-    '/Output=' + options.coverageOutput,
-    '/Filters=' + filters,
-    '/TargetArguments=""' + nunitOptions + '""'
+    `/TargetExecutable=${nunit}`,
+    `/AnalyseTargetArguments=False`,
+    `/Output=${options.coverageOutput}`,
+    `/Filters=${filters}`,
+    `/TargetArguments=${nunitOptions}`
   ];
   if (scopeAssemblies.length) {
-    dotCoverOptions.push('/Scope=' + scopeAssemblies.join(';'));
+    dotCoverOptions.push(`/Scope=${scopeAssemblies.join(';')}`);
   }
   log.info('running testing with coverage...');
   log.info('running dotcover with: ' + dotCoverOptions.join(' '));
+  return dotCoverOptions;
 }
 
 module.exports = dotCover;

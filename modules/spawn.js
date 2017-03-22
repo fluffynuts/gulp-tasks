@@ -2,6 +2,7 @@
 // You must use exec if you want to run batch files
 var
   q = require('q'),
+  debug = require('debug')('spawn'),
   child_process = require('child_process'),
   debug = require('debug')('spawn-wrapper');
 
@@ -18,6 +19,8 @@ var run = function (executable, args, opts) {
     executable: executable,
     args: args
   };
+
+  debug(`spawning: "${executable}" ${args.map(a => '"' + a + '"').join(' ')}`);
 
   var child = child_process.spawn(executable, args, opts);
   child.on('error', function (err) {
