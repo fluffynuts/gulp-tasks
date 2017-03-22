@@ -34,16 +34,23 @@ function startKarma(isSingleRun, karmaConf, browsers) {
   });
 }
 
-gulp.task('test-javascript', 'Runs all Javascript tests with Karma', function (done) {
-  var karmaConf = karmaUtils.findKarmaConf(),
-    coverageOutputFolder = karmaUtils.findCoverageOutputFolder();
-
-  karmaUtils.rmdir(coverageOutputFolder);    // make sure it's clean
+function startKarmaLocal(isSingleRun) {
+ var karmaConf = karmaUtils.findKarmaConf();
   log.info('Running karma with config at: ' + karmaConf);
+  return startKarma(isSingleRun, karmaConf);
+}
 
-  startKarma(true, karmaConf).then(function() {
+gulp.task('test-javascript', 'Runs all Javascript tests with Karma', () => {
+  var coverageOutputFolder = karmaUtils.findCoverageOutputFolder();
+  karmaUtils.rmdir(coverageOutputFolder);
+
+  return startKarmaLocal(true).then(() => {
     karmaUtils.moveCoverageUpToParentFolderIfPossible();
-    done();
   });
+
+});
+
+gulp.task('watch-javascript', 'Watches all Javascript tests with Karma', () => {
+  return startKarmaLocal(false);
 });
 
