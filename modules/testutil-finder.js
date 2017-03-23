@@ -1,15 +1,24 @@
-'use strict';
+"use strict";
 var
-  log = require('./log'),
-  fs = require('fs'),
-  path = require('path'),
-  debug = require('debug')('testutil-finder'),
-  lsR = require('./ls-r'),
-  programFilesFolder = 'C:/Program Files (x86)';
+  log = require("./log"),
+  fs = require("fs"),
+  path = require("path"),
+  debug = require("debug")("testutil-finder"),
+  lsR = require("./ls-r"),
+  whichLib = require("which"),
+  programFilesFolder = "C:/Program Files (x86)";
+
+function which(command) {
+  try {
+    return whichLib.sync(command, {});
+  } catch (e) {
+    return undefined;
+  }
+}
 
 function isUnstable(folderName) {
-  return folderName.indexOf('alpha') > -1 ||
-    folderName.indexOf('beta') > -1;
+  return folderName.indexOf("alpha") > -1 ||
+    folderName.indexOf("beta") > -1;
 };
 
 function finder(searchFolder, searchBin, options, searchBaseFolder) {
@@ -25,7 +34,7 @@ function finder(searchFolder, searchBin, options, searchBaseFolder) {
     var lcur = cur.toLowerCase();
     if (lcur.indexOf(lsearch) === 0) {
       if (ignoreBetas && isUnstable(lcur)) {
-        log.notice('Ingnoring unstable tool at: ' + cur);
+        log.notice("Ingnoring unstable tool at: " + cur);
         return acc;
       }
       acc.push(cur);
@@ -33,13 +42,13 @@ function finder(searchFolder, searchBin, options, searchBaseFolder) {
     return acc;
   }, []);
   if (possibles.length === 0) {
-    throw 'no possibles';
+    throw "no possibles";
   }
   possibles.sort();
   for (var i = possibles.length - 1; i > -1; i--) {
-    var runner = [searchBaseFolder, '/', possibles[i], searchBin].join('');
+    var runner = [searchBaseFolder, "/", possibles[i], searchBin].join("");
     if (fs.existsSync(runner)) {
-      log.debug('Using ' + runner);
+      log.debug("Using " + runner);
       return runner;
     }
   }
@@ -50,10 +59,10 @@ function findWrapper(func, name) {
     return func();
   } catch (e) {
     switch (e) {
-      case 'no possibles':
-        throw 'Can\'t find any installed ' + name;
-      case 'not found':
-        throw 'Found ' + name + ' folder but no binaries to run )\':';
+      case "no possibles":
+        throw "Can\"t find any installed " + name;
+      case "not found":
+        throw "Found " + name + " folder but no binaries to run )\":";
       default:
         throw e;
     }
@@ -61,7 +70,7 @@ function findWrapper(func, name) {
 }
 
 var findInstalledNUnit3 = function () {
-  var search = [programFilesFolder, 'NUnit.org', 'nunit-console', 'nunit3-console.exe'].join('/');
+  var search = [programFilesFolder, "NUnit.org", "nunit-console", "nunit3-console.exe"].join("/");
   return fs.existsSync(search) ? search : null;
 };
 
@@ -70,42 +79,42 @@ function checkExists(somePath) {
 }
 
 function tryToFindNUnit(options) {
-  return initialToolSearch('nunit3-console.exe', 'NUNIT') ||
+  return initialToolSearch("nunit3-console.exe", "NUNIT") ||
     searchForNunit(options);
 }
 
 function latestNUnit(options) {
   var result = tryToFindNUnit(options);
-  debug(`Using nunit runner: ${result || 'NOT FOUND'}`);
+  debug(`Using nunit runner: ${result || "NOT FOUND"}`);
   return result;
 };
 
 function searchForNunit(options) {
   options = options || {};
-  var isX86 = (options.x86 || ((options.platform || options.architecture) === 'x86'));
-  var runner = isX86 ? '/bin/nunit-console-x86.exe' : '/bin/nunit-console.exe';
+  var isX86 = (options.x86 || ((options.platform || options.architecture) === "x86"));
+  var runner = isX86 ? "/bin/nunit-console-x86.exe" : "/bin/nunit-console.exe";
   return findWrapper(function () {
-    return findInstalledNUnit3() || finder('NUnit', runner, options);
-  }, 'nunit-console runner');
+    return findInstalledNUnit3() || finder("NUnit", runner, options);
+  }, "nunit-console runner");
 }
 
 function findTool(exeName) {
-  return lsR('tools').filter(function (p) {
+  return lsR("tools").filter(function (p) {
     return p.toLowerCase().endsWith(exeName.toLowerCase());
-  })[0];
+  })[0] || which(exeName);
 }
 
 function locateDotCover(options) {
   options = options || {};
-  return initialToolSearch('dotCover.exe', 'DOTCOVER') ||
+  return initialToolSearch("dotCover.exe", "DOTCOVER") ||
     findWrapper(function () {
-      return finder('v', '/bin/dotCover.exe', options, programFilesFolder + '/JetBrains/dotCover', 'dotCover');
+      return finder("v", "/bin/dotCover.exe", options, programFilesFolder + "/JetBrains/dotCover", "dotCover");
     });
 }
 
 function latestDotCover(options) {
   var result = locateDotCover(options);
-  debug(`Using dotCover: ${result || 'NOT FOUND'}`);
+  debug(`Using dotCover: ${result || "NOT FOUND"}`);
   return result;
 }
 
@@ -121,8 +130,8 @@ function initialToolSearch(toolExe, environmentVariable) {
 }
 
 function latestOpenCover() {
-  var result = initialToolSearch('OpenCover.Console.exe', 'OPENCOVER');
-  debug(`Using opencover: ${result || 'NOT FOUND'}`);
+  var result = initialToolSearch("OpenCover.Console.exe", "OPENCOVER");
+  debug(`Using opencover: ${result || "NOT FOUND"}`);
   return result;
 }
 
