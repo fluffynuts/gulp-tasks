@@ -176,7 +176,7 @@ function runCoverageWith(stream, allAssemblies, options) {
   var coverageToolName = grokCoverageToolNameFrom(options);
   debug(`Running tool: ${coverageToolName}`);
   var cliOptions = getCliOptionsFor(stream, coverageToolName, options, nunit, nunitOptions);
-  spawnCoverageTool(stream, coverageToolName, coverageToolExe, cliOptions);
+  spawnCoverageTool(stream, coverageToolName, coverageToolExe, cliOptions, options);
 
 }
 
@@ -190,17 +190,19 @@ var coverageSpawners = {
   opencover: spawnOpenCover
 }
 
-function spawnDotCover(stream, coverageToolExe, cliOptions) {
+function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
   var reportArgsFor = function (reportType) {
+    log.info('creating XML args');
     return ['report',
       '/ReportType=' + reportType,
-      '/Source=' + options.coverageOutput,
-      '/Output=' + options.coverageReportBase + '.' + reportType.toLowerCase()];
+      '/Source=' + globalOptions.coverageOutput,
+      '/Output=' + globalOptions.coverageReportBase + '.' + reportType.toLowerCase()];
   }
 
   return spawn(coverageToolExe, cliOptions).then(() => {
     log.info('creating XML report');
     var args = reportArgsFor('XML');
+    log.info(args);
     return spawn(coverageToolExe, args);
   }).then(() => {
     log.info('creating HTML report');
@@ -222,7 +224,7 @@ function onCoverageComplete(stream) {
   end(stream);
 }
 
-function spawnOpenCover(stream, exe, cliOptions) {
+function spawnOpenCover(stream, exe, cliOptions, globalOptions) {
   debug(`Running opencover:`);
   debug(`${exe} ${cliOptions.join(' ')}`);
   return spawn(exe, cliOptions)
@@ -262,9 +264,9 @@ function getUniqueDirsFrom(filePaths) {
   }, []).join(',');
 }
 
-function spawnCoverageTool(stream, toolName, toolExe, cliOptions) {
+function spawnCoverageTool(stream, toolName, toolExe, cliOptions, globalOptions) {
   var spawner = coverageSpawners[toolName];
-  return spawner ? spawner(stream, toolExe, cliOptions) : unsupportedTool(stream, toolName);
+  return spawner ? spawner(stream, toolExe, cliOptions, globalOptions) : unsupportedTool(stream, toolName);
 }
 
 function unsupportedTool(stream, toolName) {
