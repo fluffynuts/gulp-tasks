@@ -214,8 +214,38 @@ function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
     .catch(err => handleCoverageFailure(stream, err));
 }
 
+function stringify(err) {
+  if (err === undefined || err === null) {
+    return `(${err})`;
+  }
+  if (typeof(err) === "string") {
+    return err;
+  }
+  if (typeof(err) !== "object") {
+    return err.toString();
+  }
+  try {
+    return JSON.stringify(err);
+  } catch (e) {
+    return dumpTopLevel(err);
+  }
+}
+
+function dumpTopLevel(obj) {
+  const result = [];
+  for (var prop in obj) {
+    result.push(`${prop}: ${obj}`);
+  }
+  return `{\n\t${result.join("\n\t")}}`;
+}
+
+function logError(err) {
+  log.error(gutil.colors.red(stringify(err)));
+}
+
 function handleCoverageFailure(stream, err) {
-  log.error(gutil.colors.red(err));
+  logError(" --- COVERAGE FAILS ---");
+  logError(err);
   fail(stream, message);
 }
 
@@ -241,9 +271,10 @@ function generateOpenCoverFilter(prefix, namespaces) {
 function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
   const
     exclude = options.exclude && options.exclude.length ? options.exclude : ["*.Tests"],
+    failOnError = options.failOnError === undefined ? true : !!options.failOnError,
     excludeFilter = generateOpenCoverFilter("-", exclude);
 
-  return [
+  const result = [
     `-target:${nunit}`,
     `-targetargs:${nunitOptions}`,
     `-output:${options.coverageReportBase}.xml`,
@@ -251,6 +282,10 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
     `-register:user`,
     `-searchdirs:${getUniqueDirsFrom(options.testAssemblies)}`
   ];
+  if (failOnError) {
+    result.push("-returntargetcode:0");
+  }
+  return result;
 }
 
 function getUniqueDirsFrom(filePaths) {
