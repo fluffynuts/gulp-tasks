@@ -54,35 +54,36 @@ function dotCover(options) {
 
   var assemblies = [];
 
-  var stream = es.through(function write(file) {
-    if (!file) {
-      fail(stream, "file may not be empty or undefined");
-    }
-    var filePath = file.history[0];
-    var parts = filePath.split("\\");
-    if (parts.length === 1) {
-      parts = filePath.split("/");
-    }
-    // only accept the one which is in the debug project output for itself
-    var filePart = parts[parts.length - 1];
-    var projectParts = filePart.split(".");
-    var projectName = projectParts.slice(0, projectParts.length - 1).join(".");
-    var isBin = parts.indexOf("bin") > -1;
-    var isDebugOrAgnostic = parts.indexOf("Debug") > -1 || parts.indexOf("bin") === parts.length - 2;
-    var isProjectMatch = options.allowProjectAssemblyMismatch || parts.indexOf(projectName) > -1;
-    var include = isBin && isDebugOrAgnostic && isProjectMatch;
-    if (include) {
-      assemblies.push(file);
-    } else if (DEBUG) {
-      log.debug("ignore: " + filePath);
-      log.debug("isBin: " + isBin);
-      log.debug("isDebugOrAgnostic: " + isDebugOrAgnostic);
-      log.debug("isProjectMatch: " + isProjectMatch);
-    }
-    this.emit("data", file);
-  }, function end() {
-    runCoverageWith(this, assemblies, options);
-  });
+  var
+    stream = es.through(function write(file) {
+      if (!file) {
+        fail(this, "file may not be empty or undefined");
+      }
+      var filePath = file.history[0];
+      var parts = filePath.split("\\");
+      if (parts.length === 1) {
+        parts = filePath.split("/");
+      }
+      // only accept the one which is in the debug project output for itself
+      var filePart = parts[parts.length - 1];
+      var projectParts = filePart.split(".");
+      var projectName = projectParts.slice(0, projectParts.length - 1).join(".");
+      var isBin = parts.indexOf("bin") > -1;
+      var isDebugOrAgnostic = parts.indexOf("Debug") > -1 || parts.indexOf("bin") === parts.length - 2;
+      var isProjectMatch = options.allowProjectAssemblyMismatch || parts.indexOf(projectName) > -1;
+      var include = isBin && isDebugOrAgnostic && isProjectMatch;
+      if (include) {
+        assemblies.push(file);
+      } else if (DEBUG) {
+        log.debug("ignore: " + filePath);
+        log.debug("isBin: " + isBin);
+        log.debug("isDebugOrAgnostic: " + isDebugOrAgnostic);
+        log.debug("isProjectMatch: " + isProjectMatch);
+      }
+      this.emit("data", file);
+    }, function end() {
+      runCoverageWith(this, assemblies, options);
+    });
   return stream;
 };
 
@@ -211,17 +212,17 @@ function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
     log.info("creating HTML report");
     return spawn(coverageToolExe, htmlArgs);
   }).then(() => onCoverageComplete(stream))
-    .catch(err => handleCoverageFailure(stream, err));
+    .catch(err => handleCoverageFailure(stream, err, globalOptions));
 }
 
 function stringify(err) {
   if (err === undefined || err === null) {
     return `(${err})`;
   }
-  if (typeof(err) === "string") {
+  if (typeof (err) === "string") {
     return err;
   }
-  if (typeof(err) !== "object") {
+  if (typeof (err) !== "object") {
     return err.toString();
   }
   try {
@@ -243,10 +244,10 @@ function logError(err) {
   log.error(gutil.colors.red(stringify(err)));
 }
 
-function handleCoverageFailure(stream, err) {
+function handleCoverageFailure(stream, err, options) {
   logError(" --- COVERAGE FAILS ---");
   logError(err);
-  fail(stream, message);
+  fail(stream, "coverage fails");
 }
 
 function onCoverageComplete(stream) {
@@ -259,7 +260,7 @@ function spawnOpenCover(stream, exe, cliOptions, globalOptions) {
   debug(`${exe} ${cliOptions.join(" ")}`);
   return spawn(exe, cliOptions)
     .then(() => onCoverageComplete(stream))
-    .catch(err => handleCoverageFailure(stream, err));
+    .catch(err => handleCoverageFailure(stream, err, globalOptions));
 }
 
 function generateOpenCoverFilter(prefix, namespaces) {
@@ -268,10 +269,13 @@ function generateOpenCoverFilter(prefix, namespaces) {
     return acc;
   }, []).join(" ");
 }
+function shouldFailOnError(options) {
+  return (options || {}).failOnError === undefined ? true : !!options.failOnError;
+}
 function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
   const
     exclude = options.exclude && options.exclude.length ? options.exclude : ["*.Tests"],
-    failOnError = options.failOnError === undefined ? true : !!options.failOnError,
+    failOnError = shouldFailOnError(options),
     excludeFilter = generateOpenCoverFilter("-", exclude);
 
   const result = [
