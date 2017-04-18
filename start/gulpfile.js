@@ -14,33 +14,51 @@
  * To add or change tasks, do so one task per file in the gulp-tasks folder
  */
 var fs = require('fs'),
-  debug = require('debug')('gulp'),
-  gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
-global.requireModule = function (module) {
-  var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
-  return require(modulePath);
+    debug = require('debug')('gulpfile');
+var gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
+global.requireModule = function(module) {
+    var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
+    return require(modulePath);
 };
 var fs = require('fs');
 if (!fs.existsSync('package.json')) {
-  ['You\'re nearly there!',
-    'Please copy the package.json from the start folder alongside your gulpfile.js',
-    'then run `npm install` to install the required packages'].forEach(function (s) {
-      console.log(s);
-    });
-  process.exit(1);
+    ['You\'re nearly there!',
+     'Please copy the package.json from the start folder alongside your gulpfile.js',
+     'then run `npm install` to install the required packages'].forEach(function(s) {
+        console.log(s);
+     });
+    process.exit(1);
 }
 try {
-  var requireDir = require('require-dir');
-  requireDir('gulp-tasks');
-  var overridesFolder = 'override-tasks';
-  if (fs.existsSync(overridesFolder)) {
-    requireDir(overridesFolder);
-  }
+    var requireDir = require('require-dir');
+    requireDir('gulp-tasks');
+    ['override-tasks', 'local-tasks'].forEach(function(dirname) {
+        if (fs.existsSync(dirname)) {
+            requireDir(dirname);
+        }
+    });
 } catch (e) {
-  var envDebug = process.env.DEBUG;
-  if (debug !== '*' || debug !== 'gulp') {
-    console.error('Gulp fails. To get more info, set the DEBUG environment variable to "*" or "gulp"');
-  }
-  debug(e);
-  process.exit(1);
+    if (shouldDump(e)) {
+      console.error(e);
+    } else {
+      if (!process.env.DEBUG) {
+        console.log("Error occurred. For more info, set the DEBUG environment variable (eg set DEBUG=*).")
+      }
+    }
+    process.exit(1);
+}
+
+function shouldDump(e) {
+  return process.env.ALWAYS_DUMP_GULP_ERRORS || probablyNotReportedByGulp(e);
+}
+
+function probablyNotReportedByGulp(e) {
+  var message = (e || "").toString().toLowerCase();
+  return [
+    "cannot find module",
+    "referenceerror",
+    "syntaxerror"
+  ].reduce((acc, cur) => {
+    return acc || message.indexOf(cur) > -1;
+  }, false);
 }
