@@ -4,11 +4,9 @@ var gulp = requireModule('gulp-with-help'),
   verifyExe = requireModule('verify-exe');
 
 gulp.task('get-local-nuget', 'Attempts to download the latest nuget.exe to the gulp-tasks folder', function () {
-  return new Promise(function (resolve, reject) {
-    var downloader = new HttpDownloader();
-    return downloader.download(config.nugetDownloadUrl, config.localNuget).then(function (result) {
-      console.log('attempting to verify downloaded nuget.exe');
-      return verifyExe(result);
-    });
+  var downloader = new HttpDownloader();
+  return downloader.download(config.nugetDownloadUrl, config.localNuget).then(function (result) {
+    console.log('attempting to verify downloaded nuget.exe');
+    return verifyExe(result);
   });
 });
