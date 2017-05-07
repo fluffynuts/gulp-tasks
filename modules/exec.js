@@ -9,7 +9,7 @@ var defaultOptions = {
   shell: true
 };
 
-var doExecFile = function (cmd, args, opts, handlers) {
+var doExecFile = function (cmd, args, opts) {
   // TODO: implement handlers for stdout, stderr
   return new Promise((resolve, reject) => {
     try {
@@ -86,7 +86,7 @@ var doSpawn = function (cmd, args, opts, handlers) {
         log.showTimeStamps();
         log.error('failed to start process');
         log.error(err);
-        deferred.reject({ error: err });
+        reject({ error: err });
       });
     } catch (e) {
       reject(e);
