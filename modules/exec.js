@@ -6,6 +6,7 @@ var child_process = require('child_process');
 
 var defaultOptions = {
   cwd: process.cwd(),
+  shell: true
 };
 
 var doExecFile = function (cmd, args, opts, handlers) {

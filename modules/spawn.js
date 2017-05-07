@@ -8,7 +8,8 @@ var
 
 var defaultOptions = {
   stdio: [process.stdin, process.stdout, process.stderr, 'pipe'],
-  cwd: process.cwd()
+  cwd: process.cwd(),
+  shell: true
 };
 
 var run = function (executable, args, opts) {
