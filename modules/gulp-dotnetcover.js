@@ -187,7 +187,7 @@ function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
   const
     reportArgsFor = function (reportType) {
       log.info("creating XML args");
-      return ["report", 
+      return ["report",
         `/ReportType=${reportType}`,
         `/Source=${quoted(globalOptions.coverageOutput)}`,
         `/Output=${quoted(globalOptions.coverageReportBase + "." + reportType.toLowerCase())}`];
@@ -329,6 +329,7 @@ function getDotCoverOptionsFor(options, nunit, nunitOptions) {
     `/AnalyseTargetArguments=False`,
     `/Output=${quoted(options.coverageOutput)}`,
     `/Filters=${quoted(filters)}`,
+    `/ProcessFilters=-:sqlservr.exe`,
     `/TargetArguments=${quoted(nunitOptions)}`
   ];
   if (scopeAssemblies.length) {
