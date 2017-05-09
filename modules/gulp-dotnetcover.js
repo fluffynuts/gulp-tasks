@@ -349,15 +349,9 @@ function getToolNameForExe(options, toolExe) {
     .filter(k => toolExe === options.exec[k])[0] || "").toLowerCase();
 }
 function grokCoverageToolNameFrom(options, toolExe) {
-  console.log(options.exec);
-  console.log(toolExe);
   return (
     getToolNameForExe(options, toolExe) || options.coverageTool
   );
-  // if (options.coverageTool) {
-  //   return options.coverageTool.toLowerCase().trim(); // allow specifying the tool
-  // }
-  // return options.exec.dotCover ? "dotcover" : "opencover";
 }
 
 function getDotCoverOptionsFor(options, nunit, nunitOptions) {

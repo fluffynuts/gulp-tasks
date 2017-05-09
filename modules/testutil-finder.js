@@ -84,7 +84,7 @@ function compareVersionArrays(x, y) {
 function findWrapper(func, name) {
   var found = func();
   if (!found) {
-    throw "Can't find any installed " + name;
+    debug(`Can't find any installed ${name}`);
   }
   return found;
 }
