@@ -146,7 +146,11 @@ function quoted(str) {
 function runCoverageWith(stream, allAssemblies, options) {
   var scopeAssemblies = [];
   var testAssemblies = allAssemblies.map(function (file) {
-    return file.path;
+    const replace = [
+      process.cwd() + "\\",
+      process.cwd().replace(/\\\\/g, "/") + "/"
+    ];
+    return replace.reduce((acc, cur) => acc.replace(cur, ""), file.path);
   }).filter(function (file) {
     return options.testAssemblyFilter(file) || !scopeAssemblies.push(file);
   }).map(function (file) {
@@ -271,6 +275,7 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
   const result = [
     `-target:${nunit}`,
     `-targetargs:${nunitOptions}`,
+    `-targetdir:${process.cwd()}`,  // TODO: test me please
     `-output:${options.coverageReportBase}.xml`,
     `-filter:"+[*]* ${excludeFilter}"`,  // TODO: embetterment
     `-register:user`,
@@ -330,6 +335,7 @@ function getDotCoverOptionsFor(options, nunit, nunitOptions) {
     `/Output=${quoted(options.coverageOutput)}`,
     `/Filters=${quoted(filters)}`,
     `/ProcessFilters=-:sqlservr.exe`,
+    `/TargetWorkingDir=${process.cwd()}`,
     `/TargetArguments=${quoted(nunitOptions)}`
   ];
   if (scopeAssemblies.length) {
