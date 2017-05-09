@@ -42,12 +42,7 @@ function finder(searchBaseFolders, searchBaseSubFolder, searchFolderPrefix, sear
   if (!searchBaseFolders.length) {
     searchBaseFolders = [programFilesFolder];
   }
-  [searchFolderPrefix, searchBin, options] = args.slice(args.length - 3);
   const
-    someArgs = args.slice(args.length - 3),
-    searchFolderPrefix = args[0],
-    searchBin = args[1],
-    options = args[2],
     ignoreBetas = options.ignoreBetas === undefined ? true : options.ignoreBetas,
     lprefix = searchFolderPrefix.toLowerCase();
   const runner = searchBaseFolders
