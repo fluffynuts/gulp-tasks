@@ -22,30 +22,12 @@ function isUnstable(folderName) {
     folderName.indexOf("beta") > -1;
 }
 
-/**
- * @param {(String|String[])} [searchBaseFolders=programFilesFolder] - Base folder or array of folders.
- * @param {String} [searchBaseSubFolder] - sub folder to add to the searchBaseFolders.
- * @param {String} searchFolderPrefix - prefix of folders to search within each base + subfolder.
- * @param {String} searchBin - executable filename/path to search for within  matching folders.
- * @param {Object} [options] - optional options for the search.
- * @param {Boolean} [options.ignoreBetas] - ignore paths with alpha or beta in the name.
- */
 function finder(searchBaseFolders, searchBaseSubFolder, searchFolderPrefix, searchBin, options) {
-  const args = [].slice.call(arguments, 0, 5);
-  if (typeof args[args.length - 1] !== "object") {
-    args[args.length] = {};
-  }
-  searchBaseSubFolder = args.length < 5 ? undefined : args[1];
-  searchBaseFolders = [].concat(args.length < 4 ? undefined : args[0])
-    .filter(x => x)
-    .map(folder => path.join(folder, searchBaseSubFolder || ""));
-  if (!searchBaseFolders.length) {
-    searchBaseFolders = [programFilesFolder];
-  }
   const
     ignoreBetas = options.ignoreBetas === undefined ? true : options.ignoreBetas,
     lprefix = searchFolderPrefix.toLowerCase();
   const runner = searchBaseFolders
+    .map(f => searchBaseSubFolder ? path.join(f, searchBaseSubFolder) : f)
     .filter(checkExists)
     .reduce((possibles, baseFolder) => {
       debug("Searching: " + baseFolder);
@@ -109,12 +91,16 @@ function latestNUnit(options) {
   return result;
 }
 
+function nunit2Finder(searchBin, options) {
+  return finder([programFilesFolder], undefined, "NUnit", runner, options);
+}
+
 function searchForNunit(options) {
   options = options || {};
   var isX86 = (options.x86 || ((options.platform || options.architecture) === "x86"));
   var runner = isX86 ? "/bin/nunit-console-x86.exe" : "/bin/nunit-console.exe";
   return findWrapper(function () {
-    return findInstalledNUnit3() || finder("NUnit", runner, options);
+    return findInstalledNUnit3() || nunit2Finder(runner, options);
   }, "nunit-console runner");
 }
 
