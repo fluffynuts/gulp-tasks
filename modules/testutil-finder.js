@@ -40,7 +40,11 @@ function finder(searchBaseFolders, searchBaseSubFolder, searchFolderPrefix, sear
               log.notice("Ignoring unstable tool at: " + folder);
               return acc;
             }
-            var version = cur.match(/\d+/g).map(Number);
+            const match = cur.match(/\d+/g);
+            if (!match) {
+              return acc;
+            }
+            const version = match.map(Number);
             debug(`Adding possible: ${folder} = version ${version}`);
             acc.push({
               folder: folder,
@@ -92,7 +96,7 @@ function latestNUnit(options) {
 }
 
 function nunit2Finder(searchBin, options) {
-  return finder([programFilesFolder], undefined, "NUnit", runner, options);
+  return finder([programFilesFolder], undefined, "NUnit", searchBin, options);
 }
 
 function searchForNunit(options) {
@@ -146,5 +150,6 @@ module.exports = {
   latestNUnit: latestNUnit,
   latestDotCover: latestDotCover,
   latestOpenCover: latestOpenCover,
-  findTool: findTool
+  findTool: findTool,
+  nunit2Finder: nunit2Finder
 };
