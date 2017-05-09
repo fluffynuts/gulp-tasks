@@ -92,7 +92,6 @@ function findExactExecutable(stream, options, what, deferLocal) {
     what = [what];
   }
   if (!deferLocal) {
-    var toolsFolder = path.join(process.cwd(), "tools").toLowerCase();
     var local = findLocalExactExecutable(options, what);
     if (local) {
       return local;
@@ -172,7 +171,7 @@ function updateLabelsOptionFor(nunitOptions) {
 }
 
 function quoted(str) {
-  return `"${str.replace(/"/g, '""')}"`;
+  return /[ "]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
 function runCoverageWith(stream, allAssemblies, options) {
@@ -200,7 +199,7 @@ function runCoverageWith(stream, allAssemblies, options) {
     updateLabelsOptionFor(options.nunitOptions),
     generateXmlOutputSwitchFor(nunit, options),
     generateNoShadowFor(nunit),
-    generatePlatformSwitchFor(nunit),
+    generatePlatformSwitchFor(nunit, options),
     testAssemblies.map(quoted).join(" ")].join(" ");
 
   var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
@@ -371,7 +370,7 @@ function getDotCoverOptionsFor(options, nunit, nunitOptions) {
     `/Output=${quoted(options.coverageOutput)}`,
     `/Filters=${quoted(filters)}`,
     `/ProcessFilters=-:sqlservr.exe`,
-    `/TargetWorkingDir=${process.cwd()}`,
+    `/TargetWorkingDir=${quoted(process.cwd())}`,
     `/TargetArguments=${quoted(nunitOptions)}`
   ];
   if (scopeAssemblies.length) {
