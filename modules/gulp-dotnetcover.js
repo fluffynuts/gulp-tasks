@@ -73,11 +73,33 @@ function dotCover(options) {
   return stream;
 }
 
-function findExactExecutable(stream, options, what) {
+function findLocalExactExecutable(options, what) {
+  var toolsFolder = path.join(process.cwd(), "tools").toLowerCase();
+  return what.reduce((acc, cur) => {
+    if (acc || !options.exec[cur]) {
+      return acc;
+    }
+    var exe = trim(options.exec[cur], "\\s", "\"", "'");
+    if (exe.toLowerCase().indexOf(toolsFolder) === 0) {
+      log.info(`preferring local tool: ${exe}`);
+      return exe;
+    }
+    return acc;
+  }, undefined);
+}
+function findExactExecutable(stream, options, what, deferLocal) {
   if (!Array.isArray(what)) {
     what = [what];
   }
+  if (!deferLocal) {
+    var toolsFolder = path.join(process.cwd(), "tools").toLowerCase();
+    var local = findLocalExactExecutable(options, what);
+    if (local) {
+      return local;
+    }
+  }
   var resolved = what.reduce((acc, cur) => {
+    cur = findKeyInsensitive(options.exec, cur);
     if (!options.exec[cur]) {
       return acc;
     }
@@ -91,8 +113,17 @@ function findExactExecutable(stream, options, what) {
     fail(stream, `No auto-detection of executables (${what.join(",")}) not implemented yet. Please specify the exec.{tool} option(s) as required`);
 }
 
+function findKeyInsensitive(obj, seekKey) {
+  return obj
+          ? Object.keys(obj)
+            .filter(k => k.toLowerCase() === seekKey.toLowerCase())[0] || seekKey
+          : seekKey;
+}
+
 function findCoverageTool(stream, options) {
-  return findExactExecutable(stream, options, ["dotCover", "openCover"]);
+  return options.coverageTool
+    ? findExactExecutable(stream, options, [options.coverageTool], true)
+    : findExactExecutable(stream, options, ["dotCover", "openCover"]);
 }
 
 function findNunit(stream, options) {
@@ -140,7 +171,7 @@ function updateLabelsOptionFor(nunitOptions) {
 }
 
 function quoted(str) {
-    return `"${str.replace(/"/g, '""')}"`;
+  return `"${str.replace(/"/g, '""')}"`;
 }
 
 function runCoverageWith(stream, allAssemblies, options) {
@@ -161,6 +192,7 @@ function runCoverageWith(stream, allAssemblies, options) {
   }
   options.testAssemblies = testAssemblies;  // so other things can use this
   var coverageToolExe = findCoverageTool(stream, options);
+  debug(`selected coverage tool exe: ${coverageToolExe}`);
   var nunit = findNunit(stream, options);
 
   var nunitOptions = [
@@ -170,7 +202,7 @@ function runCoverageWith(stream, allAssemblies, options) {
     generatePlatformSwitchFor(nunit),
     testAssemblies.map(quoted).join(" ")].join(" ");
 
-  var coverageToolName = grokCoverageToolNameFrom(options);
+  var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
   debug(`Running tool: ${coverageToolName}`);
   var cliOptions = getCliOptionsFor(stream, coverageToolName, options, nunit, nunitOptions);
   spawnCoverageTool(stream, coverageToolName, coverageToolExe, cliOptions, options);
@@ -273,13 +305,13 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
     excludeFilter = generateOpenCoverFilter("-", exclude);
 
   const result = [
-    `-target:${nunit}`,
-    `-targetargs:${nunitOptions}`,
-    `-targetdir:${process.cwd()}`,  // TODO: test me please
-    `-output:${options.coverageReportBase}.xml`,
+    `"-target:${nunit}"`,
+    `"-targetargs:${nunitOptions}"`,
+    `"-targetdir:${process.cwd()}"`,  // TODO: test me please
+    `"-output:${options.coverageReportBase}.xml"`,
     `-filter:"+[*]* ${excludeFilter}"`,  // TODO: embetterment
     `-register:user`,
-    `-searchdirs:${getUniqueDirsFrom(options.testAssemblies)}`
+    `"-searchdirs:${getUniqueDirsFrom(options.testAssemblies)}"`
   ];
   if (failOnError) {
     result.push("-returntargetcode:0");
@@ -312,11 +344,20 @@ function getCliOptionsFor(stream, coverageToolName, options, nunit, nunitOptions
   return generator ? generator(options, nunit, nunitOptions) : unsupportedTool(stream, coverageToolName);
 }
 
-function grokCoverageToolNameFrom(options) {
-  if (options.coverageTool) {
-    return options.coverageTool.toLowerCase().trim(); // allow specifying the tool
-  }
-  return options.exec.dotCover ? "dotcover" : "opencover";
+function getToolNameForExe(options, toolExe) {
+  return (Object.keys(options.exec)
+    .filter(k => toolExe === options.exec[k])[0] || "").toLowerCase();
+}
+function grokCoverageToolNameFrom(options, toolExe) {
+  console.log(options.exec);
+  console.log(toolExe);
+  return (
+    getToolNameForExe(options, toolExe) || options.coverageTool
+  );
+  // if (options.coverageTool) {
+  //   return options.coverageTool.toLowerCase().trim(); // allow specifying the tool
+  // }
+  // return options.exec.dotCover ? "dotcover" : "opencover";
 }
 
 function getDotCoverOptionsFor(options, nunit, nunitOptions) {
