@@ -7,14 +7,13 @@ gulp.task('build', 'Builds all Visual Studio solutions in tree', ['nuget-restore
     '**/*.sln',
     '!**/node_modules/**/*.sln'
   ]).pipe(msbuild({
-      toolsVersion: 14.0,
-      targets: ['Clean', 'Build'],
-      configuration: 'Debug',
-      stdout: true,
-      verbosity: 'minimal',
-      errorOnFail: true,
-      architecture: 'x64'
+    toolsVersion: 14.0,
+    targets: ['Clean', 'Build'],
+    configuration: 'Debug',
+    stdout: true,
+    verbosity: 'minimal',
+    errorOnFail: true,
+    architecture: 'x64',
+    nologo: false
   }));
 });
-
-

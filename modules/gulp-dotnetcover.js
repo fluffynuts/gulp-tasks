@@ -34,23 +34,9 @@ function dotCover(options) {
     var regex = options.testAssemblyFilter;
     options.testAssemblyFilter = function (file) {
       return !!file.match(regex);
-    }
+    };
   }
   DEBUG = options.debug || false;
-
-  var mkdir = function (dir) {
-    var parts = dir.split("/");
-    var current = "";
-    parts.forEach(function (item) {
-      if (current) {
-        current += "/";
-      }
-      current += item;
-      if (!fs.existsSync(current)) {
-        fs.mkdirSync(current);
-      }
-    });
-  }
 
   var assemblies = [];
 
@@ -85,7 +71,7 @@ function dotCover(options) {
       runCoverageWith(this, assemblies, options);
     });
   return stream;
-};
+}
 
 function findExactExecutable(stream, options, what) {
   if (!Array.isArray(what)) {
@@ -122,7 +108,7 @@ function end(stream) {
 }
 
 function trim() {
-  var args = Array.prototype.slice.call(arguments)
+  var args = Array.prototype.slice.call(arguments);
   var source = args[0];
   var replacements = args.slice(1).join(",");
   var regex = new RegExp("^[" + replacements + "]+|[" + replacements + "]+$", "g");
@@ -134,8 +120,8 @@ function isNunit3(nunitRunner) {
 }
 
 function generateXmlOutputSwitchFor(nunitRunner, options) {
-  var outFile = options.nunitOutput;
-  return isNunit3(nunitRunner) ? "/result:" + outFile + ";format=nunit2" : "/xml=" + outFile;
+  var outFile = quoted(options.nunitOutput);
+  return isNunit3(nunitRunner) ? `/result:${outFile};format=nunit2` : `/xml=${outFile}`;
 }
 
 function generateNoShadowFor(nunitRunner) {
@@ -146,11 +132,15 @@ function generatePlatformSwitchFor(nunitRunner) {
   return isNunit3(nunitRunner) ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
 }
 
-function updateLabelsOptionFor(nunitOptions, nunitRunner) {
+function updateLabelsOptionFor(nunitOptions) {
   if (nunitOptions.indexOf("labels:") > -1) {
     return nunitOptions; // caller already updated for new labels= syntax
   }
   return nunitOptions.replace(/\/labels/, "/labels:All");
+}
+
+function quoted(str) {
+    return `"${str.replace(/"/g, '""')}"`;
 }
 
 function runCoverageWith(stream, allAssemblies, options) {
@@ -170,11 +160,11 @@ function runCoverageWith(stream, allAssemblies, options) {
   var nunit = findNunit(stream, options);
 
   var nunitOptions = [
-    updateLabelsOptionFor(options.nunitOptions, nunit),
+    updateLabelsOptionFor(options.nunitOptions),
     generateXmlOutputSwitchFor(nunit, options),
     generateNoShadowFor(nunit),
     generatePlatformSwitchFor(nunit),
-    testAssemblies.join(" ")].join(" ");
+    testAssemblies.map(quoted).join(" ")].join(" ");
 
   var coverageToolName = grokCoverageToolNameFrom(options);
   debug(`Running tool: ${coverageToolName}`);
@@ -191,16 +181,16 @@ var commandLineOptionsGenerators = {
 var coverageSpawners = {
   dotcover: spawnDotCover,
   opencover: spawnOpenCover
-}
+};
 
 function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
   const
     reportArgsFor = function (reportType) {
       log.info("creating XML args");
       return ["report",
-        "/ReportType=" + reportType,
-        "/Source=" + globalOptions.coverageOutput,
-        "/Output=" + globalOptions.coverageReportBase + "." + reportType.toLowerCase()];
+        `/ReportType=${reportType}`,
+        `/Source=${quoted(globalOptions.coverageOutput)}`,
+        `/Output=${quoted(globalOptions.coverageReportBase + "." + reportType.toLowerCase())}`];
     },
     xmlArgs = reportArgsFor("XML"),
     htmlArgs = reportArgsFor("HTML");
@@ -244,7 +234,7 @@ function logError(err) {
   log.error(gutil.colors.red(stringify(err)));
 }
 
-function handleCoverageFailure(stream, err, options) {
+function handleCoverageFailure(stream, err) {
   logError(" --- COVERAGE FAILS ---");
   logError(err);
   fail(stream, "coverage fails");
@@ -335,14 +325,15 @@ function getDotCoverOptionsFor(options, nunit, nunitOptions) {
   }
 
   var dotCoverOptions = ["cover",
-    `/TargetExecutable=${nunit}`,
+    `/TargetExecutable=${quoted(nunit)}`,
     `/AnalyseTargetArguments=False`,
-    `/Output=${options.coverageOutput}`,
-    `/Filters=${filters}`,
-    `/TargetArguments=${nunitOptions}`
+    `/Output=${quoted(options.coverageOutput)}`,
+    `/Filters=${quoted(filters)}`,
+    `/ProcessFilters=-:sqlservr.exe`,
+    `/TargetArguments=${quoted(nunitOptions)}`
   ];
   if (scopeAssemblies.length) {
-    dotCoverOptions.push(`/Scope=${scopeAssemblies.join(";")}`);
+    dotCoverOptions.push(`/Scope=${quoted(scopeAssemblies.join(";"))}`);
   }
   log.info("running testing with coverage...");
   log.info("running dotcover with: " + dotCoverOptions.join(" "));
