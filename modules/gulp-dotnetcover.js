@@ -159,8 +159,9 @@ function generateNoShadowFor(nunitRunner) {
   return isNunit3(nunitRunner) ? "" : "/noshadow"; // default to not shadow in nunit3 & /noshadow deprecated
 }
 
-function generatePlatformSwitchFor(nunitRunner) {
-  return isNunit3(nunitRunner) ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
+function generatePlatformSwitchFor(nunitRunner, options) {
+  var isX86 = (options.x86 || ((options.platform || options.architecture) === "x86"));
+  return isNunit3(nunitRunner) && isX86 ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
 }
 
 function updateLabelsOptionFor(nunitOptions) {
