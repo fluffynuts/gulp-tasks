@@ -1,6 +1,7 @@
-var fs = require('fs');
-var path = require('path');
-var HttpDownloader = require('./http-downloader');
+const
+  fs = require("fs"),
+  path = require("path"),
+  downloadNuget = require("./nuget-downloader")
 
 function completedFile(path) {
     return path + '.completed';
@@ -9,15 +10,16 @@ function completedFile(path) {
 var lastResolution;
 
 function findLocalNuget() {
-    var localNuget = path.join(__dirname, 'nuget.exe'),
-        url = 'http://dist.nuget.org/win-x86-commandline/latest/nuget.exe';
-    var i = 1;
+    const
+      targetFolder = __dirname,
+      localNuget = path.join(targetFolder, 'nuget.exe'),
+      i = 1;
     return new Promise(function(resolve, reject) {
         if (lastResolution) {
             return resolve(lastResolution);
         }
         var downloader = new HttpDownloader();
-        downloader.download(url, localNuget).then(function(dl) {
+        downloadNuget(targetFolder).then(function(dl) {
             lastResolution = dl;
             resolve(dl);
         }).catch(function(err) {
