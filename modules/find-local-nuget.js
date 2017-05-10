@@ -1,7 +1,7 @@
 const
   fs = require("fs"),
   path = require("path"),
-  downloadNuget = require("./nuget-downloader")
+  downloadNuget = require("./download-nuget")
 
 function completedFile(path) {
     return path + '.completed';
