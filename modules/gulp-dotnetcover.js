@@ -92,7 +92,6 @@ function findExactExecutable(stream, options, what, deferLocal) {
     what = [what];
   }
   if (!deferLocal) {
-    var toolsFolder = path.join(process.cwd(), "tools").toLowerCase();
     var local = findLocalExactExecutable(options, what);
     if (local) {
       return local;
@@ -159,8 +158,9 @@ function generateNoShadowFor(nunitRunner) {
   return isNunit3(nunitRunner) ? "" : "/noshadow"; // default to not shadow in nunit3 & /noshadow deprecated
 }
 
-function generatePlatformSwitchFor(nunitRunner) {
-  return isNunit3(nunitRunner) ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
+function generatePlatformSwitchFor(nunitRunner, options) {
+  var isX86 = (options.x86 || ((options.platform || options.architecture) === "x86"));
+  return isNunit3(nunitRunner) && isX86 ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
 }
 
 function updateLabelsOptionFor(nunitOptions) {
@@ -171,7 +171,7 @@ function updateLabelsOptionFor(nunitOptions) {
 }
 
 function quoted(str) {
-  return `"${str.replace(/"/g, '""')}"`;
+  return /[ "]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
 function runCoverageWith(stream, allAssemblies, options) {
@@ -199,7 +199,7 @@ function runCoverageWith(stream, allAssemblies, options) {
     updateLabelsOptionFor(options.nunitOptions),
     generateXmlOutputSwitchFor(nunit, options),
     generateNoShadowFor(nunit),
-    generatePlatformSwitchFor(nunit),
+    generatePlatformSwitchFor(nunit, options),
     testAssemblies.map(quoted).join(" ")].join(" ");
 
   var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
@@ -370,7 +370,7 @@ function getDotCoverOptionsFor(options, nunit, nunitOptions) {
     `/Output=${quoted(options.coverageOutput)}`,
     `/Filters=${quoted(filters)}`,
     `/ProcessFilters=-:sqlservr.exe`,
-    `/TargetWorkingDir=${process.cwd()}`,
+    `/TargetWorkingDir=${quoted(process.cwd())}`,
     `/TargetArguments=${quoted(nunitOptions)}`
   ];
   if (scopeAssemblies.length) {
