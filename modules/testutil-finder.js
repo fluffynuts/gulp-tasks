@@ -26,6 +26,9 @@ function finder(searchBaseFolders, searchBaseSubFolder, searchFolderPrefix, sear
   const
     ignoreBetas = options.ignoreBetas === undefined ? true : options.ignoreBetas,
     lprefix = searchFolderPrefix.toLowerCase();
+  if (!Array.isArray(searchBaseFolders)) {
+    searchBaseFolders = [ searchBaseFolders ];
+  }
   const runner = searchBaseFolders
     .map(f => searchBaseSubFolder ? path.join(f, searchBaseSubFolder) : f)
     .filter(checkExists)
@@ -119,7 +122,7 @@ function locateDotCover(options) {
   return initialToolSearch("dotCover.exe", "DOTCOVER") ||
     findWrapper(function () {
       return finder([programFilesFolder, localAppDataFolder], "JetBrains/Installations", "dotCover", "dotCover.exe", options)
-        || finder(programFilesFolder, "JetBrains/dotCover", "v", "Bin/dotCover.exe", options);
+        || finder([programFilesFolder], "JetBrains/dotCover", "v", "Bin/dotCover.exe", options);
     }, "dotCover");
 }
 
