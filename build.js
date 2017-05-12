@@ -6,7 +6,7 @@ gulp.task("build", "Builds all Visual Studio solutions in tree", ["nuget-restore
   return gulp.src([
     "**/*.sln",
     "!**/node_modules/**/*.sln",
-    "./tools/**/*.sln"
+    "!./tools/**/*.sln"
   ]).pipe(msbuild({
     toolsVersion: 14.0,
     targets: ["Clean", "Build"],

@@ -18,7 +18,6 @@ function findLocalNuget() {
         if (lastResolution) {
             return resolve(lastResolution);
         }
-        var downloader = new HttpDownloader();
         downloadNuget(targetFolder).then(function(dl) {
             lastResolution = dl;
             resolve(dl);
