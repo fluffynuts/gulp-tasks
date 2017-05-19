@@ -29,6 +29,7 @@ function dotCover(options) {
   options.nunitOutput = projectPathFor(options.nunitOutput || "buildreports/nunit-result.xml");
   options.coverageReportBase = projectPathFor(options.coverageReportBase || "buildreports/coverage");
   options.coverageOutput = projectPathFor(options.coverageOutput || "buildreports/coveragesnapshot");
+  options.agents = options.agents || process.env.MAX_NUNIT_AGENTS;  // allow setting max agents via environment variable
   mkdirp(options.coverageReportBase); // because open-cover is too lazy to do it itself :/
   if (typeof options.testAssemblyFilter !== "function") {
     var regex = options.testAssemblyFilter;
@@ -200,7 +201,12 @@ function runCoverageWith(stream, allAssemblies, options) {
     generateXmlOutputSwitchFor(nunit, options),
     generateNoShadowFor(nunit),
     generatePlatformSwitchFor(nunit, options),
-    testAssemblies.map(quoted).join(" ")].join(" ");
+    testAssemblies.map(quoted).join(" ")];
+  var agents = parseInt(options.agents);
+  if (!isNaN(agents)) {
+    nunitOptions.push("--agents=" + agents);
+  }
+  nunitOptions = nunitOptions.join(" ");
 
   var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
   debug(`Running tool: ${coverageToolName}`);
