@@ -2,6 +2,6 @@ var gulp = requireModule("gulp-with-help");
 
 gulp.task(
   "install-tools",
-  "Empty 'install-tools' task so you can inject tool dependencies via local-tasks",
+  "Shell task: write your own logic or make a task depending on default-tools-installer",
   done => done()
 );
