@@ -14,13 +14,14 @@
  * To add or change tasks, do so one task per file in the gulp-tasks folder
  */
 var fs = require('fs'),
-    debug = require('debug')('gulpfile');
-var gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
-global.requireModule = function(module) {
-    var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
-    return require(modulePath);
-};
-var fs = require('fs');
+    debug = require('debug')('gulpfile'),
+    gulpTasksFolder = 'gulp-tasks'; // if you cloned elsewhere, you'll need to modify this
+    requireModule = global.requireModule = function(module) {
+        var modulePath = ['.', gulpTasksFolder, 'modules', module].join('/');
+        return require(modulePath);
+    },
+    importNpmTasks = requireModule("import-npm-tasks");
+
 if (!fs.existsSync('package.json')) {
     ['You\'re nearly there!',
      'Please copy the package.json from the start folder alongside your gulpfile.js',
@@ -30,6 +31,7 @@ if (!fs.existsSync('package.json')) {
     process.exit(1);
 }
 try {
+    importNpmTasks();
     var requireDir = require('require-dir');
     requireDir('gulp-tasks');
     ['override-tasks', 'local-tasks'].forEach(function(dirname) {

@@ -13,7 +13,7 @@ var path = require('path'),
   debug = require('debug')('import-npm-tasks'),
   fs = require('fs'),
   search = ['override-tasks', 'local-tasks'];
-(function () {
+module.exports = function() {
   var overridden = false;
   search.forEach(function (dir) {
     var lookFor = path.join('..', dir, __filename);
@@ -28,4 +28,4 @@ var path = require('path'),
     require('gulp-npm-run')(requireModule('gulp-with-help'));
     debug('-> done');
   }
-})();
+};
