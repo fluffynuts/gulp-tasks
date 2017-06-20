@@ -1,5 +1,8 @@
 {
   "name": "Please set your own project name here",
+  "scripts":{
+    "test": "gulp test-dotnet"
+  },
   "devDependencies": {
     "chai": "^4.0.2",
     "debug": "^2.6.8",

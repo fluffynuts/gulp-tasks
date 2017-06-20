@@ -3,7 +3,10 @@ var gulp = requireModule("gulp-with-help"),
   nunit = require("gulp-nunit-runner"),
   testUtilFinder = requireModule("testutil-finder");
 
-gulp.task("test-dotnet", "Runs all tests in your solution via NUnit", function () {
+gulp.task("test-dotnet",
+  "Runs all tests in your solution via NUnit",
+  [ "build" ],
+  function () {
   if (!fs.existsSync("buildreports")) {
     fs.mkdir("buildreports");
   }
