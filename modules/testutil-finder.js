@@ -112,9 +112,10 @@ function searchForNunit(options) {
 }
 
 function findTool(exeName) {
-  return lsR("tools").filter(function (p) {
+  const allResults = lsR("tools").filter(function (p) {
     return p.toLowerCase().endsWith(exeName.toLowerCase());
-  })[0] || which(exeName);
+  }).sort();
+  return allResults[0] || which(exeName);
 }
 
 function locateDotCover(options) {
