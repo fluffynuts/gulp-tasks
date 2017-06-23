@@ -4,7 +4,7 @@
     "test": "gulp test-dotnet"
   },
   "devDependencies": {
-    "chai": "^4.0.2",
+    "del": "^2.2.2",
     "debug": "^2.6.8",
     "event-stream": "^3.3.4",
     "gulp": "^3.9.1",
