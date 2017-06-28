@@ -3,9 +3,7 @@ const
   runSequence = require("run-sequence"),
   msbuild = require("gulp-msbuild");
 
-gulp.task("prebuild", done => {
-  runSequence("nuget-restore", "install-tools", done)
-});
+gulp.task("prebuild", ["nuget-restore", "install-tools"]);
 
 gulp.task("build",
   "Builds all Visual Studio solutions in tree",

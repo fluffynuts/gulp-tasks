@@ -43,7 +43,7 @@ function resolveNuget(nugetPath) {
     findNugetInPath(),
     checkExists(config.localNuget)
   ].reduce(function (acc, cur) {
-    return acc || cur
+    return acc || cur;
   }, null);
   if (resolved) {
     return resolved;

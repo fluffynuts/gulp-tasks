@@ -63,14 +63,15 @@ module.exports = {
     if (!Array.isArray(requiredTools)) {
       requiredTools = [requiredTools];
     }
-    const targetFolder = overrideToolsFolder || defaultToolsFolder;
-    return ensureFolderExists(targetFolder)
-      .then(() => downloadOrUpdateNuget(targetFolder))
+    const target = overrideToolsFolder || defaultToolsFolder;
+    return ensureFolderExists(target)
+      .then(() => cleanFoldersFrom(target))
+      .then(() => downloadOrUpdateNuget(target))
       .then(() => Promise.all(
         requiredTools.map(tool => exec(
           nugetExe,
           ["install", tool],
-          { cwd: targetFolder }
+          { cwd: target }
         ))));
   },
   clean: (overrideToolsFolder) => {

@@ -12,6 +12,14 @@ function push(arr, item) {
 }
 
 var defaultIgnores = [/node_modules/, /\.git/, /bower_components/];
+function tryReadDirSync(dir) {
+  try {
+    return fs.readdirSync(dir);
+  } catch (e) {
+    debug(`Error reading dir contents for ${dir} : ${e}`);
+    return [];
+  }
+}
 
 function ls_R(dir, ignores) {
   dir = path.resolve(dir);
@@ -19,21 +27,19 @@ function ls_R(dir, ignores) {
     return [];
   }
   ignores = ignores || defaultIgnores;
-  var current = fs.readdirSync(dir);
-  if (!current) {
-    debug(`got nothing for ${dir}`);
-    return [];
-  }
-  return current.reduce(function(acc, cur) {
+  var current = tryReadDirSync(dir);
+  return current.reduce((acc, cur) => {
     var fullPath = path.join(dir, cur);
-    var shouldIgnore = ignores.reduce(function(acc, cur) {
+    var shouldIgnore = ignores.reduce((acc, cur) => {
       return acc || cur.test(fullPath);
     }, false);
     if (shouldIgnore) {
       debug(`ignoring ${fullPath}`);
       return acc;
     }
-    return isDir(fullPath) ? acc.concat(ls_R(fullPath, ignores)) : push(acc, fullPath);
+    return isDir(fullPath)
+      ? acc.concat(ls_R(fullPath, ignores))
+      : push(acc, fullPath);
   }, []);
 }
 
