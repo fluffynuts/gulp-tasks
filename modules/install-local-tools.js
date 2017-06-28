@@ -1,5 +1,6 @@
 const
   downloadNuget = require("./download-nuget"),
+  debug = require("debug")("install-local-tools"),
   gutil = require("gulp-util"),
   exec = requireModule("exec"),
   path = require("path"),
@@ -9,13 +10,17 @@ const
   del = require("del");
 
 function ensureFolderExists(toolsFolder) {
+  debug(`Ensuring existence of tools folder "${toolsFolder}"`);
   return new Promise((resolve, reject) => {
     try {
       if (!fs.existsSync(toolsFolder)) {
         fs.mkdirSync(toolsFolder);
       }
+      debug(`${toolsFolder} exists!`);
       resolve();
     } catch (e) {
+      debug(`${toolsFolder} doesn't exist and not creatable`);
+      debug(e);
       reject(e);
     }
   });
@@ -28,11 +33,18 @@ function cleanFoldersFrom(toolsFolder) {
       const stat = fs.lstatSync(p);
       return stat.isDirectory();
     });
+  if (dirs.length) {
+    debug(`Will delete the following tools sub-folders:`);
+    dirs.forEach(d => {
+      debug(` - ${d}`);
+    });
+  }
   return del(dirs);
 }
 
 function downloadOrUpdateNuget(targetFolder) {
   const nugetPath = path.join(targetFolder, "nuget.exe");
+  debug(`Attempting to get tools nuget to: ${targetFolder}`);
   if (fs.existsSync(nugetPath)) {
     gutil.log("nuget.exe already exists... attempting self-update");
     return exec(nugetPath, [
@@ -52,12 +64,12 @@ module.exports = (requiredTools, overrideToolsFolder) => {
   }
   const targetFolder = overrideToolsFolder || defaultToolsFolder;
   return ensureFolderExists(targetFolder)
-          .then(() => cleanFoldersFrom(targetFolder))
-          .then(() => downloadOrUpdateNuget(targetFolder))
-          .then(() => Promise.all(
-            requiredTools.map(tool => exec(
-              nugetExe,
-              [ "install", tool ],
-              { cwd: targetFolder }
-            ))));
+    .then(() => cleanFoldersFrom(targetFolder))
+    .then(() => downloadOrUpdateNuget(targetFolder))
+    .then(() => Promise.all(
+      requiredTools.map(tool => exec(
+        nugetExe,
+        ["install", tool],
+        { cwd: targetFolder }
+      ))));
 };

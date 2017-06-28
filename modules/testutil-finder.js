@@ -84,6 +84,7 @@ var findInstalledNUnit3 = function () {
 };
 
 function checkExists(somePath) {
+  debug(`Checking if file exists: ${somePath}`);
   return fs.existsSync(somePath) ? somePath : undefined;
 }
 

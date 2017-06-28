@@ -33,7 +33,7 @@ function resolveNuget(nugetPath) {
   var toolsContents = lsR('tools'),
       toolsNuget = toolsContents.filter(function(path) {
         return path.toLowerCase().endsWith(nugetExe);
-      })[0];
+      }).sort()[0];
   var resolved = [
     checkExists(nugetPath),
     checkExists(toolsNuget),
