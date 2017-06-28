@@ -55,21 +55,26 @@ function downloadOrUpdateNuget(targetFolder) {
   }
 }
 
-module.exports = (requiredTools, overrideToolsFolder) => {
-  if (!requiredTools) {
-    throw new Error("No required tools set");
+module.exports = {
+  install: (requiredTools, overrideToolsFolder) => {
+    if (!requiredTools) {
+      throw new Error("No required tools set");
+    }
+    if (!Array.isArray(requiredTools)) {
+      requiredTools = [requiredTools];
+    }
+    const targetFolder = overrideToolsFolder || defaultToolsFolder;
+    return ensureFolderExists(targetFolder)
+      .then(() => downloadOrUpdateNuget(targetFolder))
+      .then(() => Promise.all(
+        requiredTools.map(tool => exec(
+          nugetExe,
+          ["install", tool],
+          { cwd: targetFolder }
+        ))));
+  },
+  clean: (overrideToolsFolder) => {
+    const target = overrideToolsFolder || defaultToolsFolder;
+    return cleanFoldersFrom(target);
   }
-  if (!Array.isArray(requiredTools)) {
-    requiredTools = [requiredTools];
-  }
-  const targetFolder = overrideToolsFolder || defaultToolsFolder;
-  return ensureFolderExists(targetFolder)
-    .then(() => cleanFoldersFrom(targetFolder))
-    .then(() => downloadOrUpdateNuget(targetFolder))
-    .then(() => Promise.all(
-      requiredTools.map(tool => exec(
-        nugetExe,
-        ["install", tool],
-        { cwd: targetFolder }
-      ))));
-};
+}

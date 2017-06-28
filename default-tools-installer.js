@@ -1,6 +1,6 @@
 const
   gulp = requireModule("gulp-with-help"),
-  install = requireModule("install-local-tools")
+  installLocalTools = requireModule("install-local-tools"),
   tools = [
     "nunit.console",
     "opencover",
@@ -8,6 +8,12 @@ const
   ];
 
 gulp.task("default-tools-installer",
-`Installs the default toolset: ${tools.join(", ")}`, () => {
-  return install(tools);
+`Installs the default toolset: ${tools.join(", ")}`, 
+["clean-tools-folder"],
+() => {
+  return installLocalTools.install(tools);
+});
+
+gulp.task("clean-tools-folder", () => {
+  return installLocalTools.clean();
 });
