@@ -3,7 +3,11 @@ var fs = require('fs'),
   debug = require('debug')('ls-r');
 
 function isDir(p) {
-  return fs.lstatSync(p).isDirectory();
+  try {
+    return fs.lstatSync(p).isDirectory();
+  } catch (ignore) {
+    return false;
+  }
 }
 
 function push(arr, item) {
