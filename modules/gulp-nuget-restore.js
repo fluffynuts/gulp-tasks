@@ -43,8 +43,11 @@ function determineNugetCmd(nugetPath, stream) {
     var nuget = resolveNuget(nugetPath);
     log.info('Using nuget.exe from: ' + nuget);
     return nuget;
-  } catch (ignore) {
-    fail(stream, `No nuget.exe resolved: ${ignore}`);
+  } catch (ex) {
+    fail(stream, [
+      `No nuget.exe resolved: ${ex}`,
+      `stack: ${ex.stack || "no stack"}`
+    ].join("\n"));
   }
 }
 
