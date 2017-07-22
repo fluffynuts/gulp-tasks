@@ -12,8 +12,7 @@ gulp.task("test-dotnet",
   }
   return gulp.src([
     "**/bin/Debug/**/*.Tests.dll",
-    "**/bin/*.Tests.dll",
-    "./tools/**/*.sln"
+    "**/bin/*.Tests.dll"
   ], { read: false }).pipe(nunit({
     executable: testUtilFinder.latestNUnit({ architecture: "x86" }),
     options: {
