@@ -1,5 +1,5 @@
 var fs = require('fs'),
-    http = require('http'),
+    request = require('request'),
     debug = require('debug')('http-downloader');
 function HttpDownloader(infoLogFunction, debugLogFunction) {
   this._info = infoLogFunction || console.log;
@@ -18,12 +18,14 @@ HttpDownloader.prototype = {
     this._tempTarget = target + '.part';
     var self = this;
     this._info('Start download of "' + url + '"');
-    this._request = http.get(this._url, function (response) {
-      self._response = response;
-      self._handleResponse();
-    }).on('error', function (e) {
-      self._reject('Download failed: ' + (e || 'unknown error'));
-    });
+    this._request = request.get(this._url)
+      .on('response', function (response) {
+        self._response = response;
+        self._handleResponse();
+      })
+      .on('error', function (e) {
+        self._reject('Download failed: ' + (e || 'unknown error'));
+      });
     return result;
   },
   abort: function () {
