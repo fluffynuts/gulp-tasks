@@ -12,13 +12,14 @@ HttpDownloader.prototype = {
     if (this._request) {
       throw new Error('Already downloading.');
     }
+    this._errored = false;
     var result = this._createResultPromise();
     this._url = url;
     this._target = target;
     this._tempTarget = target + '.part';
     var self = this;
     this._info('Start download of "' + url + '"');
-    this._request = request.get(this._url)
+    this._request = request.get(this._url, { timeout: 30000 })
       .on('response', function (response) {
         self._response = response;
         self._handleResponse();
@@ -30,6 +31,7 @@ HttpDownloader.prototype = {
   },
   abort: function () {
     if (this._request) {
+      self._errored = true;
       this._request.abort();
       this._clear();
     }
@@ -54,6 +56,7 @@ HttpDownloader.prototype = {
     var self = this;
     this._response.on('data', function (data) {
       self._lastData = new Date();
+      self._errored = false;
       self._debug('writing ' + data.length + ' bytes to ' + self._tempTarget);
       fs.appendFileSync(self._tempTarget, data);
       self._updateStatus(data);
@@ -74,6 +77,9 @@ HttpDownloader.prototype = {
   _bindOnResponseEnd: function () {
     var self = this;
     this._response.on('end', function () {
+      if (self._errored) {
+        return;
+      }
       self._clearStatus();
       self._rename(self._tempTarget, self._target);
       self._clear();
@@ -101,6 +107,7 @@ HttpDownloader.prototype = {
   _bindOnResponseError: function () {
     var self = this;
     this._response.on('error', function (err) {
+      self._errored = true;
       self._handleDownloadError(err);
     });
   },
