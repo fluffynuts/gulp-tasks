@@ -46,6 +46,7 @@ function promisifyStream(s) {
       reject.apply(null, Array.from(arguments));
     }
     s.on("error", runReject);
+    s.on("end", runResolve);
     s.on("finish", runResolve);
   });
 }

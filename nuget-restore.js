@@ -1,4 +1,5 @@
 var gulp = requireModule("gulp-with-help"),
+  debug = require("debug")("nuget-restore"),
   child_process = require("child_process"),
   debug = require("debug")("nuget-restore"),
   nugetRestore = requireModule("./gulp-nuget-restore"),
@@ -15,7 +16,12 @@ gulp.task("nuget-restore",
           .pipe(nugetRestore({
             debug: false
           }))
-      );
+      ).then(() => {
+        debug("nuget restore complete!");
+      }).catch(e => {
+        console.error("nugetRestore errs:", e);
+        throw new Error(e);
+      });
   });
 })
 
