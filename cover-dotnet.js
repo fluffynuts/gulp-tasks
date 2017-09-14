@@ -11,7 +11,7 @@ gulp.task('cover-dotnet', 'Runs tests from projects matching *.Tests with DotCov
                             'AutoMapper.*',
                             'WindsorTestHelpers.*',
                             'MvcTestHelpers',
-                            'TestUtils']
+                            'TestUtils',
+                            '*.Tests.*']
              }));
 });
-
