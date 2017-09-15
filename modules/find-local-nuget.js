@@ -1,6 +1,7 @@
 const
   fs = require("fs"),
   path = require("path"),
+  resolveNuget = require("./resolve-nuget"),
   downloadNuget = require("./download-nuget")
 
 function completedFile(path) {
@@ -12,11 +13,14 @@ var lastResolution;
 function findLocalNuget() {
     const
       targetFolder = __dirname,
-      localNuget = path.join(targetFolder, 'nuget.exe'),
+      localNuget = resolveNuget(undefined, false) || path.join(targetFolder, 'nuget.exe'),
       i = 1;
     return new Promise(function(resolve, reject) {
         if (lastResolution) {
             return resolve(lastResolution);
+        }
+        if (fs.existsSync(localNuget)) {
+            return resolve(localNuget);
         }
         downloadNuget(targetFolder).then(function(dl) {
             lastResolution = dl;

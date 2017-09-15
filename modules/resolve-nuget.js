@@ -23,7 +23,10 @@ function checkExists(nugetPath) {
 
 const parentOfTasksFolder = path.resolve(path.join(__dirname, '..', '..'));
 
-function resolveNuget(nugetPath) {
+function resolveNuget(nugetPath, errorOnMissing) {
+  if (errorOnMissing === undefined) {
+    errorOnMissing = true;
+  }
   // search for nuget:
   //  - given path
   //  - tools/nuget.exe
@@ -47,6 +50,9 @@ function resolveNuget(nugetPath) {
   }, null);
   if (resolved) {
     return resolved;
+  }
+  if (!errorOnMissing) {
+    return undefined;
   }
   if (nugetPath) {
     throw `configured nuget: "${nugetPath}" not found`;

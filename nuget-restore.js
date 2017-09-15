@@ -4,8 +4,7 @@ var gulp = requireModule("gulp-with-help"),
   debug = require("debug")("nuget-restore"),
   nugetRestore = requireModule("./gulp-nuget-restore"),
   promisify = requireModule("promisify"),
-  findLocalNuget = requireModule("find-local-nuget"),
-  resolveNuget = requireModule("./resolve-nuget");
+  findLocalNuget = requireModule("find-local-nuget");
 
 gulp.task("nuget-restore",
   "Restores all nuget packages in all solutions",
