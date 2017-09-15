@@ -317,6 +317,7 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
     `"-output:${options.coverageReportBase}.xml"`,
     `-filter:"+[*]* ${excludeFilter}"`,  // TODO: embetterment
     `-register:user`,
+    `-mergebyhash`,
     `"-searchdirs:${getUniqueDirsFrom(options.testAssemblies)}"`
   ];
   if (failOnError) {
