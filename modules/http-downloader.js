@@ -63,6 +63,9 @@ HttpDownloader.prototype = {
     });
   },
   _updateStatus: function (data) {
+    if (process.env.SUPPRESS_DOWNLOAD_PROGRESS) {
+      return;
+    }
     this._written += data.length;
     var perc = Math.round((100 * this._written) / this._downloadSize);
     if (perc != this._lastPerc) {
