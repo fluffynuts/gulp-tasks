@@ -8,6 +8,7 @@ var
   spawn = require("./spawn"),
   debug = require("debug")("gulp-cover"),
   mkdirp = require("mkdirp"),
+  os = require("os"),
   log = require("./log");
 
 var PLUGIN_NAME = "gulp-dotnetcover";
@@ -179,6 +180,22 @@ function quoted(str) {
   return /[ "]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
+function generateAgentsLimitFor(nunit, options) {
+  var raw = options.maxAgents || process.env.NUNIT_MAX_AGENTS,
+      limit = parseInt(raw);
+  if (isNaN(limit)) {
+    limit = os.cpus().length;
+    console.warn([
+      `Limiting to the number of CPUs Node can find: ${limit}`,
+      `(specify your own limit with:`,
+      `- the 'maxAgents' option or`,
+      `- the NUNIT_MAX_AGENTS environment variable`
+    ].join("\n"));
+  }
+
+  return `--agents=${limit}`;
+}
+
 function runCoverageWith(stream, allAssemblies, options) {
   var scopeAssemblies = [];
   var testAssemblies = allAssemblies.map(function (file) {
@@ -205,6 +222,7 @@ function runCoverageWith(stream, allAssemblies, options) {
     generateXmlOutputSwitchFor(nunit, options),
     generateNoShadowFor(nunit),
     generatePlatformSwitchFor(nunit, options),
+    generateAgentsLimitFor(nunit, options),
     testAssemblies.map(quoted).join(" ")];
   var agents = parseInt(options.agents);
   if (!isNaN(agents)) {
