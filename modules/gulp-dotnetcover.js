@@ -151,6 +151,10 @@ function isNunit3(nunitRunner) {
 }
 
 function generateXmlOutputSwitchFor(nunitRunner, options) {
+  if ((options.nunitOptions || "").indexOf("/result:") > -1) {
+    debug(`"/result" option already specified in nunitOptions("${options.nunitOptions}"), skipping generation`);
+    return "";
+  }
   var outFile = quoted(options.nunitOutput);
   return isNunit3(nunitRunner) ? `/result:${outFile};format=nunit2` : `/xml=${outFile}`;
 }
