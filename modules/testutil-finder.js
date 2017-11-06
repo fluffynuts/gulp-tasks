@@ -112,8 +112,8 @@ function searchForNunit(options) {
   }, "nunit-console runner");
 }
 
-function findTool(exeName) {
-  const allResults = lsR("tools").filter(function (p) {
+function findTool(exeName, underFolder) {
+  const allResults = lsR(underFolder || "tools").filter(function (p) {
     return p.toLowerCase().endsWith(exeName.toLowerCase());
   }).sort();
   return allResults[0] || which(exeName);
