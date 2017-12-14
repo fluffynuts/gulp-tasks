@@ -1,7 +1,7 @@
 // MUST use for running batch files
 // you can use this for other commands but spawn is better
 // as it handles IO better
-const 
+const
   log = require("./log"),
   child_process = require("child_process"),
   debug = require("debug")("exec");
@@ -79,7 +79,13 @@ var doSpawn = function (cmd, args, opts, handlers) {
       proc.on("close", function (code) {
         log.showTimeStamps();
         if (code) {
-          reject({ error: new Error("Exit code " + code) });
+          reject({
+            error: new Error([
+              "Exit code " + code,
+              "more info:",
+              "command: " + cmd,
+              "args: " + args.join(" ")].join("\n"))
+          });
         } else {
           resolve();
         }

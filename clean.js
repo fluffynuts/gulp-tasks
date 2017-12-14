@@ -7,7 +7,7 @@ var gulp = requireModule('gulp-with-help'),
 gulp.task('clean', 'Invokes the "Clean" target on all solutions in the tree', function() {
     return gulp.src('**/*.sln')
             .pipe(msbuild({
-                toolsVersion: 4.0,
+                toolsVersion: "auto",
                 targets: ['Clean'],
                 configuration: 'Debug',
                 stdout: true,
