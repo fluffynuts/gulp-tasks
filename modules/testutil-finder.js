@@ -7,6 +7,7 @@ var
   lsR = require("./ls-r"),
   whichLib = require("which"),
   programFilesFolder = process.env["ProgramFiles(x86)"] || process.env["ProgramFiles"],
+  getToolsFolder = require("./get-tools-folder"),
   localAppDataFolder = process.env["LOCALAPPDATA"];
 
 function which(command) {
@@ -113,7 +114,7 @@ function searchForNunit(options) {
 }
 
 function findTool(exeName, underFolder) {
-  const allResults = lsR(underFolder || "tools").filter(function (p) {
+  const allResults = lsR(underFolder || getToolsFolder()).filter(function (p) {
     return p.toLowerCase().endsWith(exeName.toLowerCase());
   }).sort();
   return allResults[0] || which(exeName);

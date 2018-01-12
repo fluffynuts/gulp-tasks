@@ -5,6 +5,7 @@ var
   path = require("path"),
   fs = require("fs"),
   testUtilFinder = require("./testutil-finder"),
+  getToolsFolder = require("./get-tools-folder"),
   spawn = require("./spawn"),
   debug = require("debug")("gulp-cover"),
   mkdirp = require("mkdirp"),
@@ -76,7 +77,7 @@ function dotCover(options) {
 }
 
 function findLocalExactExecutable(options, what) {
-  var toolsFolder = path.join(process.cwd(), "tools").toLowerCase();
+  var toolsFolder = path.join(process.cwd(), getToolsFolder()).toLowerCase();
   return what.reduce((acc, cur) => {
     if (acc || !options.exec[cur]) {
       return acc;

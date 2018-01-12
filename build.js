@@ -1,5 +1,6 @@
 const
   gulp = requireModule("gulp-with-help"),
+  getToolsFolder = requireModule("get-tools-folder"),
   runSequence = require("run-sequence"),
   msbuild = require("gulp-msbuild");
 
@@ -12,7 +13,7 @@ gulp.task("build",
     return gulp.src([
       "**/*.sln",
       "!**/node_modules/**/*.sln",
-      "!./tools/**/*.sln"
+      `!./${getToolsFolder()}/**/*.sln`
     ]).pipe(msbuild({
       toolsVersion: "auto",
       targets: ["Clean", "Build"],

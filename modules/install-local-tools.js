@@ -5,7 +5,7 @@ const
   exec = requireModule("exec"),
   path = require("path"),
   fs = require("fs"),
-  defaultToolsFolder = "tools",
+  getToolsFolder = require("./get-tools-folder"),
   nugetExe = "nuget.exe",
   del = require("del");
 
@@ -63,7 +63,7 @@ module.exports = {
     if (!Array.isArray(requiredTools)) {
       requiredTools = [requiredTools];
     }
-    const target = overrideToolsFolder || defaultToolsFolder;
+    const target = overrideToolsFolder || getToolsFolder();
     return ensureFolderExists(target)
       .then(() => cleanFoldersFrom(target))
       .then(() => downloadOrUpdateNuget(target))
@@ -75,7 +75,7 @@ module.exports = {
         ))));
   },
   clean: (overrideToolsFolder) => {
-    const target = overrideToolsFolder || defaultToolsFolder;
+    const target = overrideToolsFolder || getToolsFolder();
     return cleanFoldersFrom(target);
   }
 }
