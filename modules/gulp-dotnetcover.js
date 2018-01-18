@@ -10,6 +10,7 @@ var
   debug = require("debug")("gulp-cover"),
   mkdirp = require("mkdirp"),
   os = require("os"),
+  coverageTarget = process.env.COVERAGE_TARGET || "Debug",
   log = require("./log");
 
 var PLUGIN_NAME = "gulp-dotnetcover";
@@ -58,15 +59,15 @@ function dotCover(options) {
       var projectParts = filePart.split(".");
       var projectName = projectParts.slice(0, projectParts.length - 1).join(".");
       var isBin = parts.indexOf("bin") > -1;
-      var isDebugOrAgnostic = parts.indexOf("Debug") > -1 || parts.indexOf("bin") === parts.length - 2;
+      var isRelevantForCoverageTarget = parts.indexOf(coverageTarget) > -1 || parts.indexOf("bin") === parts.length - 2;
       var isProjectMatch = options.allowProjectAssemblyMismatch || parts.indexOf(projectName) > -1;
-      var include = isBin && isDebugOrAgnostic && isProjectMatch;
+      var include = isBin && isRelevantForCoverageTarget && isProjectMatch;
       if (include) {
         assemblies.push(file);
       } else if (DEBUG) {
         log.debug("ignore: " + filePath);
         log.debug("isBin: " + isBin);
-        log.debug("isDebugOrAgnostic: " + isDebugOrAgnostic);
+        log.debug("isDebugOrAgnostic: " + isRelevantForCoverageTarget);
         log.debug("isProjectMatch: " + isProjectMatch);
       }
       this.emit("data", file);
