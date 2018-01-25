@@ -1,5 +1,6 @@
 var gulp = requireModule("gulp-with-help"),
   fs = require("fs"),
+  os = require("os"),
   nunit = require("gulp-nunit-runner"),
   testUtilFinder = requireModule("testutil-finder");
 
@@ -16,8 +17,8 @@ gulp.task("test-dotnet",
   ], { read: false }).pipe(nunit({
     executable: testUtilFinder.latestNUnit({ architecture: "x86" }),
     options: {
-      result: "buildreports/nunit-result.xml"
+      result: "buildreports/nunit-result.xml",
+      agents: process.env.MAX_NUNIT_AGENTS || os.cpus() - 1
     }
   }));
 });
-
