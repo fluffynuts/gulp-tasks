@@ -11,6 +11,10 @@ gulp.task("test-dotnet",
   if (!fs.existsSync("buildreports")) {
     fs.mkdir("buildreports");
   }
+  var agents = parseInt(process.env.MAX_NUNIT_AGENTS);
+  if (isNaN(agents)) {
+    agents = os.cpus().length - 1;
+  }
   return gulp.src([
     "**/bin/Debug/**/*.Tests.dll",
     "**/bin/*.Tests.dll"
@@ -18,7 +22,7 @@ gulp.task("test-dotnet",
     executable: testUtilFinder.latestNUnit({ architecture: "x86" }),
     options: {
       result: "buildreports/nunit-result.xml",
-      agents: process.env.MAX_NUNIT_AGENTS || os.cpus() - 1
+      agents: agents
     }
   }));
 });
