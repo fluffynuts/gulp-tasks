@@ -55,6 +55,28 @@ function downloadOrUpdateNuget(targetFolder) {
   }
 }
 
+function generateNugetSourcesOptions(toolSpecifiedSource) {
+  if (toolSpecifiedSource) {
+    return ["-source", toolSpecifiedSource];
+  }
+  return (process.env.NUGET_SOURCES || "").split(',').reduce(
+    (acc, cur) => acc.concat(["-source", cur]), []
+  );
+}
+
+function generateNugetInstallArgsFor(toolSpec) {
+  // accept a tool package in the formats:
+  // packagename (eg 'nunit')
+  //  - retrieves the package according to the system config (original & default behavior)
+  // source/packagename (eg 'proget.mycompany.moo/nunit')
+  //  - retrieves the package from the named source (same as nuget.exe install nunit -source proget.mycompany.moo}
+  //  - allows consumer to be specific about where the package should come from
+  //  - allows third-parties to be specific about their packages being from, eg, nuget.org
+  var parts = toolSpec.split('/');
+  var toolPackage = parts.splice(parts.length - 1);
+  return ["install", toolPackage].concat(generateNugetSourcesOptions(parts[0]));
+}
+
 module.exports = {
   install: (requiredTools, overrideToolsFolder) => {
     if (!requiredTools) {
@@ -69,10 +91,11 @@ module.exports = {
       .then(() => downloadOrUpdateNuget(target))
       .then(() => Promise.all(
         requiredTools.map(tool => exec(
-          nugetExe,
-          ["install", tool],
-          { cwd: target }
-        ))));
+            nugetExe,
+            generateNugetInstallArgsFor(tool),
+            { cwd: target }
+          )
+        )));
   },
   clean: (overrideToolsFolder) => {
     const target = overrideToolsFolder || getToolsFolder();

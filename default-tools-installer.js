@@ -2,9 +2,9 @@ const
   gulp = requireModule("gulp-with-help"),
   installLocalTools = requireModule("install-local-tools"),
   tools = [
-    "nunit.console",
-    "opencover",
-    "reportgenerator"
+    "nuget.org/nunit.console",
+    "nuget.org/opencover",
+    "nuget.org/reportgenerator"
   ];
 
 gulp.task("default-tools-installer",
