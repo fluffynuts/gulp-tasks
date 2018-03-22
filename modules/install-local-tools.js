@@ -47,9 +47,14 @@ function downloadOrUpdateNuget(targetFolder) {
   debug(`Attempting to get tools nuget to: ${targetFolder}`);
   if (fs.existsSync(nugetPath)) {
     gutil.log("nuget.exe already exists... attempting self-update");
-    return exec(nugetPath, [
-      "update", "-self"
-    ]);
+    if (process.env.SKIP_NUGET_UPDATES) {
+      gutil.log("skipping updates because SKIP_NUGET_SELF_UPDATE environment variable set");
+      return Promise.resolve();
+    } else {
+      return exec(nugetPath, [
+        "update", "-self"
+      ]);
+    }
   } else {
     return downloadNuget(targetFolder);
   }
@@ -91,10 +96,10 @@ module.exports = {
       .then(() => downloadOrUpdateNuget(target))
       .then(() => Promise.all(
         requiredTools.map(tool => exec(
-            nugetExe,
-            generateNugetInstallArgsFor(tool),
-            { cwd: target }
-          )
+          nugetExe,
+          generateNugetInstallArgsFor(tool),
+          { cwd: target }
+        )
         )));
   },
   clean: (overrideToolsFolder) => {
