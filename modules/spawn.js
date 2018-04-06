@@ -1,7 +1,14 @@
 // use for spawning actual processes.
 // You must use exec if you want to run batch files
 var
-  debug = require('debug')('spawn'),
+  tryLoadDebug = function() {
+    try {
+      return require("debug")("spawn");
+    } catch (e) {
+      return function() { };
+    }
+  },
+  debug = tryLoadDebug(),
   child_process = require('child_process');
 
 var defaultOptions = {

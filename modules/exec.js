@@ -2,9 +2,29 @@
 // you can use this for other commands but spawn is better
 // as it handles IO better
 const
-  log = require("./log"),
+  tryRequire = function(module) {
+    try {
+      return require(module);
+    } catch (e) {
+      return null;
+    }
+  },
+  tryLoadDebug = function() {
+    try {
+      return tryRequire("debug")("exec");
+    } catch (e) {
+      return null;
+    }
+  },
+  logModule = tryRequire("./log"),
   child_process = require("child_process"),
-  debug = require("debug")("exec");
+  debug = tryLoadDebug()
+  log = logModule || {
+    error: console.error,
+    warning: console.warn,
+    info: console.log,
+    suppressTimeStamps: function() { }
+  };
 
 var defaultOptions = {
   cwd: process.cwd(),
@@ -110,11 +130,13 @@ var exec = function (cmd, args, opts, handlers) {
   args = args || [];
   opts = Object.assign({}, defaultOptions, opts);
   opts.maxBuffer = Number.MAX_SAFE_INTEGER;
-  debug("executing:")
-  debug(`- cmd: ${cmd}`);
-  debug(`- args: ${JSON.stringify(args)}`);
-  debug(`- opts: ${JSON.stringify(opts)}`);
-  debug(`- handlers: ${JSON.stringify(handlers)}`);
+  if (debug) {
+    debug("executing:")
+    debug(`- cmd: ${cmd}`);
+    debug(`- args: ${JSON.stringify(args)}`);
+    debug(`- opts: ${JSON.stringify(opts)}`);
+    debug(`- handlers: ${JSON.stringify(handlers)}`);
+  }
   return doExec(cmd, args, opts, handlers || {});
 };
 

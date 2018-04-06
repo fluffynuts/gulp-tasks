@@ -15,16 +15,20 @@ This is a starting-point which you can use (and track) to get gulp building your
 Here's what you do:
 
 1. add this repo as a submodule of your repo, at the root level
-- copy `start/gulpfile.js` and `start/package.json` to the root of your repo
-- edit your new `package.json` to set the package name appropriately
-- if you know some gulp, you may augment tasks by creating new tasks in the `local-tasks` folder 
-    parallel to the `gulp-tasks` folder
-- override provided tasks by copying them to the `local-tasks` folder
-  - edit them to your heart's content: you only have to edit the ones you want to change.
-- First time: run `npm install` to install required modules
-- Either:
-  - run `node node_modules/gulp/bin/gulp.js` OR
-  - install gulp globally with `npm install -g gulp` and then run `gulp`
+2. copy `start/gulpfile.js` to the root of your repo
+3. run `node gulpfile.js` in the root of your repo. This should guide you through:
+    - initializing a `package.json` with your repo's details
+    - installing the node modules required by `gulp-tasks` to run
+    - setting up two npm scripts:
+      - `gulp` which can be used to run gulp commands without a globally-installed gulp. Simply do something like `npm run gulp {taskname}`
+      - `test` which will run the `test-dotnet` task from `gulp-tasks`
+4. if you know some gulp, you may augment tasks by creating new tasks in the `local-tasks` folder parallel to the `gulp-tasks` folder
+5. override provided tasks by copying them to the `local-tasks` folder
+    - edit them to your heart's content: you only have to edit the ones you want to change.
+6. First time: run `npm install` to install required modules
+7. Either:
+    - run `node node_modules/gulp/bin/gulp.js` OR
+    - install gulp globally with `npm install -g gulp` and then run `gulp`
 
 ## Assumptions
 1. You're using MSBuild to build your stuff and Visual Studio for development (at least somewhere, so you get .sln files)
@@ -44,7 +48,7 @@ Available tasks (at time of writing) include:
         * install nuget packages for all solutions in the repo
         * install tooling required by shell `install-tools` task
         * build: msbuild your solution(s): all .sln files in the repo
-        * cover-dotnet: run all NUnit tests through dotCover (searches for dotCover and NUnit in 
+        * cover-dotnet: run all NUnit tests through dotCover (searches for dotCover and NUnit in
             expected locations)
         * run shell `generate-reports` task to output pretty reports.
 - build
@@ -56,33 +60,33 @@ Available tasks (at time of writing) include:
 - test-javascript
     - runs karma in a single-run mode, recording coverage\*\*
 - git-submodules
-    - attempts to update all git submodules with the latest (HEAD) from the repositories they 
+    - attempts to update all git submodules with the latest (HEAD) from the repositories they
         point at. Think along the lines of svn:externals
 - nuget-restore
-    - attempts to restore all nuget packages for all solutions\*. Will download it's own 
+    - attempts to restore all nuget packages for all solutions\*. Will download it's own
     `nuget.exe` unless you specify otherwise.
 - sonar
     - attempts to run sonar in your project folder. Note that this task is highly dependant on a path to sonar, so you'll probably want to modify it to point at where you have Sonar installed.
 - test-dotnet
-    - (currently) attempts to run nunit tests from all Test projects, using a 
-        convention-over-configuration method: All assemblies that it can find which end in 
-        .Tests.dll are candidates for testing -- the ones selected must reside in the Debug build 
-        output of a corresponding project folder, ie 
-        `SomeProject.Tests/bin/Debug/SomeProject.Tests.dll`. The task will also look one up from 
-        this if the Debug folder isn't found, so you can use this against test projects which are 
+    - (currently) attempts to run nunit tests from all Test projects, using a
+        convention-over-configuration method: All assemblies that it can find which end in
+        .Tests.dll are candidates for testing -- the ones selected must reside in the Debug build
+        output of a corresponding project folder, ie
+        `SomeProject.Tests/bin/Debug/SomeProject.Tests.dll`. The task will also look one up from
+        this if the Debug folder isn't found, so you can use this against test projects which are
         Web projects at heart. \*\*\*
 - cover-dotnet
-    - attempts to run tests with coverage on your test assemblies. You will most likely want to 
-      edit this task to add exclusions for external libraries and such that your test project is 
+    - attempts to run tests with coverage on your test assemblies. You will most likely want to
+      edit this task to add exclusions for external libraries and such that your test project is
       using, though the defaults are sane. Will attempt to find installed or local dotCover
       or OpenCover to run coverage with
+- install-tools (now a default part of the pipeline - see the `install-tools.js` file for information on how to disable this task, if it's not interesting to you)
+    - install local build tools to the tools/ folder in your solution (by default, can be overridden by the BUILD_TOOLS_FOLDER environment variable)
+    - depends on `default-tools-installer`, providing:
+        - nunit.console
+        - opencover
+        - reportgenerator
 - shell tasks (have no default behavior, but hook into the build pipeline):
-    - install-tools
-        - install local build tools to the tools/ folder in your solution
-        - you can get sane behavior by creating a local task which depends on `default-tools-installer`, providing:
-            - nunit.console
-            - opencover
-            - reportgenerator
     - generate-reports
         - generate reports after building
         - you can get sane behavior by creating a local task which depends on
@@ -95,17 +99,16 @@ Available tasks (at time of writing) include:
 \*\*\* These tasks attempt to find the highest stable releases of their dependancies (dotcover.exe and nunit-console-{platform}.exe) according to default install paths by default.
 
 ## Shell tasks
-Shell tasks do nothing out of the box. You have to opt into the default behavior or write your 
-own. If you think that the default behavior is what you want, create a task which simply depends 
+Shell tasks do nothing out of the box. You have to opt into the default behavior or write your
+own. If you think that the default behavior is what you want, create a task which simply depends
 on the default behavior. For example, if you want local tooling and reports out of the box, you
 could create `local-tasks/use-default-tasks.js` with:
 ```
 const gulp = requireModule("gulp-with-help");
-gulp.task("install-tools", "Install local tools", ["default-tools-installer"]);
 gulp.task("generate-reports", "Generate coverage reports", ["default-report-generator"]);
 ```
 
-The default behaviors here are left out so as not to interfere with existing users.
+The default behaviors here are left out so as not to interfere with existing users. `install-tools` has been included by default now that I find I need it more often than not. Anyone who updates their reference to `gulp-tasks` and sees extra stuff being done should follow the instructions in `install-tools.js`.
 
 ## Using modules from `gulp-tasks`
 If you want to use any of the modules found under `gulp-tasks/modules`, make use of the

@@ -1,10 +1,8 @@
 {
-  "name": "Please set your own project name here",
-  "scripts":{
-    "test": "gulp test-dotnet"
-  },
+  "name": "This is used as a reference for dev dependencies only (disregarding versions)",
   "devDependencies": {
     "chai": "^4.0.2",
+    "cross-env": "^5.1.4",
     "debug": "^2.6.8",
     "del": "^3.0.0",
     "event-stream": "^3.3.4",
