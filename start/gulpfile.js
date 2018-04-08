@@ -26,7 +26,7 @@ if (!fs.existsSync("package.json")) {
   initializeNpm();
 } else if (mustInstallDeps()) {
   console.log(
-    "Now we just need to install the dependencies require for gulp-tasks to run (:"
+    "Now we just need to install the dependencies required for gulp-tasks to run (:"
   );
   installGulpTaskDependencies().then(() =>
     console.log("You're good to go with `gulp-tasks`. Try running `npm run gulp build`")
@@ -44,7 +44,7 @@ function mustInstallDeps() {
   var
     package = require("./package.json"),
     devDeps = package.devDependencies || {},
-    haveDeps = Object.keys(package.devDependencies),
+    haveDeps = Object.keys(devDeps),
     needDeps = requiredDeps();
   return needDeps.reduce((acc, cur) => {
     return acc || haveDeps.indexOf(cur) == -1;
