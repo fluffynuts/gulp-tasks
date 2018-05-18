@@ -194,7 +194,7 @@ function generateXmlOutputSwitchFor(nunitRunner, options) {
     );
     return "";
   }
-  var outFile = quoted(options.nunitOutput);
+  var outFile = options.nunitOutput;
   return isNunit3(nunitRunner)
     ? `/result:${outFile};format=nunit2`
     : `/xml=${outFile}`;
@@ -270,18 +270,17 @@ function runCoverageWith(stream, allAssemblies, options) {
   var nunit = findNunit(stream, options);
 
   var nunitOptions = [
-    updateLabelsOptionFor(options.nunitOptions),
     generateXmlOutputSwitchFor(nunit, options),
     generateNoShadowFor(nunit),
     generatePlatformSwitchFor(nunit, options),
     generateAgentsLimitFor(nunit, options),
     testAssemblies.map(quoted).join(" ")
-  ];
+  ].concat(updateLabelsOptionFor(options.nunitOptions).split(" "));
   var agents = parseInt(options.agents);
   if (!isNaN(agents)) {
     nunitOptions.push("--agents=" + agents);
   }
-  nunitOptions = nunitOptions.join(" ");
+  nunitOptions = nunitOptions.map(a => quoteIfSpaced(a, "\"\"")).join(" ");
 
   var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
   debug(`Running tool: ${coverageToolName}`);
@@ -405,17 +404,26 @@ function shouldFailOnError(options) {
     ? true
     : !!options.failOnError;
 }
+function quoteIfSpaced(str, quote) {
+  if (str.indexOf(" ") == -1) {
+    return str;
+  }
+  quote = quote || "\"";
+  return `${quote}${str}${quote}`;
+}
+
 function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
   const exclude =
       options.exclude && options.exclude.length ? options.exclude : ["*.Tests"],
     failOnError = shouldFailOnError(options),
-    excludeFilter = generateOpenCoverFilter("-", exclude);
+    excludeFilter = generateOpenCoverFilter("-", exclude),
+    dq = "\"\"";
 
   const result = [
     `"-target:${nunit}"`,
     `"-targetargs:${nunitOptions}"`,
     `"-targetdir:${process.cwd()}"`, // TODO: test me please
-    `"-output:${options.coverageReportBase}.xml"`,
+    `"-output:${options.coverageReportBase + ".xml"}"`,
     `-filter:"+[*]* ${excludeFilter}"`, // TODO: embetterment
     `-register:user`,
     `-mergebyhash`,
@@ -433,7 +441,7 @@ function getUniqueDirsFrom(filePaths) {
       var dirName = path.dirname(cur);
       var required = !acc.filter(p => cur === p)[0];
       if (required) {
-        acc.push(dirName);
+        acc.push(quoteIfSpaced(dirName, "\"\""));
       }
       return acc;
     }, [])

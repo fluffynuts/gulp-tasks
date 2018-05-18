@@ -1,23 +1,29 @@
-const
-  gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp-with-help"),
   path = require("path"),
   findTool = requireModule("testutil-finder").findTool,
-  exec = requireModule("exec"),
+  spawn = requireModule("spawn"),
   fs = require("fs"),
-  defaultExclusions = "-" + [
-    "*.Tests",
-    "FluentMigrator",
-    "FluentMigrator.Runner",
-    "PeanutButter.*",
-    "GenericBuilderTestArtifactBuilders",
-    "GenericBuilderTestArtifactEntities"
-  ].join(";-"),
+  defaultExclusions =
+    "-" +
+    [
+      "*.Tests",
+      "FluentMigrator",
+      "FluentMigrator.Runner",
+      "PeanutButter.*",
+      "GenericBuilderTestArtifactBuilders",
+      "GenericBuilderTestArtifactEntities"
+    ].join(";-"),
   defaultReportsPath = path.join("buildreports", "coverage.xml"),
   buildReportsPath = process.env.COVERAGE_XML || defaultReportsPath,
   coverageExclude = process.env.COVERAGE_EXCLUDE || defaultExclusions;
 
 function findCoverageXml() {
   return fs.existsSync(buildReportsPath) ? buildReportsPath : null;
+}
+
+function quoteIfSpaced(str, q) {
+  q = q || '"';
+  return str.indexOf(" ") > -1 ? `${q}${str}${q}` : str;
 }
 
 gulp.task(
@@ -32,12 +38,10 @@ gulp.task(
     if (!coverageXml) {
       return Promise.reject("Can't find coverage.xml");
     }
-    return exec(
-      reportGenerator,
-      [
-        `-reports:${coverageXml}`,
-        `-targetdir:${path.join("buildreports", "coverage")}`,
-        `"-assemblyfilters:${coverageExclude}"`
-      ]
-    );
-  });
+    return spawn(reportGenerator, [
+      `-reports:${quoteIfSpaced(coverageXml)}`,
+      `-targetdir:${quoteIfSpaced(path.join("buildreports", "coverage"))}`,
+      `"-assemblyfilters:${coverageExclude}"`
+    ]);
+  }
+);
