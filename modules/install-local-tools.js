@@ -65,7 +65,7 @@ function generateNugetSourcesOptions(toolSpecifiedSource) {
     return ["-source", toolSpecifiedSource];
   }
   return (process.env.NUGET_SOURCES || "").split(',').reduce(
-    (acc, cur) => acc.concat(["-source", cur]), []
+    (acc, cur) => acc.concat(cur ? ["-source", cur] : []), []
   );
 }
 
