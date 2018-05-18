@@ -17,7 +17,7 @@ gulp.task("build",
     ]).pipe(msbuild({
       toolsVersion: "auto",
       targets: ["Clean", "Build"],
-      configuration: "Debug",
+      configuration: process.env.BUILD_CONFIGURATION || "Debug",
       stdout: true,
       verbosity: "minimal",
       errorOnFail: true,
