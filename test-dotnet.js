@@ -22,7 +22,8 @@ gulp.task("test-dotnet",
     executable: testUtilFinder.latestNUnit({ architecture: "x86" }),
     options: {
       result: "buildreports/nunit-result.xml",
-      agents: agents
+      agents: agents,
+      labels: "All"
     }
   }));
 });
