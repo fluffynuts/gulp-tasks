@@ -6,7 +6,6 @@ var gutil = require("gulp-util"),
   testUtilFinder = require("./testutil-finder"),
   getToolsFolder = require("./get-tools-folder"),
   spawn = require("./spawn"),
-  debug = require("debug")("gulp-cover"),
   mkdirp = require("mkdirp"),
   os = require("os"),
   coverageTarget = process.env.COVERAGE_TARGET || "Debug",
@@ -268,19 +267,21 @@ function runCoverageWith(stream, allAssemblies, options) {
   var coverageToolExe = findCoverageTool(stream, options);
   debug(`selected coverage tool exe: ${coverageToolExe}`);
   var nunit = findNunit(stream, options);
-
+  debug("testAssemblies:", testAssemblies);
+  var q = quoteIfSpaced;
   var nunitOptions = [
-    generateXmlOutputSwitchFor(nunit, options),
-    generateNoShadowFor(nunit),
-    generatePlatformSwitchFor(nunit, options),
-    generateAgentsLimitFor(nunit, options),
+    q(generateXmlOutputSwitchFor(nunit, options)),
+    q(generateNoShadowFor(nunit)),
+    q(generatePlatformSwitchFor(nunit, options)),
+    q(generateAgentsLimitFor(nunit, options)),
     testAssemblies.map(quoted).join(" ")
-  ].concat(updateLabelsOptionFor(options.nunitOptions).split(" "));
+  ].concat(q(updateLabelsOptionFor(options.nunitOptions).split(" ")));
+  debug("nunit options: ", nunitOptions);
   var agents = parseInt(options.agents);
   if (!isNaN(agents)) {
     nunitOptions.push("--agents=" + agents);
   }
-  nunitOptions = nunitOptions.map(a => quoteIfSpaced(a, "\"\"")).join(" ");
+  nunitOptions = nunitOptions.join(" ");
 
   var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
   debug(`Running tool: ${coverageToolName}`);
