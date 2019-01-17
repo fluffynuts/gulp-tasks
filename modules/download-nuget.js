@@ -37,17 +37,6 @@ function validateCanRunExe(exePath) {
 
       setTimeout(testExe, 1000);
     }, 1000);
-
-    for (var i = 0; i < 10; i++) {
-      try {
-        exec(exePath, ["update", "-self"]);
-        resolve();
-      } catch (e) {
-        lastMessage = e.message || lastMessage;
-        logger.debug(`failed to run executable (${e.message}); ${i < 9 ? "will try again" : "giving up"}`);
-      }
-    }
-    reject(`Unable to run executable at ${exePath}: ${lastMessage}`);
   });
 }
 
