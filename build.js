@@ -1,7 +1,6 @@
 const
   gulp = requireModule("gulp-with-help"),
   getToolsFolder = requireModule("get-tools-folder"),
-  runSequence = require("run-sequence"),
   msbuild = require("gulp-msbuild");
 
 gulp.task("prebuild", ["nuget-restore", "install-tools"]);
