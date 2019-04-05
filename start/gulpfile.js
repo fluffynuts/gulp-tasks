@@ -8,23 +8,19 @@
   and / or override the default task-set.
  */
 var fs = require("fs"),
-  gulpTasksFolder = "gulp-tasks"; // if you cloned elsewhere, you"ll need to modify this
-var originalRequire = global.require;
-requireModule = global.requireModule = function(mod) {
-  var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
-  if (fs.existsSync(modulePath)) {
-    return originalRequire(modulePath);
-  } else {
-    return originalRequire(mod);
-  }
-};
+  gulpTasksFolder = "gulp-tasks", // if you cloned elsewhere, you"ll need to modify this
+  requireModule = global.requireModule = function(mod) {
+    var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
+    if (fs.existsSync(modulePath + ".js")) {
+        return require(modulePath);
+    } else {
+        return require(mod);
+    }
+  };
 
-global.require = requireModule; // hijack!
 
 if (!fs.existsSync(gulpTasksFolder)) {
-  console.error(
-    "Either clone `gulp-tasks` to the `gulp-tasks` folder or modify this script to avoid sadness"
-  );
+  console.error("Either clone `gulp-tasks` to the `gulp-tasks` folder or modify this script to avoid sadness");
   process.exit(2);
 }
 
@@ -38,23 +34,20 @@ if (!fs.existsSync("package.json")) {
     "Now we just need to install the dependencies required for gulp-tasks to run (:"
   );
   installGulpTaskDependencies().then(() =>
-    console.log(
-      "You're good to go with `gulp-tasks`. Try running `npm run gulp build`"
-    )
+    console.log("You're good to go with `gulp-tasks`. Try running `npm run gulp build`")
   );
 } else {
   bootstrapGulp();
 }
 
 function requiredDeps() {
-  var starter = require([".", gulpTasksFolder, "start", "package.json"].join(
-    "/"
-  ));
-  return Object.keys(starter.devDependencies);
+    var starter = require([".", gulpTasksFolder, "start", "package.json"].join("/"));
+    return Object.keys(starter.devDependencies);
 }
 
 function mustInstallDeps() {
-  var package = require("./package.json"),
+  var
+    package = require("./package.json"),
     devDeps = package.devDependencies || {},
     haveDeps = Object.keys(devDeps),
     needDeps = requiredDeps();
@@ -65,34 +58,25 @@ function mustInstallDeps() {
 
 function initializeNpm() {
   var spawn = requireModule("spawn");
-  runNpmWith(["init"]).then(() =>
-    spawn("cmd", ["/c", "node", process.argv[1]])
-  );
+  runNpmWith(["init"])
+  .then(() => spawn("cmd", [ "/c", "node", process.argv[1]]));
 }
 
 function installGulpTaskDependencies() {
-  var findFirstMissing = function() {
+  var
+    findFirstMissing = function() {
       var args = Array.from(arguments);
-      return args.reduce(
-        (acc, cur) => acc || (fs.existsSync(cur) ? acc : cur),
-        undefined
-      );
+      return args.reduce((acc, cur) => acc || (fs.existsSync(cur) ? acc : cur), undefined);
     },
+    deps = requiredDeps(),
     package = require("./package.json"),
-    buildTools = findFirstMissing(
-      "tools",
-      "build-tools",
-      ".tools",
-      ".build-tools"
-    ),
+    buildTools = findFirstMissing("tools", "build-tools", ".tools", ".build-tools"),
     prepend = `cross-env BUILD_TOOLS_FOLDER=${buildTools}`;
 
   package.scripts["gulp"] = `${prepend} gulp`;
   package.scripts["test"] = `${prepend} gulp test-dotnet`;
 
-  fs.writeFileSync("package.json", JSON.stringify(package, null, 4), {
-    encoding: "utf8"
-  });
+  fs.writeFileSync("package.json", JSON.stringify(package, null, 4), { encoding: "utf8" });
 
   return runNpmWith(["install", "--save-dev"].concat(deps));
 }
