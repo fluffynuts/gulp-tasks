@@ -12,75 +12,58 @@ if (gulpVersion.major === 3) {
   // NB: new deps:
   // - undertaker-forward-reference
   // - chalk
-  var
-    help = {};
-    FwdRef = require("undertaker-forward-reference"),
-    gulp = require("gulp");
+  var help = {};
+  (FwdRef = require("undertaker-forward-reference")), (gulp = require("gulp"));
   gulp.registry(new FwdRef());
-  var
-    originalTask = gulp.task,
+  var originalTask = gulp.task,
     newTask = function() {
-      var args = Array.from(arguments);
-      args = args.map((a, idx) => {
-        return Array.isArray(a)
-        // when we get an array of dependencies, we have to pack that
-        // up into:
-        //  -> run deps in parallel (original gulp behavior)
-        //  -> run the final provided function in series after deps
-        //     - gulp4 simply ignores the 3rd argument, so ¯\_(ツ)_/¯
-          ? gulp.series(gulp.parallel(a), args[idx + 1] || (cb => cb()))
-          : a;
-      });
-      help[args[0]] = "";
-      if (args.length < 3) {
-        // not help-enabled, just pass through
-        originalTask.apply(gulp, args);
-        return originalTask.call(gulp, args[0]);
-      } else {
-        if (
-          typeof args[0] === "string" &&
-          typeof args[1] === "string" &&
-          typeof args[2] === "function"
-        ) {
-          // looks like an attempt to use the old gulp-help module
-          originalTask.call(gulp, args[0], args[2]);
-          // because gulp couldn't just return the task :/
-          var task = originalTask.call(gulp, args[0]);
-          task.description = args[1];
-          help[args[0]] = args[1];
-          return task;
-        } else {
-          // ¯\_(ツ)_/¯
-          return originalTask.apply(gulp, args);
-        }
+      let
+        args = Array.from(arguments),
+        taskName = args[0],
+        helpMessage = "";
+      if (typeof args[1] === "string") {
+        helpMessage = args[1];
+        args.splice(1, 1);
       }
+      if (Array.isArray(args[1])) {
+        const parallel = args[1].length === 1 ? gulp.task(args[1][0]) : gulp.parallel(args[1]);
+        args[1] = gulp.series(
+          parallel,
+          args[2] || (() => Promise.resolve())
+        );
+        args.splice(2, 1);
+      }
+      help[taskName] = helpMessage;
+      originalTask.call(gulp, taskName, args[1]);
+      const generatedTask = originalTask.call(gulp, taskName);
+      generatedTask.description = helpMessage;
+      return generatedTask;
     };
-    gulp.task = newTask.bind(gulp);
-    gulp.task("help", () => {
-      var
-        chalk = require("chalk"),
-        green = chalk.greenBright.bind(chalk),
-        yellow = chalk.yellowBright.bind(chalk),
-        cyan = chalk.cyanBright.bind(chalk);
+  gulp.task = newTask.bind(gulp);
+  gulp.task("help", () => {
+    var chalk = require("chalk"),
+      green = chalk.greenBright.bind(chalk),
+      yellow = chalk.yellowBright.bind(chalk),
+      cyan = chalk.cyanBright.bind(chalk);
 
-      return new Promise((resolve, reject) => {
-        console.log(yellow("Task help"));
-        var keys = Object.keys(help).sort();
-        var longestKeyLength = keys.reduce(function(acc, cur) {
-          return cur.length > acc ? cur.length : acc;
-        }, 0);
-        keys.forEach(function(key) {
-          if (!help[key]) {
-            return console.log(cyan(key));
-          }
-          var helpMessage = help[key];
-          while (key.length < longestKeyLength) {
-            key += " ";
-          }
-          console.log(cyan(key) + "  " + green(helpMessage));
-        });
-        resolve();
+    return new Promise((resolve, reject) => {
+      console.log(yellow("Task help"));
+      var keys = Object.keys(help).sort();
+      var longestKeyLength = keys.reduce(function(acc, cur) {
+        return cur.length > acc ? cur.length : acc;
+      }, 0);
+      keys.forEach(function(key) {
+        if (!help[key]) {
+          return console.log(cyan(key));
+        }
+        var helpMessage = help[key];
+        while (key.length < longestKeyLength) {
+          key += " ";
+        }
+        console.log(cyan(key) + "  " + green(helpMessage));
       });
+      resolve();
     });
-    module.exports = gulp;
+  });
+  module.exports = gulp;
 }
