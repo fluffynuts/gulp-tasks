@@ -9,10 +9,17 @@
  */
 var fs = require("fs"),
   gulpTasksFolder = "gulp-tasks"; // if you cloned elsewhere, you"ll need to modify this
-requireModule = global.requireModule = function(module) {
-  var modulePath = [".", gulpTasksFolder, "modules", module].join("/");
-  return require(modulePath);
+var originalRequire = global.require;
+requireModule = global.requireModule = function(mod) {
+  var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
+  if (fs.existsSync(modulePath)) {
+    return originalRequire(modulePath);
+  } else {
+    return originalRequire(mod);
+  }
 };
+
+global.require = requireModule; // hijack!
 
 if (!fs.existsSync(gulpTasksFolder)) {
   console.error(

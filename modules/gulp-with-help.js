@@ -4,9 +4,9 @@
 //    - facilitate forward references, as per original gulp
 //    -
 var gulpInfo = require("gulp/package.json"),
-  gulpVersion = parseInt(gulpInfo.version.split(".")[0], 10);
+  gulpVersion = requireModule("gulp-version");
 
-if (gulpVersion === 3) {
+if (gulpVersion.major === 3) {
   module.exports = require("gulp-help")(require("gulp"));
 } else {
   // NB: new deps:
@@ -20,9 +20,15 @@ if (gulpVersion === 3) {
   var
     originalTask = gulp.task,
     newTask = function() {
-      var args = Array.from(arguments).map(a => {
+      var args = Array.from(arguments);
+      args = args.map((a, idx) => {
         return Array.isArray(a)
-          ? gulp.parallel(a)
+        // when we get an array of dependencies, we have to pack that
+        // up into:
+        //  -> run deps in parallel (original gulp behavior)
+        //  -> run the final provided function in series after deps
+        //     - gulp4 simply ignores the 3rd argument, so ¯\_(ツ)_/¯
+          ? gulp.series(gulp.parallel(a), args[idx + 1] || (cb => cb()))
           : a;
       });
       help[args[0]] = "";
