@@ -71,9 +71,6 @@ function installGulpTaskDependencies() {
         undefined
       );
     },
-    deps = requiredDeps().map(d => {
-      return d === "gulp" ? "gulp@^3.9.1" : d; // gulp4 breaks with 3 and stuff like gulp-help doesn't (yet) work with it
-    }),
     package = require("./package.json"),
     buildTools = findFirstMissing(
       "tools",
