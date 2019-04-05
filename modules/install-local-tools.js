@@ -69,6 +69,7 @@ function generateNugetSourcesOptions(toolSpecifiedSource) {
   );
 }
 
+
 function generateNugetInstallArgsFor(toolSpec) {
   // accept a tool package in the formats:
   // packagename (eg 'nunit')
@@ -82,11 +83,19 @@ function generateNugetInstallArgsFor(toolSpec) {
   return ["install", toolPackage].concat(generateNugetSourcesOptions(parts[0]));
 }
 
+// gulp4 doesn't seem to protect against repeated dependencies, so this is a safeguard
+//  here to prevent accidental parallel install
+var installing = false;
 module.exports = {
   install: (requiredTools, overrideToolsFolder) => {
     if (!requiredTools) {
       throw new Error("No required tools set");
     }
+    if (installing) {
+      console.warn("default tools installer already running...");
+      return Promise.resolve();
+    }
+    installing = true;
     if (!Array.isArray(requiredTools)) {
       requiredTools = [requiredTools];
     }
@@ -95,12 +104,16 @@ module.exports = {
       .then(() => cleanFoldersFrom(target))
       .then(() => downloadOrUpdateNuget(target))
       .then(() => Promise.all(
-        requiredTools.map(tool => exec(
-          nugetExe,
-          generateNugetInstallArgsFor(tool),
-          { cwd: target }
+        requiredTools.map(tool =>
+          exec(
+            nugetExe,
+            generateNugetInstallArgsFor(tool),
+            { cwd: target }
+          )
         )
-        )));
+      )).then(() => {
+        installing = false;
+      });
   },
   clean: (overrideToolsFolder) => {
     const target = overrideToolsFolder || getToolsFolder();

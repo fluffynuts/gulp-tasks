@@ -3,7 +3,7 @@ const
   getToolsFolder = requireModule("get-tools-folder"),
   msbuild = require("gulp-msbuild");
 
-gulp.task("prebuild", ["nuget-restore", "install-tools"]);
+gulp.task("prebuild", ["nuget-restore"]);
 
 gulp.task("build",
   "Builds all Visual Studio solutions in tree",
