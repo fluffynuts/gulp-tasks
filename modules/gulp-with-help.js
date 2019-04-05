@@ -9,6 +9,14 @@ var gulpInfo = require("gulp/package.json"),
 if (gulpVersion.major === 3) {
   module.exports = require("gulp-help")(require("gulp"));
 } else {
+  function setTaskName(task, name) {
+    task.displayName = name;
+    Object.defineProperty(task, "name", {
+      get() {
+        return name;
+      }
+    });
+  }
   // NB: new deps:
   // - undertaker-forward-reference
   // - chalk
@@ -26,11 +34,13 @@ if (gulpVersion.major === 3) {
         args.splice(1, 1);
       }
       if (Array.isArray(args[1])) {
-        const parallel = args[1].length === 1 ? gulp.task(args[1][0]) : gulp.parallel(args[1]);
+        const parallel = gulp.parallel(args[1]);
+        setTaskName(parallel, `pre-${taskName}`);
         args[1] = gulp.series(
           parallel,
           args[2] || (() => Promise.resolve())
         );
+        setTaskName(args[1], `[${taskName}]`);
         args.splice(2, 1);
       }
       help[taskName] = helpMessage;
