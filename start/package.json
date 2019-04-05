@@ -1,7 +1,8 @@
 {
-  "name": "This is used as a reference for dev dependencies only (disregarding versions)",
+  "name": "this-is-used-as-a-reference-for-dev-dependencies-only-disregarding-versions",
   "devDependencies": {
     "chai": "^4.0.2",
+    "chalk": "^2.4.2",
     "cross-env": "^5.1.4",
     "debug": "^2.6.8",
     "del": "^3.0.0",
@@ -32,6 +33,7 @@
     "requirejs": "^2.3.3",
     "run-sequence": "^1.2.2",
     "through2": "^2.0.3",
+    "undertaker-forward-reference": "^1.0.2",
     "which": "^1.2.14"
   }
 }
