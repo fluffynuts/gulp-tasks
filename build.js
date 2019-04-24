@@ -20,7 +20,7 @@ gulp.task("build",
       stdout: true,
       verbosity: "minimal",
       errorOnFail: true,
-      architecture: "x64",
+      architecture: "AnyCPU",
       nologo: false
     }));
   });
