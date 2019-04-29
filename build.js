@@ -20,7 +20,9 @@ gulp.task("build",
       stdout: true,
       verbosity: "minimal",
       errorOnFail: true,
-      architecture: "AnyCPU",
+      solutionPlatform: process.env.BUILD_PLATFORM || "Any CPU",
+      // NB: this is the MSBUILD architecture, NOT your desired output architecture
+      architecture: process.env.BUILD_ARCHITECTURE || "x64",
       nologo: false
     }));
   });
