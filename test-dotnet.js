@@ -1,16 +1,26 @@
 var gulp = requireModule("gulp-with-help"),
   fs = require("fs"),
+  areAllDotnetCore = requireModule("are-all-dotnet-core"),
   os = require("os"),
+  { test } = require("gulp-dotnet-cli"),
   nunit = require("gulp-nunit-runner"),
+  getToolsFolder = requireModule("get-tools-folder"),
   testUtilFinder = requireModule("testutil-finder");
 
 gulp.task("test-dotnet",
   "Runs all tests in your solution via NUnit",
   [ "build" ],
-  function () {
+  async () => {
   if (!fs.existsSync("buildreports")) {
-    fs.mkdir("buildreports");
+    fs.mkdirSync("buildreports");
   }
+
+  const projects = [ "**/*.Tests.csproj", "**/Tests.csproj", "**/Test.csproj", "!**/node_modules/**/*.csproj", `!./${getToolsFolder}/**/*.csproj`];
+  if (await areAllDotnetCore(projects)) {
+    return gulp.src(projects)
+      .pipe(test());
+  }
+
   var agents = parseInt(process.env.MAX_NUNIT_AGENTS);
   if (isNaN(agents)) {
     agents = os.cpus().length - 1;
