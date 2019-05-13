@@ -33,6 +33,7 @@
     "require-dir": "^0.3.2",
     "requirejs": "^2.3.3",
     "run-sequence": "^1.2.2",
+    "temp": "^0.9.0",
     "through2": "^2.0.3",
     "undertaker-forward-reference": "^1.0.2",
     "which": "^1.2.14",

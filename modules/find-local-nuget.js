@@ -13,8 +13,7 @@ var lastResolution;
 function findLocalNuget() {
     const
       targetFolder = __dirname,
-      localNuget = resolveNuget(undefined, false) || path.join(targetFolder, 'nuget.exe'),
-      i = 1;
+      localNuget = resolveNuget(undefined, false) || path.join(targetFolder, 'nuget.exe');
     return new Promise(function(resolve, reject) {
         if (lastResolution) {
             return resolve(lastResolution);

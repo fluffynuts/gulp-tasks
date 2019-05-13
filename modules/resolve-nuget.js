@@ -22,7 +22,11 @@ function checkExists(nugetPath) {
 
 const parentOfTasksFolder = path.resolve(path.join(__dirname, "..", ".."));
 
+let lastResolution = null;
 function resolveNuget(nugetPath, errorOnMissing) {
+  if (lastResolution !== null) {
+    return lastResolution;
+  }
   if (errorOnMissing === undefined) {
     errorOnMissing = true;
   }
@@ -48,7 +52,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
     return acc || cur;
   }, null);
   if (resolved) {
-    return resolved;
+    return lastResolution = resolved;
   }
   if (!errorOnMissing) {
     return undefined;
