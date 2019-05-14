@@ -74,7 +74,9 @@ function installGulpTaskDependencies() {
     prepend = `cross-env BUILD_TOOLS_FOLDER=${buildTools}`;
 
   package.scripts["gulp"] = `${prepend} gulp`;
-  package.scripts["test"] = `${prepend} gulp test-dotnet`;
+  package.scripts["test"] = `run-s "gulp test-dotnet"`;
+  package.scripts["build"] = `run-s "gulp build"`;
+  package.scripts["pack"] = `BUILD_CONFIGURATION=Release run-s "gulp pack"`;
 
   fs.writeFileSync("package.json", JSON.stringify(package, null, 4), { encoding: "utf8" });
 

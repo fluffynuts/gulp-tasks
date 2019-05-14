@@ -1,22 +1,41 @@
-const fs = require("fs");
+const
+  promisify = require("./promisify-function"),
+  path = require("path"),
+  fs = require("fs");
 
-function promisify(func, parent) {
-  return function() {
-    const args = Array.from(arguments);
-    return new Promise((resolve, reject) => {
-      args.push((err, data) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(data);
-      });
-      func.apply(parent || fs, args);
-    });
-  }
-}
+const
+  stat = promisify(fs.stat, fs),
+  readFile = promisify(fs.readFile, fs),
+  readdir = promisify(fs.readdir, fs),
+  mkdir = promisify(fs.mkdir, fs),
+  exists = promisify(fs.exists, fs, true);
 
 module.exports = {
-  stat: promisify(fs.stat),
-  readFile: promisify(fs.readFile),
-  readdir: promisify(fs.readdir)
+  stat,
+  readFile,
+  readdir,
+  mkdir,
+  exists,
+
+  ensureDirectoryExists: async function(expectedPath) {
+    // forward-slashes can be valid (and mixed) on win32,
+    //  so split on both \ and / to make \o/
+    const
+      parts = expectedPath.split(/\\|\//),
+      current = [];
+    for (const part of parts) {
+      current.push(part);
+      const
+        test = current.join(path.sep),
+        pathExists = await exists(test);
+      if (pathExists) {
+        const st = await stat(test);
+        if (!st.isDirectory()) {
+          throw new Error(`${test} exists but is not a directory`);
+        }
+        continue;
+      }
+      await mkdir(test);
+    }
+  }
 };
