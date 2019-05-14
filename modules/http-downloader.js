@@ -40,7 +40,7 @@ HttpDownloader.prototype = {
     }
   },
   _updateStatus: function (data) {
-    if (process.env.SUPPRESS_DOWNLOAD_PROGRESS) {
+    if (process.env.SUPPRESS_DOWNLOAD_PROGRESS || process.env.BUILD_NUMER /* automatically disable at Jenkins CI */) {
       return;
     }
     this._written = this._written || 0;
