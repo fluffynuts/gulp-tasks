@@ -39,8 +39,24 @@ async function resolveAll(obj) {
   return result;
 }
 
+function resolveRelativeBasePathOn(options, nuspecPath) {
+  console.log({
+    options
+  });
+  if (!options.basePath) {
+    return;
+  }
+  if (options.basePath.indexOf("~") === 0) {
+    const
+      packageDir = path.dirname(nuspecPath).replace(/\\/g, "/"),
+      sliced = options.basePath.substr(1).replace(/\\/g, "/");
+    options.basePath = path.join(packageDir, sliced);
+  }
+}
+
 function addOptionalParameters(options, args) {
   if (options.basePath) {
+    gutil.log(`packaging with base path: ${options.basePath}`);
     args.splice(args.length, 0, "-BasePath", options.basePath);
   }
   if (options.excludeEmptyDirectories) {
@@ -69,9 +85,7 @@ function gulpNugetPack(options) {
       promises.push(
         new Promise(async (resolve, reject) => {
           options = await resolveAll(options);
-          console.log({
-            options
-          });
+          resolveRelativeBasePathOn(options, file.path);
           const { packageName, packageVersion } = await grokNuspec(
               file.contents.toString()
             ),
@@ -116,7 +130,7 @@ function gulpNugetPack(options) {
       this.emit("end");
     }
   );
-};
+}
 
 function logBuilt(packagePath) {
   gutil.log(

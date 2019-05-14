@@ -24,6 +24,9 @@ module.exports = {
       parts = expectedPath.split(/\\|\//),
       current = [];
     for (const part of parts) {
+      if (!part) {
+        continue;
+      }
       current.push(part);
       const
         test = current.join(path.sep),
