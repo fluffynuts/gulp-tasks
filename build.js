@@ -1,5 +1,6 @@
 const gulp = requireModule("gulp-with-help"),
   getToolsFolder = requireModule("get-tools-folder"),
+  promisifyStream = requireModule("promisify-stream"),
   areAllDotnetCore = requireModule("are-all-dotnet-core"),
   { clean, build } = require("gulp-dotnet-cli"),
   msbuild = require("gulp-msbuild");
@@ -16,14 +17,15 @@ gulp.task(
       "!**/node_modules/**/*.sln",
       `!./${getToolsFolder()}/**/*.sln`
     ]);
-    return await areAllDotnetCore([
+    const useDotNetBuild = await areAllDotnetCore([
       "**/*.csproj",
       "!**/node_modules/**/*.sln",
       `!./${getToolsFolder()}/**/*.csproj`
-    ]) ? solutions
-          .pipe(clean())
-          .pipe(build())
-       : solutions.pipe(
+    ]);
+
+    const stream = useDotNetBuild
+      ? solutions.pipe(clean()).pipe(build())
+      : solutions.pipe(
           msbuild({
             toolsVersion: "auto",
             targets: ["Clean", "Build"],
@@ -37,5 +39,6 @@ gulp.task(
             nologo: false
           })
         );
+    return promisifyStream(stream);
   }
 );
