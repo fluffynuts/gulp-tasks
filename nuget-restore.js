@@ -1,9 +1,8 @@
 var gulp = requireModule("gulp-with-help"),
   debug = require("debug")("nuget-restore"),
-  child_process = require("child_process"),
   debug = require("debug")("nuget-restore"),
   nugetRestore = requireModule("./gulp-nuget-restore"),
-  promisify = requireModule("promisify"),
+  promisify = requireModule("promisify-stream"),
   getToolsFolder = requireModule("get-tools-folder"),
   findLocalNuget = requireModule("find-local-nuget");
 
