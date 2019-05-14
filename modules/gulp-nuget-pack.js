@@ -40,9 +40,6 @@ async function resolveAll(obj) {
 }
 
 function resolveRelativeBasePathOn(options, nuspecPath) {
-  console.log({
-    options
-  });
   if (!options.basePath) {
     return;
   }
