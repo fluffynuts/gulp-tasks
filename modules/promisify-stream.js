@@ -1,4 +1,6 @@
-const stream = require("stream");
+const 
+    stream = require("stream"),
+    promisifyFunction = require("./promisify-function");
 function isStream(o) {
   return o instanceof stream.Stream;
 }
@@ -17,16 +19,6 @@ function looksLikePromise(o) {
 
 function isFunction(o) {
   return typeof(o) === "function";
-}
-
-function promisifyFunction(fn) {
-  return new Promise((resolve, reject) => {
-    try {
-      resolve(fn());
-    } catch (e) {
-      reject(e);
-    }
-  });
 }
 
 function passThrough(p) {
@@ -59,11 +51,12 @@ const strategies = [
 ];
 
 module.exports = function(item) {
+  const args = Array.from(arguments);
   const strategy = strategies.reduce((acc, cur) => {
     return acc || (cur[0](item) ? cur[1] : null);
   }, null);
   if (!strategy) {
     throw new Error(`Unable to promisify ${item}: dunno what to do with it, squire!`);
   }
-  return strategy(item);
+  return strategy.apply(null, args);
 };

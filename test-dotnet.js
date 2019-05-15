@@ -1,7 +1,7 @@
 var gulp = requireModule("gulp-with-help"),
   fs = require("fs"),
   areAllDotnetCore = requireModule("are-all-dotnet-core"),
-  promisifyStream = requireModule("promisify-stream"),
+  promisifyStream = requireModule("promisify"),
   os = require("os"),
   { test } = require("gulp-dotnet-cli"),
   nunit = require("gulp-nunit-runner"),

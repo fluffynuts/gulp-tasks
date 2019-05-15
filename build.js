@@ -1,6 +1,6 @@
 const gulp = requireModule("gulp-with-help"),
   getToolsFolder = requireModule("get-tools-folder"),
-  promisifyStream = requireModule("promisify-stream"),
+  promisifyStream = requireModule("promisify"),
   areAllDotnetCore = requireModule("are-all-dotnet-core"),
   { clean, build } = require("gulp-dotnet-cli"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
