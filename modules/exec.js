@@ -2,6 +2,8 @@
 // you can use this for other commands but spawn is better
 // as it handles IO better
 const
+  os = require("os"),
+  spawn = require("./spawn"),
   tryRequire = function(module) {
     try {
       return require(module);
@@ -123,7 +125,9 @@ var doSpawn = function (cmd, args, opts, handlers) {
 };
 
 var doExec = function (cmd, args, opts, handlers) {
-  return (opts._useExecFile) ? doExecFile(cmd, args, opts, handlers) : doSpawn(cmd, args, opts, handlers);
+  return (opts._useExecFile)
+    ? doExecFile(cmd, args, opts, handlers)
+    : doSpawn(cmd, args, opts, handlers);
 };
 
 var exec = function (cmd, args, opts, handlers) {
@@ -137,7 +141,9 @@ var exec = function (cmd, args, opts, handlers) {
     debug(`- opts: ${JSON.stringify(opts)}`);
     debug(`- handlers: ${JSON.stringify(handlers)}`);
   }
-  return doExec(cmd, args, opts, handlers || {});
+  return os.platform() === "win32"
+    ? doExec(cmd, args, opts, handlers || {})
+    : spawn(cmd, args, Object.assign({}, opts, handlers));
 };
 
 module.exports = exec;

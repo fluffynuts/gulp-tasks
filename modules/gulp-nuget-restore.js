@@ -1,5 +1,7 @@
 'use strict';
-var gutil = require('gulp-util'),
+var
+  path = require("path"),
+  gutil = require('gulp-util'),
   es = require('event-stream'),
   q = require('q'),
   spawn = require('./spawn'),
@@ -56,9 +58,12 @@ function runNuget(nugetCmd, solutions, stream) {
   var deferred = q.defer();
   var final = solutions.reduce(function (promise, item) {
     log.info('Restoring packages for: ' + item);
-    var args = ['restore', `"${item.replace(/"/g, '""')}"`];
+    var pathParts = item.split(/[\\|\/]/g);
+    var sln = pathParts[pathParts.length - 1];
+    var slnFolder = pathParts.slice(0, pathParts.length - 1).join(path.sep);
+    var args = ['restore', sln];
     return promise.then(function () {
-      return spawn(nugetCmd, args).then(function () {
+      return spawn(nugetCmd, args, { cwd: slnFolder }).then(function () {
         'Packages restored for: ' + item;
       }).catch(function (err) {
         throw err;
