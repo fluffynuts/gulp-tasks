@@ -44,8 +44,7 @@ function resolveRelativeBasePathOn(options, nuspecPath) {
     return;
   }
   if (options.basePath.indexOf("~") === 0) {
-    const
-      packageDir = path.dirname(nuspecPath).replace(/\\/g, "/"),
+    const packageDir = path.dirname(nuspecPath).replace(/\\/g, "/"),
       sliced = options.basePath.substr(1).replace(/\\/g, "/");
     options.basePath = path.join(packageDir, sliced);
   }
@@ -75,56 +74,62 @@ function gulpNugetPack(options) {
     : false;
   options.version = options.version || process.env.PACK_VERSION;
 
-  const tracked = temp.track();
-  (workDir = tracked.mkdirSync()), (promises = []);
+  const
+    tracked = temp.track(),
+    workDir = tracked.mkdirSync();
+  let
+    promise = Promise.resolve();
   return es.through(
     function write(file) {
-      promises.push(
-        new Promise(async (resolve, reject) => {
-          options = await resolveAll(options);
-          resolveRelativeBasePathOn(options, file.path);
-          const { packageName, packageVersion } = await grokNuspec(
-              file.contents.toString()
-            ),
-            version = options.version || packageVersion,
-            expectedFileName = path.join(
-              workDir,
-              `${packageName}.${version}.nupkg`
-            ),
-            args = ["pack", file.path, "-OutputDirectory", workDir];
+      promise = promise.then(async () => {
+            options = await resolveAll(options);
+            resolveRelativeBasePathOn(options, file.path);
+            const { packageName, packageVersion } = await grokNuspec(
+                file.contents.toString()
+              ),
+              version = options.version || packageVersion,
+              expectedFileName = path.join(
+                workDir,
+                `${packageName}.${version}.nupkg`
+              ),
+              args = ["pack", file.path, "-OutputDirectory", workDir];
 
-          await fs.ensureDirectoryExists(workDir);
-          addOptionalParameters(options, args);
+            await fs.ensureDirectoryExists(workDir);
+            addOptionalParameters(options, args);
 
-          await spawnNuget(args, {
-            stdout: () => {
-              /* suppress stdout: it's confusing anyway because it mentions temp files */
+            await spawnNuget(args, {
+              stdout: () => {
+                /* suppress stdout: it's confusing anyway because it mentions temp files */
+              }
+            });
+
+            const outputExists = await fs.exists(expectedFileName);
+            if (!outputExists) {
+              const err = `file not found: ${expectedFileName}`;
+              this.emit("error", err);
+              throw err;
+            } else {
+              logBuilt(expectedFileName);
+              this.emit(
+                "data",
+                new Vinyl({
+                  path: path.basename(expectedFileName),
+                  contents: await fs.readFile(expectedFileName)
+                })
+              );
             }
-          });
-
-          const outputExists = await fs.exists(expectedFileName);
-          if (!outputExists) {
-            const err = `file not found: ${expectedFileName}`;
-            this.emit("error", err);
-            reject(err);
-          } else {
-            logBuilt(expectedFileName);
-            this.emit(
-              "data",
-              new Vinyl({
-                path: path.basename(expectedFileName),
-                contents: await fs.readFile(expectedFileName)
-              })
-            );
-            resolve();
-          }
         })
-      );
     },
     async function end() {
-      await Promise.all(promises);
+      let errored = false;
+      await promise.catch(err => {
+        errored = true;
+        this.emit("error", err);
+      });
       tracked.cleanupSync();
-      this.emit("end");
+      if (!errored) {
+        this.emit("end");
+      }
     }
   );
 }
