@@ -92,7 +92,7 @@ module.exports = {
       throw new Error("No required tools set");
     }
     if (installing) {
-      console.warn("default tools installer already running...");
+      debug("default tools installer already running...");
       return Promise.resolve();
     }
     installing = true;
