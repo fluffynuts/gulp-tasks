@@ -1,6 +1,7 @@
 const
   getToolsFolder = requireModule("get-tools-folder"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
+  fs = requireModule("fs"),
   del = require("del"),
   gulp = requireModule("gulp-with-help"),
   pack = requireModule("gulp-nuget-pack");
@@ -19,6 +20,8 @@ gulp.task(
 });
 
 gulp.task("clean-packages",
-  "Removes any existing package artifacts", () => {
-    return del(process.env.PACKAGE_TARGET_FOLDER || "packages");
+  "Removes any existing package artifacts", async () => {
+    const packageFolder = process.env.PACKAGE_TARGET_FOLDER || "packages";
+    await del(packageFolder)
+    await fs.ensureDirectoryExists(packageFolder);
 });
