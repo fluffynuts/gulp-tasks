@@ -7,7 +7,9 @@
   particular, I highly recommend reading about how to use `local-tasks` to extend
   and / or override the default task-set.
  */
-var fs = require("fs"),
+var 
+  os = require("os"),
+  fs = require("fs"),
   gulpTasksFolder = "gulp-tasks", // if you cloned elsewhere, you"ll need to modify this
   requireModule = global.requireModule = function(mod) {
     var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
@@ -95,6 +97,9 @@ function bootstrapGulp() {
       }
     });
   } catch (e) {
+    if (looksLikeMissingGulpTasksModule(e)) {
+      return installModuleFor(e).then(() => restart());
+    }
     if (shouldDump(e)) {
       console.error(e);
     } else {
@@ -122,7 +127,36 @@ function bootstrapGulp() {
   }
 }
 
+function looksLikeMissingGulpTasksModule(e) {
+  if (!e || !e.message) {
+    return false;
+  }
+  var mod = grokMissingPackageFrom(e.message);
+  if (!mod) {
+    return false;
+  }
+  var starter = require("./gulp-tasks/start/package.json");
+  return !!starter.devDependencies[mod];
+}
+
+function installModuleFor(e) {
+  var mod = grokMissingPackageFrom(e.message);
+  console.log(`\n\nLooks like you're missing a package required by gulp-tasks: ${mod}\nLet's get that installed and try again (:`);
+  return runNpmWith(["install", mod]);
+}
+
+function grokMissingPackageFrom(message) {
+  var match = message.match("Cannot find module '(.*)'");
+  return match && match.length > 1 ? match[1] : null;
+}
+
+function restart() {
+  return spawn(process.argv[0], process.argv.slice(1), { env: process.env });
+}
+
 function runNpmWith(args) {
   var spawn = requireModule("spawn");
-  return spawn("cmd", ["/c", "npm"].concat(args));
+  return os.platform() === "win32"
+    ? spawn("cmd", ["/c", "npm"].concat(args))
+    : spawn("npm", args);
 }
