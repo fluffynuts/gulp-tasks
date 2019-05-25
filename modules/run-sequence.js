@@ -1,6 +1,6 @@
 var gulpVersion = requireModule("gulp-version");
 if (gulpVersion.major === 3) {
-  return require("run-sequence");
+  module.exports = require("run-sequence");
 } else {
   // it's shim time, baby!
   const gulp = requireModule("gulp-with-help");
