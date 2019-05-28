@@ -15,8 +15,8 @@ gulp.task(
   async () => {
     const solutions = gulp.src([
       "**/*.sln",
-      "!**/node_modules/**/*.sln",
-      `!./${getToolsFolder()}/**/*.sln`
+      "!**/node_modules/**/*.csproj",
+      `!./${getToolsFolder()}/**/*.csproj`
     ]);
 
     const useDotNetBuild = await areAllDotnetCore([

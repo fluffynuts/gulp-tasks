@@ -1,5 +1,7 @@
 const
   gulp = requireModule("gulp-with-help"),
+  getToolsFolder = requireModule("get-tools-folder"),
+  areAllDotnetCore = requireModule("are-all-dotnet-core"),
   nugetSourceName = process.env.NUGET_SOURCE || "nuget.org",
   installLocalTools = requireModule("install-local-tools"),
   tools = [
@@ -10,8 +12,15 @@ const
 
 gulp.task("default-tools-installer",
 `Installs the default toolset: ${tools.join(", ")}`,
-() => {
-  return installLocalTools.install(tools);
+async () => {
+  const allDNC = await areAllDotnetCore([
+    "**/*.csproj",
+    "!**/node_modules/**/*.csproj",
+    `!./${getToolsFolder()}/**/*.csproj`
+  ]);
+  return allDNC
+    ? Promise.resolve()  // none of the default NETFramework tooling is useful for DNC yet
+    : installLocalTools.install(tools);
 });
 
 gulp.task("clean-tools-folder",

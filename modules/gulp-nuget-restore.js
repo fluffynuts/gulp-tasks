@@ -28,7 +28,7 @@ function nugetRestore(options) {
     solutionFiles.push(file);
     this.emit('data', file);
   }, function end() {
-    runNugetRestoreWith(this, solutionFiles, options);
+    restoreNugetPackagesWith(this, solutionFiles, options);
   });
   return stream;
 }
@@ -40,7 +40,7 @@ function end(stream) {
   stream.emit('end');
 }
 
-function determineNugetCmd(nugetPath, stream) {
+function determineRestoreCommandFor(nugetPath, stream) {
   try {
     var nuget = resolveNuget(nugetPath);
     log.info('Using nuget.exe from: ' + nuget);
@@ -53,8 +53,8 @@ function determineNugetCmd(nugetPath, stream) {
   }
 }
 
-function runNuget(nugetCmd, solutions, stream) {
-  debug(`nugetCmd: ${nugetCmd}`);
+function runNuget(restoreCommand, solutions, stream) {
+  debug(`restoreCmd: ${restoreCommand}`);
   var deferred = q.defer();
   var final = solutions.reduce(function (promise, item) {
     log.info('Restoring packages for: ' + item);
@@ -63,7 +63,7 @@ function runNuget(nugetCmd, solutions, stream) {
     var slnFolder = pathParts.slice(0, pathParts.length - 1).join(path.sep);
     var args = ['restore', sln];
     return promise.then(function () {
-      return spawn(nugetCmd, args, { cwd: slnFolder }).then(function () {
+      return spawn(restoreCommand, args, { cwd: slnFolder }).then(function () {
         'Packages restored for: ' + item;
       }).catch(function (err) {
         throw err;
@@ -79,7 +79,7 @@ function runNuget(nugetCmd, solutions, stream) {
   return deferred;
 }
 
-function runNugetRestoreWith(stream, solutionFiles, options) {
+function restoreNugetPackagesWith(stream, solutionFiles, options) {
   var solutions = solutionFiles.map(file => file.path);
   if (solutions.length === 0) {
     if (solutionFiles.length == 0) {
@@ -87,7 +87,7 @@ function runNugetRestoreWith(stream, solutionFiles, options) {
     }
   }
   var nuget = options.nuget || 'nuget.exe';
-  var nugetCmd = determineNugetCmd(nuget, stream);
+  var nugetCmd = determineRestoreCommandFor(nuget, stream);
   if (nugetCmd) {
     return runNuget(nugetCmd, solutions, stream);
   }
