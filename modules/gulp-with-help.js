@@ -3,27 +3,23 @@
 // -> in 4.x, this is shimmed in. In addition, we need to
 //    - facilitate forward references, as per original gulp
 //    -
-var gulpInfo = require("gulp/package.json"),
+var
+  setTaskName = requireModule("set-task-name"),
   gulpVersion = requireModule("gulp-version");
 
 if (gulpVersion.major === 3) {
   module.exports = require("gulp-help")(require("gulp"));
 } else {
-  function setTaskName(task, name) {
-    task.displayName = name;
-    Object.defineProperty(task, "name", {
-      get() {
-        return name;
-      }
-    });
-  }
-  // NB: new deps:
-  // - undertaker-forward-reference
-  // - chalk
-  var help = {};
-  (FwdRef = require("undertaker-forward-reference")), (gulp = require("gulp"));
+  var quieter = requireModule("reduce-gulp-noise");
+  const
+    gulp = require("gulp"),
+    help = {},
+    FwdRef = require("undertaker-forward-reference");
+
   gulp.registry(new FwdRef());
-  var originalTask = gulp.task,
+
+  const
+    originalTask = gulp.task,
     newTask = function() {
       let
         args = Array.from(arguments),
@@ -34,7 +30,12 @@ if (gulpVersion.major === 3) {
         args.splice(1, 1);
       }
       if (Array.isArray(args[1])) {
-        const parallel = gulp.parallel(args[1]);
+        const parallel = gulp.parallel(
+          args[1].map(name => {
+            // this allows late-overriding of tasks, as per assistance
+            // at: https://github.com/gulpjs/gulp/issues/2337
+            return setTaskName((...args) => gulp.series(name)(...args), `${quieter.marker}(${name})`);
+          }));
         setTaskName(parallel, `pre-${taskName}`);
         args[1] = gulp.series(
           parallel,
