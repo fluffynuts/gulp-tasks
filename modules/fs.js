@@ -10,7 +10,7 @@ const
   mkdir = promisify(fs.mkdir, fs),
   exists = promisify(fs.exists, fs, true);
 
-module.exports = {
+const exported = {
   stat,
   readFile,
   readdir,
@@ -42,3 +42,9 @@ module.exports = {
     }
   }
 };
+
+Object.keys(fs)
+  .filter(k => k.match(/Sync$/) && typeof fs[k] === "function")
+  .forEach(k => exported[k] = fs[k].bind(fs));
+
+module.exports = exported;

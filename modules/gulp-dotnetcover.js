@@ -30,7 +30,10 @@ function dotCover(options) {
   options.baseFilters =
     options.baseFilters || "+:module=*;class=*;function=*;-:*.Tests";
   options.exclude = options.exclude || [];
-  options.nunitOptions = options.nunitOptions || "/framework:net-4.5 /labels";
+  options.nunitOptions = options.nunitOptions || "--labels=All";
+  if (Array.isArray(options.nunitOptions)) {
+    options.nunitOptions = options.nunitOptions.join(" ");
+  }
   options.nunitOutput = projectPathFor(
     options.nunitOutput || "buildreports/nunit-result.xml"
   );
@@ -335,7 +338,9 @@ function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
       log.info("creating HTML report");
       return spawn(coverageToolExe, htmlArgs);
     })
-    .then(() => onCoverageComplete(stream))
+    .then(() => {
+      onCoverageComplete(stream);
+    })
     .catch(err => handleCoverageFailure(stream, err, globalOptions));
 }
 
@@ -426,7 +431,7 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
     `"-targetdir:${process.cwd()}"`, // TODO: test me please
     `"-output:${options.coverageReportBase + ".xml"}"`,
     `-filter:"+[*]* ${excludeFilter}"`, // TODO: embetterment
-    `-register:user`,
+    `-register`,
     `-mergebyhash`,
     `"-searchdirs:${getUniqueDirsFrom(options.testAssemblies)}"`
   ];
@@ -457,6 +462,12 @@ function spawnCoverageTool(
   globalOptions
 ) {
   var spawner = coverageSpawners[toolName];
+  debug({
+    toolName,
+    toolExe,
+    cliOptions,
+    globalOptions
+  });
   return spawner
     ? spawner(stream, toolExe, cliOptions, globalOptions)
     : unsupportedTool(stream, toolName);

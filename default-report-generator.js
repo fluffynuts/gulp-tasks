@@ -1,8 +1,10 @@
-const gulp = requireModule("gulp-with-help"),
+const
+  gulp = requireModule("gulp-with-help"),
   path = require("path"),
   findTool = requireModule("testutil-finder").findTool,
   spawn = requireModule("spawn"),
-  fs = require("fs"),
+  fs = requireModule("fs"),
+  del = require("del"),
   defaultExclusions =
     "-" +
     [
@@ -15,7 +17,8 @@ const gulp = requireModule("gulp-with-help"),
     ].join(";-"),
   defaultReportsPath = path.join("buildreports", "coverage.xml"),
   buildReportsPath = process.env.COVERAGE_XML || defaultReportsPath,
-  coverageExclude = process.env.COVERAGE_EXCLUDE || defaultExclusions;
+  coverageExclude = process.env.COVERAGE_EXCLUDE || defaultExclusions,
+  buildReportsFolder = path.dirname(buildReportsPath);
 
 function findCoverageXml() {
   return fs.existsSync(buildReportsPath) ? buildReportsPath : null;
@@ -45,3 +48,13 @@ gulp.task(
     ]);
   }
 );
+
+gulp.task(
+  "clean-reports",
+  `Cleans out the build reports folder ${buildReportsFolder}`, async () => {
+    const exists = await fs.exists(buildReportsFolder);
+    if (exists) {
+      await del(buildReportsFolder);
+    }
+    await fs.mkdir(buildReportsFolder);
+  });
