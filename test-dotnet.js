@@ -28,7 +28,8 @@ gulp.task(
       return promisifyStream(
         gulp.src(projects).pipe(
           test({
-            verbosity: "normal"
+            verbosity: "normal",
+            configuration: process.env.BUILD_CONFIGURATION || "Debug"
           })
         )
       );

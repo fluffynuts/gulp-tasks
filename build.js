@@ -36,17 +36,19 @@ function check() {
 }
 
 function buildForNetCore(solutions) {
+  const configuration = process.env.BUILD_CONFIGURATION || "Debug";
   return promisifyStream(
     solutions
       .pipe(check())
       .pipe(
         clean({
-          configuration: process.env.BUILD_CONFIGURATION || "Debug"
+          configuration
         })
       )
       .pipe(
         build({
-          configuration: process.env.BUILD_CONFIGURATION || "Debug"
+          verbosity: "minimal",
+          configuration
         })
       )
   );
