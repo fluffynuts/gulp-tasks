@@ -4,10 +4,6 @@ const
   resolveNuget = require("./resolve-nuget"),
   downloadNuget = require("./download-nuget")
 
-function completedFile(path) {
-    return path + '.completed';
-}
-
 var lastResolution;
 
 function findLocalNuget() {

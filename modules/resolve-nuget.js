@@ -9,7 +9,7 @@ const fs = require("fs"),
 function findNugetInPath() {
   try {
     const nuget = which.sync("nuget");
-    log.info(`Using pathed ${nugetExe} from: ${nuget}`);
+    log.info(`found nuget in PATH: ${nuget}`);
     return nuget;
   } catch (ignored) {
     return null;
@@ -52,6 +52,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
     return acc || cur;
   }, null);
   if (resolved) {
+    log.info(`using nuget: ${resolved}`);
     return lastResolution = resolved;
   }
   if (!errorOnMissing) {

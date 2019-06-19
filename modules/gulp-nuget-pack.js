@@ -126,7 +126,6 @@ function gulpNugetPack(options) {
         this.emit("error", err);
       });
       if (!errored) {
-        console.log("cleaning up");
         tracked.cleanupSync();
         this.emit("end");
       }
