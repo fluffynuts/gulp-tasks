@@ -1,4 +1,5 @@
-const temp = require("temp"),
+const
+  temp = require("temp"),
   xml2js = require("xml2js"),
   Vinyl = require("vinyl"),
   fs = require("./fs"),
@@ -69,9 +70,7 @@ function gulpNugetPack(options) {
   options.basePath = process.env.PACK_BASE_PATH || options.basePath;
   options.excludeEmptyDirectories = process.env.PACK_INCLUDE_EMPTY_DIRECTORIES
     ? false
-    : options.excludeEmptyDirectories === undefined
-    ? true
-    : false;
+    : options.excludeEmptyDirectories === undefined;
   options.version = options.version || process.env.PACK_VERSION;
 
   const
@@ -126,8 +125,9 @@ function gulpNugetPack(options) {
         errored = true;
         this.emit("error", err);
       });
-      tracked.cleanupSync();
       if (!errored) {
+        console.log("cleaning up");
+        tracked.cleanupSync();
         this.emit("end");
       }
     }
