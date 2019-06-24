@@ -7,19 +7,9 @@
   particular, I highly recommend reading about how to use `local-tasks` to extend
   and / or override the default task-set.
  */
-var 
-  os = require("os"),
-  fs = require("fs"),
-  gulpTasksFolder = "gulp-tasks", // if you cloned elsewhere, you"ll need to modify this
-  requireModule = global.requireModule = function(mod) {
-    var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
-    if (fs.existsSync(modulePath + ".js")) {
-        return require(modulePath);
-    } else {
-        return require(mod);
-    }
-  };
-
+var fs = require("fs"),
+  gulpTasksFolder = "gulp-tasks"; // if you cloned elsewhere, you"ll need to modify this
+  requireModule = require(`./${gulpTasksFolder}/modules/require-module`)(__dirname, gulpTasksFolder);
 
 if (!fs.existsSync(gulpTasksFolder)) {
   console.error("Either clone `gulp-tasks` to the `gulp-tasks` folder or modify this script to avoid sadness");
@@ -59,9 +49,9 @@ function mustInstallDeps() {
 }
 
 function initializeNpm() {
-  var spawn = requireModule("spawn");
+  var exec = requireModule("exec");
   runNpmWith(["init"])
-  .then(() => spawn("cmd", [ "/c", "node", process.argv[1]]));
+  .then(() => exec("node", process.argv[1]));
 }
 
 function installGulpTaskDependencies() {
@@ -76,9 +66,7 @@ function installGulpTaskDependencies() {
     prepend = `cross-env BUILD_TOOLS_FOLDER=${buildTools}`;
 
   package.scripts["gulp"] = `${prepend} gulp`;
-  package.scripts["test"] = `run-s "gulp test-dotnet"`;
-  package.scripts["build"] = `run-s "gulp build"`;
-  package.scripts["pack"] = `BUILD_CONFIGURATION=Release run-s "gulp pack"`;
+  package.scripts["test"] = `${prepend} gulp test-dotnet`;
 
   fs.writeFileSync("package.json", JSON.stringify(package, null, 4), { encoding: "utf8" });
 
@@ -97,9 +85,6 @@ function bootstrapGulp() {
       }
     });
   } catch (e) {
-    if (looksLikeMissingGulpTasksModule(e)) {
-      return installModuleFor(e).then(() => restart());
-    }
     if (shouldDump(e)) {
       console.error(e);
     } else {
@@ -127,36 +112,7 @@ function bootstrapGulp() {
   }
 }
 
-function looksLikeMissingGulpTasksModule(e) {
-  if (!e || !e.message) {
-    return false;
-  }
-  var mod = grokMissingPackageFrom(e.message);
-  if (!mod) {
-    return false;
-  }
-  var starter = require("./gulp-tasks/start/package.json");
-  return !!starter.devDependencies[mod];
-}
-
-function installModuleFor(e) {
-  var mod = grokMissingPackageFrom(e.message);
-  console.log(`\n\nLooks like you're missing a package required by gulp-tasks: ${mod}\nLet's get that installed and try again (:`);
-  return runNpmWith(["install", mod]);
-}
-
-function grokMissingPackageFrom(message) {
-  var match = message.match("Cannot find module '(.*)'");
-  return match && match.length > 1 ? match[1] : null;
-}
-
-function restart() {
-  return spawn(process.argv[0], process.argv.slice(1), { env: process.env });
-}
-
 function runNpmWith(args) {
-  var spawn = requireModule("spawn");
-  return os.platform() === "win32"
-    ? spawn("cmd", ["/c", "npm"].concat(args))
-    : spawn("npm", args);
+  var exec = requireModule("exec");
+  return exec("npm", args);
 }
