@@ -57,15 +57,15 @@ var trim = function (data) {
   return ("" + (data || "")).trim();
 };
 
-var isWarning = function (str) {
+function isWarning(str) {
   return str.indexOf(" WARN ") > -1;
 };
 
-var isError = function (str) {
+function isError(str) {
   return str.indexOf(" ERROR ") > -1;
 };
 
-var printLines = function (data) {
+function printLines (data) {
   var lines = trim(data).split("\n");
   lines.forEach(function (line) {
     line = trim(line);
@@ -79,14 +79,23 @@ var printLines = function (data) {
   });
 };
 
-var doSpawn = function (cmd, args, opts, handlers) {
-  handlers = handlers || {};
-  return new Promise((resolve, reject) => {
-    try {
+function start(cmd, args, opts) {
+  if (os.platform() == "win32") {
       var cmdArgs = ["/c", cmd];
       cmdArgs.push.apply(cmdArgs, args);
       log.suppressTimeStamps();
-      var proc = child_process.spawn("cmd.exe", cmdArgs, opts);
+      return child_process.spawn("cmd.exe", cmdArgs, opts);
+  } else {
+    return child_process.spawn(cmd, args, opts);
+  }
+}
+
+function doSpawn (cmd, args, opts, handlers) {
+  handlers = handlers || {};
+  return new Promise((resolve, reject) => {
+    try {
+      log.suppressTimeStamps();
+      var proc = start(cmd, args, opts);
       var stdoutHandler = handlers.stdout || printLines;
       if (proc.stdout) {
         proc.stdout.on("data", function (data) {

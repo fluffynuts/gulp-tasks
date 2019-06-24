@@ -1,9 +1,14 @@
-const gulp = requireModule("gulp-with-help"),
+const 
+  os = require("os"),
+  gulp = requireModule("gulp-with-help"),
   getToolsFolder = requireModule("get-tools-folder"),
   promisifyStream = requireModule("promisify"),
   areAllDotnetCore = requireModule("are-all-dotnet-core"),
   { clean, build } = require("gulp-dotnet-cli"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
+  xbuild = requireModule("gulp-xbuild"),
+  gutil = requireModule("gulp-util"),
+  log = requireModule("log"),
   msbuild = require("gulp-msbuild");
 
 gulp.task("prebuild", ["nuget-restore"]);
@@ -24,6 +29,14 @@ gulp.task(
       "!**/node_modules/**/*.sln",
       `!./${getToolsFolder()}/**/*.csproj`
     ]);
+
+    console.log("------ BUILD ------");
+
+    log.info(gutil.colors.yellow(
+      useDotNetBuild
+      ? "Building with dotnet core"
+      : "Building with full framework"
+    ));
 
     return useDotNetBuild
       ? buildForNetCore(solutions)
@@ -55,9 +68,12 @@ function buildForNetCore(solutions) {
 }
 
 function buildForNETFramework(solutions) {
+  const builder = os.platform() === "win32"
+    ? msbuild
+    : xbuild;
   return promisifyStream(
     solutions.pipe(check()).pipe(
-      msbuild({
+      builder({
         toolsVersion: "auto",
         targets: ["Clean", "Build"],
         configuration: process.env.BUILD_CONFIGURATION || "Debug",

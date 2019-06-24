@@ -57,6 +57,7 @@ async function allTargetsAreCoreOrFramework(csproj) {
         if (!data.Project) {
           resolve(false);
         }
+        let foundTargetFrameworksNode = false;
         const allCoreOrStandard = (data.Project.PropertyGroup || []).reduce(
           (acc, cur) => {
             const targetFrameworksNode =
@@ -64,6 +65,7 @@ async function allTargetsAreCoreOrFramework(csproj) {
             if (!targetFrameworksNode) {
               return acc;
             }
+            foundTargetFrameworksNode = true;
             const targetFrameworks = targetFrameworksNode.join("").split(";");
             debug(`have target framework(s): ${targetFrameworks}`);
             return (
@@ -78,7 +80,7 @@ async function allTargetsAreCoreOrFramework(csproj) {
             );
           },
           true
-        );
+        ) && foundTargetFrameworksNode;
         debug(`all targets are core/standard: ${allCoreOrStandard}`);
         resolve(allCoreOrStandard);
       });

@@ -1,7 +1,9 @@
 const
   HttpDownloader = require("./http-downloader"),
   exec = require("./exec"),
+  nugetUpdateSelf = require("./nuget-update-self"),
   logger = require("./log"),
+  os = require("os"),
   path = require("path"),
   url = 'http://dist.nuget.org/win-x86-commandline/latest/nuget.exe';
 
@@ -27,9 +29,10 @@ function validateCanRunExe(exePath) {
       attempts++;
       try {
         logger.debug(`attempt #${attempts} to run ${exePath}`);
-        exec(exePath, ["update", "-self"]);
-        logger.info(`nuget.exe appears to be valid!`);
-        return resolve();
+        nugetUpdateSelf(exePath).then(() => {
+          logger.info(`nuget.exe appears to be valid!`);
+          return resolve();
+        });
       } catch (e) {
         lastMessage = e.message || lastMessage;
         logger.debug(`failed to run executable (${e.message}); ${i < 9 ? "will try again" : "giving up"}`);

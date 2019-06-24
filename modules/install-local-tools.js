@@ -1,12 +1,14 @@
 const
+  resolveNuget = require("./resolve-nuget"),
   downloadNuget = require("./download-nuget"),
+  nugetUpdateSelf = require("./nuget-update-self"),
   debug = require("debug")("install-local-tools"),
   gutil = require("gulp-util"),
   exec = requireModule("exec"),
   path = require("path"),
   fs = require("fs"),
   getToolsFolder = require("./get-tools-folder"),
-  nugetExe = "nuget.exe",
+  nuget = require("./nuget"),
   del = require("del");
 
 function ensureFolderExists(toolsFolder) {
@@ -44,20 +46,17 @@ function cleanFoldersFrom(toolsFolder) {
 
 function downloadOrUpdateNuget(targetFolder) {
   const nugetPath = path.join(targetFolder, "nuget.exe");
-  debug(`Attempting to get tools nuget to: ${targetFolder}`);
-  if (fs.existsSync(nugetPath)) {
-    gutil.log("nuget.exe already exists... attempting self-update");
-    if (process.env.SKIP_NUGET_UPDATES) {
-      gutil.log("skipping updates because SKIP_NUGET_SELF_UPDATE environment variable set");
-      return Promise.resolve();
-    } else {
-      return exec(nugetPath, [
-        "update", "-self"
-      ]);
+  const nuget = resolveNuget(nugetPath, false);
+  if (nuget) {
+    if (!process.env.SKIP_NUGET_UPDATES) {
+      gutil.log("nuget.exe already exists... attempting self-update");
+      console.log(`NUGET: (${nuget})`);
+      return nugetUpdateSelf(nuget);
     }
-  } else {
-    return downloadNuget(targetFolder);
+    return nuget;
   }
+  debug(`Attempting to get tools nuget to: ${targetFolder}`);
+  return downloadNuget(targetFolder);
 }
 
 function generateNugetSourcesOptions(toolSpecifiedSource) {
@@ -105,8 +104,7 @@ module.exports = {
       .then(() => downloadOrUpdateNuget(target))
       .then(() => Promise.all(
         requiredTools.map(tool =>
-          exec(
-            nugetExe,
+          nuget(
             generateNugetInstallArgsFor(tool),
             { cwd: target }
           )
