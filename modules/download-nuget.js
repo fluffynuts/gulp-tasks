@@ -17,8 +17,14 @@ function downloadNugetTo(targetFolder) {
     .then(() => validateCanRunExe(target));
 }
 
+var validators = {};
+
 function validateCanRunExe(exePath) {
-  return new Promise((resolve, reject) => {
+  if (validators[exePath]) {
+    return validators[exePath];
+  }
+  console.log("validate", { exePath });
+  return validators[exePath] = new Promise((resolve, reject) => {
     var
       lastMessage = "unknown error",
       attempts = 0;
@@ -29,8 +35,9 @@ function validateCanRunExe(exePath) {
       attempts++;
       try {
         logger.debug(`attempt #${attempts} to run ${exePath}`);
+        var a = attempts;
         nugetUpdateSelf(exePath).then(() => {
-          logger.info(`nuget.exe appears to be valid!`);
+          logger.info(`nuget.exe appears to be valid! (${a})`);
           return resolve();
         });
       } catch (e) {

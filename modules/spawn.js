@@ -8,6 +8,7 @@ var
       return function() { };
     }
   },
+  pathQuote = require("./path-quote"),
   debug = tryLoadDebug(),
   child_process = require('child_process');
 
@@ -36,11 +37,11 @@ function spawn (executable, args, opts) {
     args: args
   };
 
-  debug(`spawning: "${executable}" ${args.map(a => '"' + a + '"').join(' ')}`);
+  debug(`spawning: ${pathQuote(executable)} ${args.map(a => '"' + a + '"').join(' ')}`);
   debug({ opts });
 
   return new Promise((resolve, reject) => {
-    var child = child_process.spawn(`"${executable}"`, args, opts);
+    var child = child_process.spawn(pathQuote(executable), args, opts);
     child.on('error', function (err) {
       debug(`child error: ${err}`);
       result.error = err;

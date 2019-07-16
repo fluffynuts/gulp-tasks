@@ -7,6 +7,7 @@ const
   lsR = require("./ls-r"),
   toolsDir = require("./get-tools-folder")(),
   findNpmBase = require("./find-npm-base"),
+  pathQuote = require("./path-quote"),
   nugetExe = "nuget.exe";
 
 function findNugetInPath() {
@@ -56,7 +57,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
   }, null);
   if (resolved) {
     log.info(`using nuget: ${resolved}`);
-    return lastResolution = quote(resolveMonoScriptIfRequiredFor(resolved));
+    return lastResolution = pathQuote(resolveMonoScriptIfRequiredFor(resolved));
   }
   if (!errorOnMissing) {
     return undefined;
@@ -65,19 +66,6 @@ function resolveNuget(nugetPath, errorOnMissing) {
     throw `configured nuget: "${nugetPath}" not found`;
   }
   throw `${config.localNuget} not found! Suggestion: add "get-local-nuget" to your pipeline`;
-}
-
-function quote(str) {
-  if (!str) {
-    return str;
-  }
-  if (str.indexOf(" ") === -1) {
-    return str;
-  }
-  if (str[0] == str[str.length - 1] == "\"") {
-    return str;
-  }
-  return `"${str}"`;
 }
 
 function resolveMonoScriptIfRequiredFor(nugetPath) {
