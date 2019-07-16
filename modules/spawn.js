@@ -17,7 +17,7 @@ var defaultOptions = {
   shell: true
 };
 
-var run = function (executable, args, opts) {
+function spawn (executable, args, opts) {
   args = args || [];
   opts = Object.assign({}, defaultOptions, opts);
 
@@ -64,4 +64,4 @@ var run = function (executable, args, opts) {
   });
 };
 
-module.exports = run;
+module.exports = spawn;
