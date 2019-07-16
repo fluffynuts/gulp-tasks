@@ -30,8 +30,6 @@ gulp.task(
       `!./${getToolsFolder()}/**/*.csproj`
     ]);
 
-    console.log("------ BUILD ------");
-
     log.info(gutil.colors.yellow(
       useDotNetBuild
       ? "Building with dotnet core"
