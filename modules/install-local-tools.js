@@ -4,7 +4,6 @@ const
   nugetUpdateSelf = require("./nuget-update-self"),
   debug = require("debug")("install-local-tools"),
   gutil = require("gulp-util"),
-  exec = requireModule("exec"),
   path = require("path"),
   fs = require("fs"),
   getToolsFolder = require("./get-tools-folder"),

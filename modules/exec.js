@@ -48,6 +48,7 @@ var doExecFile = function (cmd, args, opts) {
         resolve(stdout);
       });
     } catch (e) {
+      console.error(`EXEC ERROR: ${e} / ${cmd} ${args}`);
       reject(e);
     }
   });

@@ -69,6 +69,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
 }
 
 function resolveMonoScriptIfRequiredFor(nugetPath) {
+  nugetPath = path.resolve(nugetPath);
   if (os.platform() === "win32") {
     return nugetPath;
   }
@@ -87,7 +88,7 @@ mono ${path.resolve(nugetPath)} $@`;
   const scriptPath = path.join(baseFolder, "node_modules", ".bin", "mono-nuget");
   fs.writeFileSync(scriptPath, script, { encoding: "utf-8" });
   fs.chmodSync(scriptPath, "755");
-  return scriptPath;
+  return path.resolve(scriptPath);
 }
 
 
