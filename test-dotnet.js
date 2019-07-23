@@ -21,6 +21,7 @@ gulp.task(
       "**/*.Tests.csproj",
       "**/Tests.csproj",
       "**/Test.csproj",
+      "**/*.Tests.*.csproj",
       "!**/node_modules/**/*.csproj",
       `!./${getToolsFolder}/**/*.csproj`
     ];
