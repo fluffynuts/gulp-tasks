@@ -25,12 +25,13 @@ gulp.task(
       "!**/node_modules/**/*.csproj",
       `!./${getToolsFolder}/**/*.csproj`
     ];
+    const configuration = process.env.BUILD_CONFIGURATION || "Debug";
     if (await areAllDotnetCore(projects)) {
       return promisifyStream(
         gulp.src(projects).pipe(
           test({
             verbosity: "normal",
-            configuration: process.env.BUILD_CONFIGURATION || "Debug"
+            configuration
           })
         )
       );
@@ -42,7 +43,7 @@ gulp.task(
     }
     return promisifyStream(
       gulp
-        .src(["**/bin/Debug/**/*.Tests.dll", "**/bin/*.Tests.dll"], {
+        .src([`**/bin/${configuration}/**/*.Tests.dll`, `**/bin/*.Tests.dll`], {
           read: false
         })
         .pipe(
