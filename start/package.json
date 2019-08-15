@@ -13,6 +13,7 @@
     "gulp-debug": "^4.0.0",
     "gulp-dotnet-cli": "^1.1.0",
     "gulp-edit-xml": "^3.0.0",
+    "gulp-filter": "^6.0.0",
     "gulp-help": "^1.6.1",
     "gulp-msbuild": "^0.5.5",
     "gulp-npm-run": "0.0.3",
