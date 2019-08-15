@@ -7,7 +7,9 @@
   particular, I highly recommend reading about how to use `local-tasks` to extend
   and / or override the default task-set.
  */
-var fs = require("fs"),
+var 
+  fs = require("fs"),
+  path = require("path"),
   gulpTasksFolder = "gulp-tasks", // if you cloned elsewhere, you"ll need to modify this
   requireModule = global.requireModule = function(mod) {
     var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
@@ -24,18 +26,53 @@ if (!fs.existsSync(gulpTasksFolder)) {
   process.exit(2);
 }
 
+let autoWorking = null;
+function pauseWhilstWorking() {
+  const 
+    args = process.argv,
+    lastTwo = args.slice(args.length - 2),
+    runningGulp = isGulpJs(lastTwo[0]),
+    task = lastTwo[1];
+  if (!runningGulp || !task) {
+    return;
+  }
+  autoWorking = true;
+  try {
+      const localGulp = require("gulp");
+      localGulp.task(task, function() {
+        console.log(`--- taking over your ${task} task whilst we do some bootstrapping ---`);
+        return new Promise(function watchWorker(resolve, reject) {
+          if (!autoWorking) {
+            resolve();
+          }
+          setTimeout(function() {
+            watchWorker(resolve, reject);
+          }, 500);
+        });
+      });
+  } catch (e) {
+    /* suppress: may not have deps installed yet */
+  }
+}
+function isGulpJs(filePath) {
+  return path.basename(filePath) === "gulp.js";
+}
+
 if (!fs.existsSync("package.json")) {
+  pauseWhilstWorking();
   console.log(
     "You need to set up a package.json first. I'll run `npm init` for you (:"
   );
-  initializeNpm();
+  initializeNpm().then(() => autoWorking = false);
 } else if (mustInstallDeps()) {
+  pauseWhilstWorking();
   console.log(
     "Now we just need to install the dependencies required for gulp-tasks to run (:"
   );
-  installGulpTaskDependencies().then(() =>
-    console.log("You're good to go with `gulp-tasks`. Try running `npm run gulp build`")
-  );
+  installGulpTaskDependencies().then(() => {
+    console.log("You're good to go with `gulp-tasks`. Try running `npm run gulp build`");
+    autoWorking = false;
+  });
 } else {
   bootstrapGulp();
 }
@@ -81,8 +118,26 @@ function installGulpTaskDependencies() {
   addMissingScript(package, "test", "run-s \"gulp test-dotnet\"");
 
   fs.writeFileSync("package.json", JSON.stringify(package, null, 4), { encoding: "utf8" });
-
   return runNpmWith(["install", "--save-dev"].concat(deps));
+}
+
+function testBin(cmds, pkg) {
+  if (!Array.isArray(cmds)) {
+    cmds = [ cmds ];
+  }
+  cmds.forEach(cmd => {
+    const 
+      expected = path.join("node_modules", ".bin", "cmd"),
+      modPath = path.join("node_modules", pkg || cmds[0]);
+    if (!fs.existsSync(expected)) {
+      if (fs.existsSync(modPath)) {
+        try {
+        } catch (e) {
+          fs.renameSync(modPath, `${modPath}.b0rked.${new Date().getTime()}`);
+        }
+      }
+    }
+  });
 }
 
 function bootstrapGulp() {
@@ -126,5 +181,10 @@ function bootstrapGulp() {
 
 function runNpmWith(args) {
   var spawn = requireModule("spawn");
+
+  testBin(["run-p", "run-s"], "npm-run-all");
+  testBin("cross-env");
+  testBin("gulp");
+
   return spawn("cmd", ["/c", "npm"].concat(args));
 }
