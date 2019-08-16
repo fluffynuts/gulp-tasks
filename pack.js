@@ -9,7 +9,7 @@ const
 gulp.task(
   "pack",
   "Creates nupkgs from all nuspec files in this repo",
-  ["build"], () => {
+  gulp.series("build", "prepack"), () => {
     return gulp.src([
       "**/*.nuspec",
       `!${getToolsFolder()}/**/*`
@@ -18,6 +18,11 @@ gulp.task(
     .pipe(pack())
     .pipe(gulp.dest(process.env.PACKAGE_TARGET_FOLDER || "packages"));
 });
+
+gulp.task(
+  "prepack",
+  "Skeleton task which you can replace to run logic just before packing", () => Promise.resolve()
+);
 
 gulp.task("clean-packages",
   "Removes any existing package artifacts", async () => {
