@@ -34,7 +34,7 @@ if (gulpVersion.major === 3) {
           args[1].map(name => {
             // this allows late-overriding of tasks, as per assistance
             // at: https://github.com/gulpjs/gulp/issues/2337
-            return setTaskName((...args) => gulp.series(name)(...args), `${quieter.marker}(${name})`);
+            return setTaskName((...args) => gulp.series(name)(...args), quieter.markForSuppression(name)); // `${quieter.marker}(${name})`);
           }));
         setTaskName(parallel, `pre-${taskName}`);
         args[1] = gulp.series(

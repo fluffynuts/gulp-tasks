@@ -22,6 +22,13 @@ log.info = function(...args) {
   originalInfo.apply(gulp, args);
 };
 
+function markForSuppression(str) {
+    return process.argv.indexOf("--tasks") > 0
+      ? str
+      : `${marker}(${str})`
+}
+
 module.exports = {
-  marker
+  marker,
+  markForSuppression
 };
