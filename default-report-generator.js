@@ -18,7 +18,21 @@ const
   defaultReportsPath = path.join("buildreports", "coverage.xml"),
   buildReportsPath = process.env.COVERAGE_XML || defaultReportsPath,
   coverageExclude = process.env.COVERAGE_EXCLUDE || defaultExclusions,
-  buildReportsFolder = path.dirname(buildReportsPath);
+  buildReportsFolder = path.dirname(buildReportsPath),
+  env = requireModule("env");
+
+  env.register({
+    name: "COVERAGE_XML",
+    default: defaultReportsPath,
+    help: "Path to coverage XML output",
+    tasks: ["cover-dotnet"]
+  });
+  env.register({
+    name: "COVERAGE_EXCLUDE",
+    default: defaultExclusions,
+    help: "Mask to apply for coverage exclusions (see ReportGenerator documentation for '-assemblyfilters')",
+    tasks: ["cover-dotnet"]
+  });
 
 function findCoverageXml() {
   return fs.existsSync(buildReportsPath) ? buildReportsPath : null;

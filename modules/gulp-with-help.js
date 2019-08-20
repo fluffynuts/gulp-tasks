@@ -10,8 +10,8 @@ var
 if (gulpVersion.major === 3) {
   module.exports = require("gulp-help")(require("gulp"));
 } else {
-  var quieter = requireModule("reduce-gulp-noise");
   const
+    quieter = requireModule("reduce-gulp-noise");
     gulp = require("gulp"),
     help = {},
     FwdRef = require("undertaker-forward-reference");
@@ -59,6 +59,8 @@ if (gulpVersion.major === 3) {
 
     return new Promise((resolve, reject) => {
       console.log(yellow("Task help"));
+      console.log(yellow(" - Tasks marked with * are affected by environment variables"));
+      console.log(yellow(" - run the help:environment task for more info"));
       var keys = Object.keys(help).sort();
       var longestKeyLength = keys.reduce(function(acc, cur) {
         return cur.length > acc ? cur.length : acc;
@@ -78,3 +80,14 @@ if (gulpVersion.major === 3) {
   });
   module.exports = gulp;
 }
+
+(function() {
+  const
+    env = requireModule("env"),
+    gulp = module.exports;
+
+    gulp.task("help:environment", () => {
+      env.printHelp();
+      return Promise.resolve();
+    });
+})();

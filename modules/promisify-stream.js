@@ -1,4 +1,4 @@
-const 
+const
     stream = require("stream"),
     promisifyFunction = require("./promisify-function");
 function isStream(o) {
@@ -46,6 +46,7 @@ function promisifyStream(s) {
 const strategies = [
   [ isFunction, promisifyFunction ],
   [ isPromise, passThrough ],
+  [ looksLikePromise, passThrough ],
   [ isStream, promisifyStream ],
   [ looksLikeStream, promisifyStream ]
 ];

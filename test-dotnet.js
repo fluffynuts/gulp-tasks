@@ -1,4 +1,5 @@
-const gulp = requireModule("gulp-with-help"),
+const
+  gulp = requireModule("gulp-with-help"),
   path = require("path"),
   gulpDebug = require("gulp-debug"),
   debug = require("debug")("test-dotnet"),
@@ -11,84 +12,182 @@ const gulp = requireModule("gulp-with-help"),
   nunit = require("gulp-nunit-runner"),
   getToolsFolder = requireModule("get-tools-folder"),
   testUtilFinder = requireModule("testutil-finder"),
-  envHelpGenerator = requireModule("generate-env-help-for"),
-  envHelp = envHelpGenerator({
-    "BUILD_CONFIGURATION": "Built configuration to use for testing",
-    "MAX_NUNIT_AGENTS": "",
-    "NUNIT_ARCHITECTURE": "",
-    "BUILD_REPORT_XML": "",
-    "NUNIT_LABELS": ""
-  });
+  env = requireModule("env"),
+  testTasks = ["test-dotnet", "quick-test-todtnet"],
+  buildAndTestTasks = ["build"].concat(testTasks),
+  multiSplit = requireModule("multi-split");
 
-gulp.task(
-  "test-dotnet",
-  `Runs all tests in your solution via NUnit\n${envHelp}`,
-  ["build"],
-  async () => runTests()
-);
+// env.register("BUILD_CONFIGURATION", "Debug", "Configuration used for building / testing", [ "build "].concat(testTasks));
+env.register({
+  name: "BUILD_CONFIGURATION",
+  default: "Debug",
+  help: "Configuration used for building / testing",
+  tasks: buildAndTestTasks
+});
+env.register({
+  name: "BUILD_PLATFORM",
+  default: "Any CPU",
+  help: "Build output platform",
+  tasks: buildAndTestTasks
+});
+env.register({
+  name: "BUILD_ARCHITECTURE",
+  default: "x64",
+  help: "Target archtecture of build",
+  tasks: buildAndTestTasks
+});
+env.register({
+  name: "MAX_NUNIT_AGENTS",
+  default: "(auto)",
+  help: "How many NUNit agents to use for testing (net framework)",
+  tasks: testTasks
+});
+env.register({
+  name: "NUNIT_ARCHITECTURE",
+  default: "(auto)",
+  tasks: testTasks
+});
+env.register({
+  name: "BUILD_REPORT_XML",
+  default: "buildreports/nunit-result.xml",
+  tasks: testTasks
+});
+env.register({
+  name: "NUNIT_LABELS",
+  default: "All",
+  tasks: testTasks
+});
+const extra = "\n - globs match dotnet core projects or .net framework built assemblies\n- elements surrounded with () are treated as pure gulp.src masks";
+env.register({
+  name: "TEST_INCLUDE",
+  help:
+    `comma-separated list of test projects to match${extra}`,
+  default: "*.Tests,*.Tests.*,Tests,Test,Test.*"
+});
+env.register({
+  name: "TEST_EXCLUDE",
+  help: `comma-separated list of exclusions for tests${extra}`,
+  default: `(!**/node_modules/**/*),(!./${getToolsFolder()}/**/*)`
+});
+env.register({
+  name: "TEST_VERBOSITY",
+  help: "Verbosity of reporting for dotnet core testing",
+  default: "normal"
+});
 
-gulp.task(
-  "quick-test-dotnet",
-  `Tests whatever test assemblies have been recently built\n${envHelp}`,
-  async () => runTests()
-);
-
-async function runTests() {
-  if (!fs.existsSync("buildreports")) {
-    fs.mkdirSync("buildreports");
-  }
-
-  const projects = [
-    "**/*.Tests.csproj",
-    "**/Tests.csproj",
-    "**/Test.csproj",
-    "**/*.Tests.*.csproj",
-    "!**/node_modules/**/*.csproj",
-    `!./${getToolsFolder}/**/*.csproj`
-  ];
-  const configuration = process.env.BUILD_CONFIGURATION || "Debug";
-  if (await areAllDotnetCore(projects)) {
-    return testAsDotnetCore(projects, configuration);
-  }
-  return testWithNunitCli(configuration);
+function explode(masks) {
+  return masks
+    .split(",")
+    .map(p => p.trim())
+    .filter(p => !!p);
 }
 
-function testWithNunitCli(configuration) {
-  let agents = parseInt(process.env.MAX_NUNIT_AGENTS);
+function runTests() {
+  const buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML"));
+  if (!fs.existsSync(buildReportFolder)) {
+    fs.mkdirSync(buildReportFolder);
+  }
+
+  const
+    include = env.resolve("TEST_INCLUDE"),
+    exclude = env.resolve("TEST_EXCLUDE"),
+    testMask = explode(exclude).concat(explode(include));
+  const
+    configuration = env.resolve("BUILD_CONFIGURATION"),
+    dotnetTestProjects = resolveDotNetCoreTestProjects(testMask);
+
+  // if (await areAllDotnetCore(dotnetTestProjects)) {
+  //   return testAsDotnetCore(dotnetTestProjects, configuration);
+  // }
+  return testWithNunitCli(configuration, testMask);
+}
+
+function resolveDotNetCoreTestProjects(masks) {
+    return masks.map(p => {
+      if (isPureMask(p)) {
+        // have path spec, don't do magic!
+        return extractPureMask(p);
+      }
+      if (p.indexOf("!") === 0) {
+        p = p.substr(1);
+        return `!**/**/${p}.csproj`
+      } else {
+        return `**/${p}.csproj`
+      }
+    });
+}
+
+function isPureMask(str) {
+  return str && str[0] === "(" && str[str.length - 1] === ")";
+}
+function extractPureMask(str) {
+  return str.substr(1, str.length - 2);
+}
+
+function testWithNunitCli(configuration, testMasks) {
+  const source = testMasks
+    .map(p => {
+      if (isPureMask(p)) {
+        // have path spec, don't do magic!
+        return [ extractPureMask(p) ];
+      }
+      if (p.indexOf("!") === 0) {
+        p = p.substr(1);
+        return [
+          `!**/bin/${configuration}/**/${p}.dll`,
+          `!**/bin/${p}.dll`
+        ];
+      } else {
+        return [
+          `**/bin/${configuration}/**/${p}.dll`,
+          `**/bin/${p}.dll`
+        ];
+      }
+    })
+    .reduce((acc, cur) => acc.concat(cur), []);
+  let agents = parseInt(env.resolve("MAX_NUNIT_AGENTS"));
   if (isNaN(agents)) {
     agents = os.cpus().length - 1;
   }
   const seenAssemblies = [];
   return promisifyStream(
     gulp
-      .src([`**/bin/${configuration}/**/*.Tests.dll`, `**/bin/*.Tests.dll`], {
+      .src(source, {
         read: false
       })
+      .pipe(filter(vinylFile => {
+        const
+          parts = multiSplit(vinylFile.path, [ "/", "\\" ]),
+          matches = parts.filter(p => p.match(/^netcore/));
+        return !matches.length;
+      }))
       .pipe(gulpDebug({ title: "before filter", logger: debug }))
       .pipe(filter(file => isDistinctFile(file.path, seenAssemblies)))
       .pipe(gulpDebug({ title: "after filter", logger: debug }))
       .pipe(
         nunit({
-          executable: testUtilFinder.latestNUnit({ architecture: process.env.NUNIT_ARCHITECTURE || "x86" }),
+          executable: testUtilFinder.latestNUnit({
+            architecture: env.resolve("NUNIT_ARCHITECTURE")
+          }),
           options: {
-            result: process.env.BUILD_REPORT_XML || "buildreports/nunit-result.xml",
+            result: env.resolve("BUILD_REPORT_XML"),
             agents: agents,
-            labels: process.env.NUNIT_LABELS || "All"
+            labels: env.resolve("NUNIT_LABELS")
           }
         })
       )
   );
 }
 
-function testAsDotnetCore(projects, configuration) {
-    return promisifyStream(
-      gulp.src(projects).pipe(
-        test({
-          verbosity: "normal",
-          configuration
-        })
-      )
-    );
+function testAsDotnetCore(testProjects, configuration) {
+  return promisifyStream(
+    gulp.src(testProjects).pipe(
+      test({
+        verbosity: env.resolve("TEST_VERBOSITY"),
+        configuration
+      })
+    )
+  );
 }
 
 function isDistinctFile(filePath, seenFiles) {
@@ -99,3 +198,16 @@ function isDistinctFile(filePath, seenFiles) {
   }
   return result;
 }
+
+gulp.task(
+  "test-dotnet",
+  `Runs all tests in your solution via NUnit *`,
+  ["build"],
+  () => runTests()
+);
+
+gulp.task(
+  "quick-test-dotnet",
+  `Tests whatever test assemblies have been recently built *`,
+  () => runTests()
+);
