@@ -13,13 +13,10 @@ gulp.task(
     if (publishRuntimes) {
       publishOpts.runtime = publishRuntimes
     }
+    const testInclusionsInverted = env.resolveArray("TEST_INCLUDE")
+    .map(p => `!${p}.csproj`)
     return gulp
-      .src([
-        "**/*.csproj",
-        "!**/Test.csproj",
-        "!**/*.Test.csproj",
-        "!**/*.Tests.csproj"
-      ])
+      .src(["**/*.csproj"].concat(testInclusionsInverted))
       .pipe(
         publish(publishOpts)
       );
