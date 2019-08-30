@@ -33,7 +33,7 @@ env.register({
 env.register({
   name: "BUILD_ARCHITECTURE",
   default: "x64",
-  help: "Target archtecture of build",
+  help: "Target architecture of build",
   tasks: buildAndTestTasks
 });
 env.register({
