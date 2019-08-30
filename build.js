@@ -1,5 +1,5 @@
-const 
-  os = require("os"),
+const os = require("os"),
+  env = requireModule("env"),
   gulp = requireModule("gulp-with-help"),
   getToolsFolder = requireModule("get-tools-folder"),
   promisifyStream = requireModule("promisify"),
@@ -12,6 +12,17 @@ const
   msbuild = require("gulp-msbuild");
 
 gulp.task("prebuild", ["nuget-restore"]);
+
+const myTasks = ["build"],
+  myVars = [
+    "BUILD_CONFIGURATION",
+    "BUILD_PLATFORM",
+    "BUILD_ARCHITECTURE",
+    "BUILD_TARGETS",
+    "BUILD_TOOLSVERSION",
+    "BUILD_VERBOSITY"
+  ];
+env.associate(myVars, myTasks);
 
 gulp.task(
   "build",
@@ -30,11 +41,13 @@ gulp.task(
       `!./${getToolsFolder()}/**/*.csproj`
     ]);
 
-    log.info(gutil.colors.yellow(
-      useDotNetBuild
-      ? "Building with dotnet core"
-      : "Building with full framework"
-    ));
+    log.info(
+      gutil.colors.yellow(
+        useDotNetBuild
+          ? "Building with dotnet core"
+          : "Building with full framework"
+      )
+    );
 
     return useDotNetBuild
       ? buildForNetCore(solutions)
@@ -66,21 +79,19 @@ function buildForNetCore(solutions) {
 }
 
 function buildForNETFramework(solutions) {
-  const builder = os.platform() === "win32"
-    ? msbuild
-    : xbuild;
+  const builder = os.platform() === "win32" ? msbuild : xbuild;
   return promisifyStream(
     solutions.pipe(check()).pipe(
       builder({
-        toolsVersion: "auto",
-        targets: ["Clean", "Build"],
-        configuration: process.env.BUILD_CONFIGURATION || "Debug",
+        toolsVersion: env.resolve("BUILD_TOOLSVERSION"),
+        targets: env.resolveArray("BUILD_TARGETS"),
+        configuration: env.resolve("BUILD_CONFIGURATION"),
         stdout: true,
-        verbosity: "minimal",
+        verbosity: env.resolve("BUILD_VERBOSITY"),
         errorOnFail: true,
-        solutionPlatform: process.env.BUILD_PLATFORM || "Any CPU",
+        solutionPlatform: env.resolve("BUILD_PLATFORM"),
         // NB: this is the MSBUILD architecture, NOT your desired output architecture
-        architecture: process.env.BUILD_ARCHITECTURE || "x64",
+        architecture: env.resolve("BUILD_ARCHITECTURE"),
         nologo: false
       })
     )

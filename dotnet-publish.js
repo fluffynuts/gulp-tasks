@@ -1,4 +1,5 @@
 const { publish } = require("gulp-dotnet-cli"),
+  env = requireModule("env"),
   gulp = requireModule("gulp-with-help");
 
 gulp.task(
@@ -6,10 +7,11 @@ gulp.task(
   "Performs `dotnet publish` on all non-test projects in the tree",
   () => {
     var publishOpts = {
-      configuration: process.env.BUILD_CONFIGURATION || "Release"
+      configuration: env.resolve("PUBLISH_BUILD_CONFIGURATION"),
     };
-    if (process.env.DOTNET_PUBLISH_RUNTIMES) {
-      publishOpts.runtime = process.env.DOTNET_PUBLISH_RUNTIMES
+    const publishRuntimes = env.resolve("DOTNET_PUBLISH_RUNTIMES");
+    if (publishRuntimes) {
+      publishOpts.runtime = publishRuntimes
     }
     return gulp
       .src([

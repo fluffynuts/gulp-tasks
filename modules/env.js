@@ -1,25 +1,32 @@
-const
-  chalk = require("chalk"),
+const chalk = require("chalk"),
   registeredEnvironmentVariables = {},
   longestStringLength = require("./longest-string-length"),
   padRight = require("./pad-right"),
-  padLeft = require("./pad-left");
+  padLeft = require("./pad-left"),
+  toExport = {
+    flag,
+    fallback,
+    register,
+    printHelp,
+    taskHelp,
+    resolve,
+    associate,
+    resolveArray,
+    explode,
+    overrideDefault
+  };
 
-const positives = [
-  "1",
-  "yes",
-  "true"
-];
+const positives = ["1", "yes", "true"];
 if (process.env.POSITIVE_FLAG) {
   positives.push(process.env.POSITIVE_FLAG);
 }
 
 function flag(name, defaultValue) {
-  const
-    envVar = fallback(name, defaultValue);
+  const envVar = fallback(name, defaultValue);
 
-  return envVar === true ||
-    positives.indexOf((envVar || "").toLowerCase()) > -1;
+  return (
+    envVar === true || positives.indexOf((envVar || "").toLowerCase()) > -1
+  );
 }
 
 function fallback(name, defaultValue) {
@@ -41,7 +48,54 @@ function register(config) {
   registeredEnvironmentVariables[name] = {
     help,
     tasks,
-    default: fallback,
+    default: fallback
+  };
+  if (pendingAssociations[name]) {
+    const otherTasks = pendingAssociations[name];
+    delete pendingAssociations[name];
+    tasks.push.apply(tasks, otherTasks);
+  }
+  if (pendingDefaultOverrides[name]) {
+    registeredEnvironmentVariables[name].default = pendingDefaultOverrides[name];
+    delete pendingDefaultOverrides[name];
+  }
+  return toExport;
+}
+
+const pendingAssociations = {};
+
+function associate(varName, tasks) {
+  if (Array.isArray(varName)) {
+    varName.forEach(v => associate(v, tasks));
+    return toExport;
+  }
+
+  if (!varName || !tasks || tasks.length === 0) {
+    return toExport;
+  }
+  if (!Array.isArray(tasks)) {
+    tasks = [tasks];
+  }
+
+  const target = registeredEnvironmentVariables[varName]
+    ? registeredEnvironmentVariables[varName].tasks
+    : (pendingAssociations[varName] = pendingAssociations[varName] || []);
+  tasks.forEach(task => {
+    if (target.indexOf(task) > -1) {
+      return;
+    }
+    target.push(task);
+  });
+  return toExport;
+}
+
+const pendingDefaultOverrides = {};
+function overrideDefault(varName, newDefault) {
+  const target = registeredEnvironmentVariables[varName];
+  if (target) {
+    target.default = newDefault;
+  } else {
+    pendingDefaultOverrides[varName] = newDefault;
   }
 }
 
@@ -49,9 +103,7 @@ function normaliseArray(arr) {
   if (!arr) {
     return [];
   }
-  return Array.isArray(arr)
-    ? arr
-    : [ arr ];
+  return Array.isArray(arr) ? arr : [arr];
 }
 
 function update(varName, fallbackValue, help, tasks) {
@@ -64,6 +116,7 @@ function update(varName, fallbackValue, help, tasks) {
   }
   tasks = normaliseArray(tasks);
   target.tasks = target.tasks.concat(tasks);
+  return toExport;
 }
 
 function trim(str) {
@@ -77,8 +130,7 @@ function printHelp() {
 function printHelpFor(vars) {
   const longest = longestStringLength(vars);
   vars.forEach(k =>
-    createHelpFor(k, longest)
-      .forEach(line => console.log(line))
+    createHelpFor(k, longest).forEach(line => console.log(line))
   );
 }
 
@@ -89,6 +141,9 @@ function indent(str, howMany) {
   return padLeft(str, howMany * 2 + str.length);
 }
 
+const tasksPre = chalk.greenBright("tasks"),
+  defaultPre = chalk.cyanBright("default");
+
 function createHelpFor(k, longest) {
   if (longest === undefined) {
     // take a guess
@@ -98,13 +153,22 @@ function createHelpFor(k, longest) {
   result.push(chalk.yellow(`${padRight(k, longest)}`));
   const target = registeredEnvironmentVariables[k];
   if (target.help) {
-    result.push(indent(target.help));
+    result.push(indent(chalk.gray(target.help)));
   }
   if (target.default) {
-    result.push(indent(`default: ${target.default}`, 2));
+    result.push(indent(`${defaultPre}: ${target.default}`, 2));
   }
   if (target.tasks && target.tasks.length) {
-    result.push(indent(`tasks: ${target.tasks.map(t => t.trim()).filter(t => t).join(", ")}`, 2))
+    result.push(
+      indent(
+        `${tasksPre}: ${target.tasks
+          .map(t => t.trim())
+          .filter(t => t)
+          .sort()
+          .join(", ")}`,
+        2
+      )
+    );
   }
   return result;
 }
@@ -114,12 +178,10 @@ function listVars() {
 }
 
 function taskHelp(task) {
-  const
-    keys = listVars(),
-    matchingRequest = keys.filter(
-      cur => {
-        return registeredEnvironmentVariables[cur].tasks.indexOf(task) > -1
-      });
+  const keys = listVars(),
+    matchingRequest = keys.filter(cur => {
+      return registeredEnvironmentVariables[cur].tasks.indexOf(task) > -1;
+    });
   printHelpFor(matchingRequest);
 }
 
@@ -128,11 +190,21 @@ function resolve(name) {
   return process.env[name] || target.default;
 }
 
-module.exports = {
-  flag,
-  fallback,
-  register,
-  printHelp,
-  taskHelp,
-  resolve
-};
+function resolveArray(name) {
+  const
+    target = registeredEnvironmentVariables[name] || {},
+    value = process.env[name] || target.default || "",
+    valueArray = Array.isArray(value)
+      ? value
+      : explode(value);
+  return valueArray;
+}
+
+function explode(str, delimiter) {
+  return str
+    .split(delimiter || ",")
+    .map(p => p.trim())
+    .filter(p => !!p);
+}
+
+module.exports = toExport;

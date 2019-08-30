@@ -43,7 +43,7 @@ function pauseWhilstWorking() {
         console.log(`--- taking over your ${task} task whilst we do some bootstrapping ---`);
         return new Promise(function watchWorker(resolve, reject) {
           if (!autoWorking) {
-            resolve();
+            return resolve();
           }
           setTimeout(function() {
             watchWorker(resolve, reject);

@@ -4,11 +4,14 @@ const
   areAllDotnetCore = requireModule("are-all-dotnet-core"),
   nugetSourceName = process.env.NUGET_SOURCE || "nuget.org",
   installLocalTools = requireModule("install-local-tools"),
+  env = requireModule("env"),
   tools = [
     `${nugetSourceName}/nunit.console`,
     `${nugetSourceName}/opencover`,
     `${nugetSourceName}/reportgenerator`
   ];
+
+env.associate("default-tools-installer", "BUILD_TOOLS_FOLDER");
 
 gulp.task("default-tools-installer",
 `Installs the default toolset: ${tools.join(", ")}`,

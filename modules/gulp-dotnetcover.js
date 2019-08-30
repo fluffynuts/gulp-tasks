@@ -139,9 +139,9 @@ function findExactExecutable(stream, options, what, deferLocal) {
     resolved ||
     fail(
       stream,
-      `No auto-detection of executables (${what.join(
+      `Auto-detection of system-wide executables (${what.join(
         ","
-      )}) not implemented yet. Please specify the exec.{tool} option(s) as required`
+      )}) not implemented and local version not found. Please specify the exec.{tool} option(s) as required.`
     )
   );
 }

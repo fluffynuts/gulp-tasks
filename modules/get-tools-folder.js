@@ -1,8 +1,8 @@
 var
-  debug = require("debug")("get-tools-folder"),
-  defaultToolsLocation = "tools";
+  env = require("./env"),
+  debug = require("debug")("get-tools-folder");
 function getToolsFolder() {
-  var result = process.env.BUILD_TOOLS_FOLDER || defaultToolsLocation;
+  var result = env.resolve("BUILD_TOOLS_FOLDER");
   debug("-> getting tools from: ", result);
   return result;
 }

@@ -1,42 +1,12 @@
-const
-  gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp-with-help"),
   path = require("path"),
   findTool = requireModule("testutil-finder").findTool,
   spawn = requireModule("spawn"),
   fs = requireModule("fs"),
   del = require("del"),
-  defaultExclusions =
-    "-" +
-    [
-      "*.Tests",
-      "FluentMigrator",
-      "FluentMigrator.Runner",
-      "PeanutButter.*",
-      "GenericBuilderTestArtifactBuilders",
-      "GenericBuilderTestArtifactEntities"
-    ].join(";-"),
-  defaultReportsPath = path.join("buildreports", "coverage.xml"),
-  buildReportsPath = process.env.COVERAGE_XML || defaultReportsPath,
-  coverageExclude = process.env.COVERAGE_EXCLUDE || defaultExclusions,
-  buildReportsFolder = path.dirname(buildReportsPath),
   env = requireModule("env");
 
-  env.register({
-    name: "COVERAGE_XML",
-    default: defaultReportsPath,
-    help: "Path to coverage XML output",
-    tasks: ["cover-dotnet"]
-  });
-  env.register({
-    name: "COVERAGE_EXCLUDE",
-    default: defaultExclusions,
-    help: "Mask to apply for coverage exclusions (see ReportGenerator documentation for '-assemblyfilters')",
-    tasks: ["cover-dotnet"]
-  });
-
-function findCoverageXml() {
-  return fs.existsSync(buildReportsPath) ? buildReportsPath : null;
-}
+env.associate(["COVERAGE_XML", "COVERAGE_REPORTING_EXCLUDE"], "cover-dotnet");
 
 function quoteIfSpaced(str, q) {
   q = q || '"';
@@ -45,15 +15,15 @@ function quoteIfSpaced(str, q) {
 
 gulp.task(
   "default-report-generator",
-  `Generates HTML reports from existing coverage XML reports at ${buildReportsPath}`,
+  `Generates HTML reports from existing coverage XML reports`,
   () => {
     var reportGenerator = findTool("ReportGenerator.exe");
     if (!reportGenerator) {
       return Promise.reject("No ReportGenerator.exe found in tools folder");
     }
-    var coverageXml = findCoverageXml();
-    if (!coverageXml) {
-      return Promise.reject("Can't find coverage.xml");
+    var coverageXml = env.resolve("COVERAGE_XML");
+    if (!fs.existsSync(coverageXml)) {
+      return Promise.reject(`Can't find ${coverageXml}`);
     }
     return spawn(reportGenerator, [
       `-reports:${quoteIfSpaced(coverageXml)}`,
@@ -65,10 +35,14 @@ gulp.task(
 
 gulp.task(
   "clean-reports",
-  `Cleans out the build reports folder ${buildReportsFolder}`, async () => {
-    const exists = await fs.exists(buildReportsFolder);
+  `Cleans out the build reports folder`,
+  async () => {
+    const
+      buildReportsFolder = path.dirname(env.resolve("COVERAGE_XML")),
+      exists = await fs.exists(buildReportsFolder);
     if (exists) {
       await del(buildReportsFolder);
     }
     await fs.mkdir(buildReportsFolder);
-  });
+  }
+);
