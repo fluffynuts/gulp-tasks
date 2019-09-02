@@ -8,24 +8,8 @@ const
   fs = require("fs"),
   getToolsFolder = require("./get-tools-folder"),
   nuget = require("./nuget"),
+  ensureFolderExists = require("./ensure-folder-exists"),
   del = require("del");
-
-function ensureFolderExists(toolsFolder) {
-  debug(`Ensuring existence of tools folder "${toolsFolder}"`);
-  return new Promise((resolve, reject) => {
-    try {
-      if (!fs.existsSync(toolsFolder)) {
-        fs.mkdirSync(toolsFolder);
-      }
-      debug(`${toolsFolder} exists!`);
-      resolve();
-    } catch (e) {
-      debug(`${toolsFolder} doesn't exist and not creatable`);
-      debug(e);
-      reject(e);
-    }
-  });
-}
 
 function cleanFoldersFrom(toolsFolder) {
   const dirs = fs.readdirSync(toolsFolder)

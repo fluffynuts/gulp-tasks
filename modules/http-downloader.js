@@ -1,4 +1,7 @@
-var fs = require('fs'),
+var
+  fs = require('fs'),
+  path = require("path"),
+  ensureFolderExists = require("./ensure-folder-exists"),
   request = require('request'),
   debug = require('debug')('http-downloader');
 
@@ -11,6 +14,7 @@ function HttpDownloader(infoLogFunction, debugLogFunction) {
 HttpDownloader.prototype = {
   download: function (url, target) {
     const partFile = `${target}.part`;
+    ensureFolderExists(path.dirname(partFile));
     return new Promise((resolve, reject) => {
       this._request = request.get(url, { timeout: 30000 })
         .on("response", (response) => {
