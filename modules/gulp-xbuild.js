@@ -1,4 +1,5 @@
 const
+  quoteIfRequired = requireModule("quote-if-required"),
   spawn = requireModule("spawn"),
   defaultOptions = {
     noConsoleLogger: false,
@@ -49,13 +50,6 @@ function prepareArgsFrom(options) {
     args.push("/nologo");
   }
   return args.map(quoteIfRequired);
-}
-
-function quoteIfRequired(arg) {
-  return arg.indexOf(" ") > -1 &&
-    arg.match(/^".*"$/) == null
-    ? `"${arg}"`
-    : arg;
 }
 
 function buildWithXBuild(

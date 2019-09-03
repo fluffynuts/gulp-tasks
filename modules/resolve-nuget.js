@@ -1,5 +1,4 @@
-const
-  os = require("os"),
+const os = require("os"),
   fs = requireModule("fs"),
   path = require("path"),
   which = require("which"),
@@ -7,7 +6,7 @@ const
   lsR = require("./ls-r"),
   toolsDir = require("./get-tools-folder")(),
   findNpmBase = require("./find-npm-base"),
-  pathQuote = require("./path-quote"),
+  quoteIfRequired = require("./quote-if-required"),
   nugetExe = "nuget.exe";
 
 function findNugetInPath() {
@@ -41,9 +40,11 @@ function resolveNuget(nugetPath, errorOnMissing) {
   //  - override-tasks/nuget.exe
   //  - local-tasks/nuget.exe
   const toolsContents = lsR(toolsDir),
-    toolsNuget = toolsContents.filter(function (path) {
-      return path.toLowerCase().endsWith(nugetExe);
-    }).sort()[0];
+    toolsNuget = toolsContents
+      .filter(function(path) {
+        return path.toLowerCase().endsWith(nugetExe);
+      })
+      .sort()[0];
   const resolved = [
     checkExists(nugetPath),
     checkExists(toolsNuget),
@@ -52,12 +53,14 @@ function resolveNuget(nugetPath, errorOnMissing) {
     checkExists(path.join(parentOfTasksFolder, "local-tasks", nugetExe)),
     findNugetInPath(),
     checkExists(config.localNuget)
-  ].reduce(function (acc, cur) {
+  ].reduce(function(acc, cur) {
     return acc || cur;
   }, null);
   if (resolved) {
     log.info(`using nuget: ${resolved}`);
-    return lastResolution = pathQuote(resolveMonoScriptIfRequiredFor(resolved));
+    return (lastResolution = quoteIfRequired(
+      resolveMonoScriptIfRequiredFor(resolved)
+    ));
   }
   if (!errorOnMissing) {
     return undefined;
@@ -85,12 +88,15 @@ function resolveMonoScriptIfRequiredFor(nugetPath) {
   const baseFolder = findNpmBase();
   const script = `#!/bin/sh
 mono ${path.resolve(nugetPath)} $@`;
-  const scriptPath = path.join(baseFolder, "node_modules", ".bin", "mono-nuget");
+  const scriptPath = path.join(
+    baseFolder,
+    "node_modules",
+    ".bin",
+    "mono-nuget"
+  );
   fs.writeFileSync(scriptPath, script, { encoding: "utf-8" });
   fs.chmodSync(scriptPath, "755");
   return path.resolve(scriptPath);
 }
 
-
 module.exports = resolveNuget;
-

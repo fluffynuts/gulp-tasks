@@ -1,9 +1,7 @@
 const
   HttpDownloader = require("./http-downloader"),
-  exec = require("./exec"),
   nugetUpdateSelf = require("./nuget-update-self"),
   logger = require("./log"),
-  os = require("os"),
   path = require("path"),
   url = 'http://dist.nuget.org/win-x86-commandline/latest/nuget.exe';
 

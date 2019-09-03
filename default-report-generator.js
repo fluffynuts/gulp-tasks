@@ -3,15 +3,11 @@ const gulp = requireModule("gulp-with-help"),
   findTool = requireModule("testutil-finder").findTool,
   spawn = requireModule("spawn"),
   fs = requireModule("fs"),
+  quoteIfRequired = requireModule("quote-if-required"),
   del = require("del"),
   env = requireModule("env");
 
 env.associate(["COVERAGE_XML", "COVERAGE_REPORTING_EXCLUDE"], "cover-dotnet");
-
-function quoteIfSpaced(str, q) {
-  q = q || '"';
-  return str.indexOf(" ") > -1 ? `${q}${str}${q}` : str;
-}
 
 gulp.task(
   "default-report-generator",
@@ -26,8 +22,8 @@ gulp.task(
       return Promise.reject(`Can't find ${coverageXml}`);
     }
     return spawn(reportGenerator, [
-      `-reports:${quoteIfSpaced(coverageXml)}`,
-      `-targetdir:${quoteIfSpaced(path.join("buildreports", "coverage"))}`,
+      `-reports:${quoteIfRequired(coverageXml)}`,
+      `-targetdir:${quoteIfRequired(path.join("buildreports", "coverage"))}`,
       `"-assemblyfilters:${coverageExclude}"`
     ]);
   }

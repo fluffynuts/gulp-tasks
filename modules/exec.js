@@ -2,6 +2,7 @@
 // you can use this for other commands but spawn is better
 // as it handles IO better
 const
+  quoteIfRequired = require("./quote-if-required"),
   os = require("os"),
   spawn = require("./spawn"),
   tryRequire = function(module) {
@@ -144,6 +145,7 @@ var exec = function (cmd, args, opts, handlers) {
   args = args || [];
   opts = Object.assign({}, defaultOptions, opts);
   opts.maxBuffer = Number.MAX_SAFE_INTEGER;
+  cmd = quoteIfRequired(cmd);
   if (debug) {
     debug("executing:")
     debug(`- cmd: ${cmd}`);

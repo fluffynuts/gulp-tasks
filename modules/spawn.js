@@ -8,7 +8,7 @@ var
       return function() { };
     }
   },
-  pathQuote = require("./path-quote"),
+  quoteIfRequired = require("./quote-if-required"),
   debug = tryLoadDebug(),
   child_process = require('child_process');
 
@@ -37,11 +37,11 @@ function spawn (executable, args, opts) {
     args: args
   };
 
-  debug(`spawning: ${pathQuote(executable)} ${args.map(a => '"' + a + '"').join(' ')}`);
+  debug(`spawning: ${quoteIfRequired(executable)} ${args.map(a => '"' + a + '"').join(' ')}`);
   debug({ opts });
 
   return new Promise((resolve, reject) => {
-    var child = child_process.spawn(pathQuote(executable), args, opts);
+    var child = child_process.spawn(quoteIfRequired(executable), args, opts);
     child.on('error', function (err) {
       debug(`child error: ${err}`);
       result.error = err;
