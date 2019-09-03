@@ -29,11 +29,14 @@ function noop() { }
 
 function promisifyStream(s) {
   return new Promise((resolve, reject) => {
+    var i = 1;
     function runResolve() {
+      console.log("runResolve");
       reject = noop;
       resolve.apply(null, Array.from(arguments));
     }
     function runReject() {
+      console.log("runReject");
       resolve = noop;
       reject.apply(null, Array.from(arguments));
     }

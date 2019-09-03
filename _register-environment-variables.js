@@ -1,9 +1,22 @@
 const debug = require("debug")("register env vars"),
+  os = require("os"),
   path = require("path"),
   env = requireModule("env"),
   getToolsFolder = requireModule("get-tools-folder");
 
 debug("-- start env var registration --");
+
+env.register({
+  name: "BUILD_MSBUILD_NODE_REUSE",
+  default: "true",
+  help: "Whether or not to allow modern msbuild to reuse msbuild.exe nodes"
+});
+
+env.register({
+  name: "BUILD_MAX_CPU_COUNT",
+  default: os.cpus().length.toString(),
+  help: "Max number of cpus to use whilst building"
+});
 
 env.register({
   name: "BUILD_CONFIGURATION",
@@ -27,6 +40,24 @@ env.register({
   name: "MAX_NUNIT_AGENTS",
   default: "(auto)",
   help: "How many NUNit agents to use for testing (net framework)"
+});
+
+env.register({
+  name: "BUILD_INCLUDE",
+  default: "*.sln",
+  help: "Mask to use for selecting solutions to build"
+});
+
+env.register({
+  name: "BUILD_EXCLUDE",
+  default: `**/node_modules/**/*.sln,./${getToolsFolder()}/**/*.sln`,
+  help: "Mask to use for specifically omitting solutions from build"
+});
+
+env.register({
+  name: "BUILD_DOTNET_CORE",
+  default: "false",
+  help: "Set to a truthy value to guide build to use 'dotnet build'"
 });
 
 env.register({

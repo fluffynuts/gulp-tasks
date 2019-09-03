@@ -13,7 +13,9 @@ const chalk = require("chalk"),
     associate,
     resolveArray,
     explode,
-    overrideDefault
+    overrideDefault,
+    resolveNumber,
+    resolveFlag
   };
 
 const positives = ["1", "yes", "true"];
@@ -187,17 +189,51 @@ function taskHelp(task) {
 
 function resolve(name) {
   const target = registeredEnvironmentVariables[name] || {};
-  return process.env[name] || target.default;
+  return process.env[name] === undefined
+    ? target.default
+    : process.env[name];
 }
 
 function resolveArray(name) {
   const
-    target = registeredEnvironmentVariables[name] || {},
-    value = process.env[name] || target.default || "",
+    value = resolve(name) || "",
     valueArray = Array.isArray(value)
       ? value
       : explode(value);
   return valueArray;
+}
+
+function resolveNumber(name) {
+  const
+    value = resolve(name),
+    asNumber = parseInt(value, 10);
+  if (isNaN(asNumber)) {
+    throw new Error(`${value} is not a valid numeric value for ${name}`);
+  }
+  return asNumber;
+}
+
+const positiveFlags = [
+  "yes",
+  "true",
+  "1"
+];
+const negativeFlags = [
+  "no",
+  "false",
+  "0"
+];
+
+function resolveFlag(name) {
+  const
+    value = (resolve(name) || "").toLowerCase();
+  if (positiveFlags.indexOf(value) > -1) {
+    return true;
+  }
+  if (negativeFlags.indexOf(value) > -1) {
+    return false;
+  }
+  throw new Error(`environmental flag not set and no default: ${name}`);
 }
 
 function explode(str, delimiter) {

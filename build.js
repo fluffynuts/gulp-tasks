@@ -1,6 +1,7 @@
 const os = require("os"),
   env = requireModule("env"),
   gulp = requireModule("gulp-with-help"),
+  gulpDebug = require("gulp-debug"),
   getToolsFolder = requireModule("get-tools-folder"),
   promisifyStream = requireModule("promisify"),
   areAllDotnetCore = requireModule("are-all-dotnet-core"),
@@ -9,6 +10,7 @@ const os = require("os"),
   xbuild = requireModule("gulp-xbuild"),
   gutil = requireModule("gulp-util"),
   log = requireModule("log"),
+  resolveMasks = requireModule("resolve-masks"),
   msbuild = require("gulp-msbuild");
 
 gulp.task("prebuild", ["nuget-restore"]);
@@ -20,50 +22,47 @@ const myTasks = ["build"],
     "BUILD_ARCHITECTURE",
     "BUILD_TARGETS",
     "BUILD_TOOLSVERSION",
-    "BUILD_VERBOSITY"
+    "BUILD_VERBOSITY",
+    "BUILD_MSBUILD_NODE_REUSE",
+    "BUILD_MAX_CPUCOUNT",
+    "BUILD_INCLUDE",
+    "BUILD_EXCLUDE"
   ];
 env.associate(myVars, myTasks);
 
 gulp.task(
   "build",
-  "Builds all Visual Studio solutions in tree",
+  "Builds Visual Studio solutions in tree",
   ["prebuild"],
-  async () => {
-    const solutions = gulp.src([
-      "**/*.sln",
-      "!**/node_modules/**/*.csproj",
-      `!./${getToolsFolder()}/**/*.csproj`
-    ]);
-
-    const useDotNetBuild = await areAllDotnetCore([
-      "**/*.csproj",
-      "!**/node_modules/**/*.sln",
-      `!./${getToolsFolder()}/**/*.csproj`
-    ]);
-
-    log.info(
-      gutil.colors.yellow(
-        useDotNetBuild
-          ? "Building with dotnet core"
-          : "Building with full framework"
-      )
-    );
-
-    return useDotNetBuild
-      ? buildForNetCore(solutions)
-      : buildForNETFramework(solutions);
-  }
+  doBuild
 );
 
-function check() {
-  return throwIfNoFiles("No .sln files found");
+gulp.task("quick-build", "Quick build without pre-cursors", doBuild);
+
+async function doBuild() {
+  const slnMasks = resolveMasks("BUILD_INCLUDE", "BUILD_EXCLUDE");
+  const solutions = gulp
+    .src(slnMasks, { allowEmpty: true })
+    .pipe(
+      gulpDebug({
+        title: "build-sln"
+      })
+    )
+    .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
+
+  // TODO: find a reliable, quick way to determine if the projects to be compiled
+  //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
+  //       here, so for now, DNC build must be requested via env BUILD_DONET_CORE
+  return env.resolveFlag("BUILD_DOTNET_CORE")
+    ? buildForNetCore(solutions)
+    : buildForNETFramework(solutions);
 }
 
 function buildForNetCore(solutions) {
-  const configuration = process.env.BUILD_CONFIGURATION || "Debug";
+  log.info(gutil.colors.yellow("Building with dotnet core"));
+  const configuration = env.resolve("BUILD_CONFIGURATION");
   return promisifyStream(
     solutions
-      .pipe(check())
       .pipe(
         clean({
           configuration
@@ -79,9 +78,19 @@ function buildForNetCore(solutions) {
 }
 
 function buildForNETFramework(solutions) {
+  log.info(gutil.colors.yellow("Building with full .NET framework"));
+  return promisifyStream(buildAsStream(solutions));
+}
+
+function buildAsStream(solutions) {
   const builder = os.platform() === "win32" ? msbuild : xbuild;
-  return promisifyStream(
-    solutions.pipe(check()).pipe(
+  console.log({
+    builder,
+    solutions
+  });
+  return solutions
+    .pipe(gulpDebug({ title: "before msbuild" }))
+    .pipe(
       builder({
         toolsVersion: env.resolve("BUILD_TOOLSVERSION"),
         targets: env.resolveArray("BUILD_TARGETS"),
@@ -92,8 +101,14 @@ function buildForNETFramework(solutions) {
         solutionPlatform: env.resolve("BUILD_PLATFORM"),
         // NB: this is the MSBUILD architecture, NOT your desired output architecture
         architecture: env.resolve("BUILD_ARCHITECTURE"),
-        nologo: false
+        nologo: false,
+        logCommand: true,
+        nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
+        maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT")
       })
     )
-  );
+    .on("end", function() {
+      console.log("moo cakes");
+    })
+    .pipe(gulpDebug({ title: "after msbuild" }));
 }

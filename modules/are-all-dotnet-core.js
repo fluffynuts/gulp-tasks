@@ -2,6 +2,7 @@ const
   gulp = requireModule("gulp-with-help"),
   fs = require("fs"),
   xml2js = require("xml2js"),
+  throwIfNoFiles = requireModule("throw-if-no-files"),
   debug = require("debug")(__filename.replace(/\.js$/, "")),
   es = require("event-stream");
 
@@ -14,7 +15,8 @@ module.exports = async function areAllDotnetCore(
   return await new Promise(async (resolve, reject) => {
     const projFiles = [];
     gulp
-      .src(gulpSrcSpecs)
+      .src(gulpSrcSpecs, { allowEmpty: true })
+      .pipe(throwIfNoFiles())
       .pipe(
         (() => {
           return es.through(
