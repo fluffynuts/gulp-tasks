@@ -7,6 +7,12 @@ const debug = require("debug")("register env vars"),
 debug("-- start env var registration --");
 
 env.register({
+  name: "USE_SYSTEM_NUGET",
+  default: "false",
+  help: "Whether or not to use nuget.exe if found in the path"
+});
+
+env.register({
   name: "BUILD_MSBUILD_NODE_REUSE",
   default: "true",
   help: "Whether or not to allow modern msbuild to reuse msbuild.exe nodes"

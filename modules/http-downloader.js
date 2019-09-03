@@ -64,7 +64,7 @@ HttpDownloader.prototype = {
       this._debug('attempt rename of temp file');
       fs.renameSync(src, dst)
       this._clearStatus();
-      this._info('-> download complete!');
+      this._info(`-> ${dst} download complete!`);
       resolve(dst)
     } catch (e) {
       this._debug('rename error:', e);

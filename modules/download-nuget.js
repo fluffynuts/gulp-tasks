@@ -15,35 +15,48 @@ function downloadNugetTo(targetFolder) {
     .then(() => validateCanRunExe(target));
 }
 
-var validators = {};
+const
+  validators = {},
+  cached = {};
 
 function validateCanRunExe(exePath) {
   if (validators[exePath]) {
     return validators[exePath];
   }
-  console.log("validate", { exePath });
+  const shouldLog = !validators[exePath];
+  if (shouldLog) {
+    logger.debug(`validating exe at: ${exePath}`);
+  }
   return validators[exePath] = new Promise((resolve, reject) => {
     var
       lastMessage = "unknown error",
       attempts = 0;
     setTimeout(function testExe() {
+      if (cached[exePath]) {
+        return resolve();
+      }
       if (attempts === 10) {
         return reject(`Unable to run executable at ${exePath}: ${lastMessage}`);
       }
       attempts++;
-      try {
+      if (shouldLog) {
         logger.debug(`attempt #${attempts} to run ${exePath}`);
-        var a = attempts;
-        nugetUpdateSelf(exePath).then(() => {
-          logger.info(`nuget.exe appears to be valid! (${a})`);
-          return resolve();
-        });
-      } catch (e) {
-        lastMessage = e.message || lastMessage;
-        logger.debug(`failed to run executable (${e.message}); ${i < 9 ? "will try again" : "giving up"}`);
       }
-
-      setTimeout(testExe, 1000);
+      var a = attempts;
+      nugetUpdateSelf(exePath).then(() => {
+        if (shouldLog) {
+          const sub = a > 1 ? ` (${a})` : "";
+          logger.info(`nuget.exe appears to be valid!${sub}`);
+        }
+        cached[exePath] = true;
+        return resolve();
+      }).catch(e => {
+        lastMessage = e.message || lastMessage;
+        if (shouldLog) {
+          logger.debug(`failed to run executable (${e.message}); ${i < 9 ? "will try again" : "giving up"}`);
+        }
+        setTimeout(testExe, 1000);
+      });
     }, 1000);
   });
 }

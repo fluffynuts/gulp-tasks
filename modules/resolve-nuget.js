@@ -1,4 +1,6 @@
 const os = require("os"),
+  debug = require("debug")("resolve-nuget"),
+  env = requireModule("env"),
   fs = requireModule("fs"),
   path = require("path"),
   which = require("which"),
@@ -9,8 +11,14 @@ const os = require("os"),
   quoteIfRequired = require("./quote-if-required"),
   nugetExe = "nuget.exe";
 
+env.associate("USE_SYSTEM_NUGET", [ "install-default-tools", "nuget-restore" ]);
+
 function findNugetInPath() {
   try {
+    if (!env.resolveFlag("USE_SYSTEM_NUGET")) {
+      debug("Usage of system-wide nuget must be opted-in via USE_SYSTEM_NUGET; will prefer local nuget.exe");
+      return null;
+    }
     const nuget = which.sync("nuget");
     log.info(`found nuget in PATH: ${nuget}`);
     return nuget;
