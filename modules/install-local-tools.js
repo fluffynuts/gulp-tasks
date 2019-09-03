@@ -66,22 +66,36 @@ function generateNugetInstallArgsFor(toolSpec) {
 
 // gulp4 doesn't seem to protect against repeated dependencies, so this is a safeguard
 //  here to prevent accidental parallel install
-var installing = false;
+let
+  installingPromise = null,
+  installingRequest = null;
 module.exports = {
   install: (requiredTools, overrideToolsFolder) => {
     if (!requiredTools) {
       throw new Error("No required tools set");
     }
-    if (installing) {
-      debug("default tools installer already running...");
-      return Promise.resolve();
-    }
-    installing = true;
     if (!Array.isArray(requiredTools)) {
       requiredTools = [requiredTools];
     }
     const target = overrideToolsFolder || getToolsFolder();
-    return ensureFolderExists(target)
+    // TODO: should allow subsequent installations, ie if
+    //       a prior install asked for tools "A" and "B", a subsequent
+    //       request for "C" should just wait and then do the work
+    if (installingPromise) {
+      debug("default tools installer already running...");
+      const missing = requiredTools.reduce((acc, cur) => {
+        if (installingRequest.indexOf(cur) === -1) {
+          acc.push(cur);
+        }
+        return acc;
+      }, []);
+      if (missing.length) {
+        return Promist.reject("multiple tools installations are not (yet) supported");
+      }
+      return installingPromise;
+    }
+    installingRequest = requiredTools;
+    return installingPromise = ensureFolderExists(target)
       .then(() => cleanFoldersFrom(target))
       .then(() => downloadOrUpdateNuget(target))
       .then(() =>
@@ -97,7 +111,6 @@ module.exports = {
       )
       .then(() => {
         debug("tool installation complete");
-        installing = false;
       });
   },
   clean: overrideToolsFolder => {

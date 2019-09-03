@@ -4,7 +4,7 @@ const os = require("os"),
   fs = requireModule("fs"),
   path = require("path"),
   which = require("which"),
-  config = require("./config"),
+  configGenerator = requireModule("config-generator"),
   lsR = require("./ls-r"),
   toolsDir = require("./get-tools-folder")(),
   findNpmBase = require("./find-npm-base"),
@@ -53,6 +53,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
         return path.toLowerCase().endsWith(nugetExe);
       })
       .sort()[0];
+  const config = configGenerator();
   const resolved = [
     checkExists(nugetPath),
     checkExists(toolsNuget),

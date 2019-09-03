@@ -1,18 +1,15 @@
-var
+const
   gulp = requireModule("gulp-with-help"),
+  downloadNuget = requireModule("download-nuget"),
   env = requireModule("env"),
-  config = requireModule("config"),
-  HttpDownloader = requireModule("http-downloader"),
-  verifyExe = requireModule("verify-exe");
+  configGenerator = requireModule("config-generator");
 
 env.associate("BUILD_TOOLS_FOLDER", "get-local-nuget");
 
 gulp.task(
   "get-local-nuget",
   "Attempts to download the latest nuget.exe to the build tooling folder", () => {
-  var downloader = new HttpDownloader();
-  return downloader.download(config.nugetDownloadUrl, config.localNuget).then(function (result) {
-    console.log("attempting to verify downloaded nuget.exe");
-    return verifyExe(result);
-  });
+    const config = configGenerator();
+    return downloadNuget(config.localNuget)
+      .then(() => console.log("get-local-nuget completes"));
 });

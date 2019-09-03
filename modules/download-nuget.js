@@ -87,6 +87,6 @@ function retry(fn, attempt, maxAttempts, wait) {
   });
 }
 
-module.exports = (targetFolder) => {
-  return retry(() => downloadNugetTo(targetFolder));
+module.exports = function downloadNuget(targetFolder) {
+  return retry(() => downloadNugetTo(targetFolder)).then(() => console.log("nuget downloaded to: " + targetFolder));
 };

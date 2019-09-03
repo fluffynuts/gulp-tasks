@@ -243,4 +243,7 @@ function explode(str, delimiter) {
     .filter(p => !!p);
 }
 
+var register = require("./register-environment-variables");
+register(toExport);
+
 module.exports = toExport;
