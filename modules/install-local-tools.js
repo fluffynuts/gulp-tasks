@@ -1,5 +1,4 @@
-const
-  resolveNuget = require("./resolve-nuget"),
+const resolveNuget = require("./resolve-nuget"),
   downloadNuget = require("./download-nuget"),
   nugetUpdateSelf = require("./nuget-update-self"),
   debug = require("debug")("install-local-tools"),
@@ -12,7 +11,8 @@ const
   del = require("del");
 
 function cleanFoldersFrom(toolsFolder) {
-  const dirs = fs.readdirSync(toolsFolder)
+  const dirs = fs
+    .readdirSync(toolsFolder)
     .map(p => path.join(toolsFolder, p))
     .filter(p => {
       const stat = fs.lstatSync(p);
@@ -46,11 +46,10 @@ function generateNugetSourcesOptions(toolSpecifiedSource) {
   if (toolSpecifiedSource) {
     return ["-source", toolSpecifiedSource];
   }
-  return (process.env.NUGET_SOURCES || "").split(',').reduce(
-    (acc, cur) => acc.concat(cur ? ["-source", cur] : []), []
-  );
+  return (process.env.NUGET_SOURCES || "")
+    .split(",")
+    .reduce((acc, cur) => acc.concat(cur ? ["-source", cur] : []), []);
 }
-
 
 function generateNugetInstallArgsFor(toolSpec) {
   // accept a tool package in the formats:
@@ -60,7 +59,7 @@ function generateNugetInstallArgsFor(toolSpec) {
   //  - retrieves the package from the named source (same as nuget.exe install nunit -source proget.mycompany.moo}
   //  - allows consumer to be specific about where the package should come from
   //  - allows third-parties to be specific about their packages being from, eg, nuget.org
-  var parts = toolSpec.split('/');
+  var parts = toolSpec.split("/");
   var toolPackage = parts.splice(parts.length - 1);
   return ["install", toolPackage].concat(generateNugetSourcesOptions(parts[0]));
 }
@@ -85,19 +84,25 @@ module.exports = {
     return ensureFolderExists(target)
       .then(() => cleanFoldersFrom(target))
       .then(() => downloadOrUpdateNuget(target))
-      .then(() => Promise.all(
-        requiredTools.map(tool =>
-          nuget(
-            generateNugetInstallArgsFor(tool),
-            { cwd: target }
-          )
+      .then(() =>
+        Promise.all(
+          requiredTools.map(tool => {
+            debug(`install: ${tool}`);
+            return nuget(
+              generateNugetInstallArgsFor(tool),
+              { cwd: target }
+            );
+          })
         )
-      )).then(() => {
+      )
+      .then(() => {
+        debug("tool installation complete");
         installing = false;
       });
   },
-  clean: (overrideToolsFolder) => {
+  clean: overrideToolsFolder => {
+    debug("cleaning tools folder");
     const target = overrideToolsFolder || getToolsFolder();
     return cleanFoldersFrom(target);
   }
-}
+};
