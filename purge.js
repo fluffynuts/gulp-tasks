@@ -1,10 +1,19 @@
-'use strict'
-const gulp = requireModule('gulp-with-help'),
-    path = require('path'),
-    del = require('del'),
-    rimraf = require('rimraf'),
-    findDirs = requireModule('find-dirs'),
-    debug = require('debug')('purge');
+const gulp = requireModule("gulp-with-help"),
+  env = requireModule("env"),
+  path = require("path"),
+  rimraf = require("rimraf"),
+  findDirs = requireModule("find-dirs"),
+  log = requireModule("log"),
+  debug = require("debug")("purge");
+
+env.associate([
+  "PURGE_DRY_RUN",
+  "PURGE_JS_DIRS",
+  "PURGE_DOTNET_DIRS",
+  "PURGE_ADDITIONAL_DIRS"
+], [
+  "purge", "purge-dotnet", "mega-purge"
+]);
 
 function isNotInRootDir(dir) {
   // where 'root dir' refers to the gulp context current dir
@@ -13,10 +22,13 @@ function isNotInRootDir(dir) {
 }
 
 function doRegularRm(dir, inRootToo) {
+  const
+    dryRun = env.resolveFlag("PURGE_DRY_RUN"),
+    del = d => dryRun ? log.info(`del: ${d}`) : rimraf.sync(d);
   return new Promise((resolve, reject) => {
     try {
       debug(`searching for folders matching: ${dir}`);
-      var matches = findDirs('.', dir);
+      var matches = findDirs(".", dir, ["node_modules", "bower_components"]);
       debug(`got: ${matches}`);
       if (!inRootToo) {
         matches = matches.filter(isNotInRootDir);
@@ -27,7 +39,7 @@ function doRegularRm(dir, inRootToo) {
       }
       matches.forEach(f => {
         debug(`should purge: ${f}`);
-        rimraf.sync(f);
+        del(f);
         debug(`purge complete: ${f}`);
       });
       resolve();
@@ -38,31 +50,45 @@ function doRegularRm(dir, inRootToo) {
   });
 }
 
-function doPurge(includeRootFolders) {
-  return Promise.all([
-    del([
-      './source/**/bin/**',
-      './src/**/bin/**',
-      './source/**/obj/**',
-      './src/**/obj/**'
-    ]),
-    doRegularRm('node_modules', includeRootFolders),
-    doRegularRm('bower_components', includeRootFolders),
-    doRegularRm('packages', includeRootFolders)
-  ]).then(() => {
-    debug('-- PURGE COMPLETE! ---');
-  });
+
+function doPurge(dirs, includeRootFolders) {
+  return Promise.all(dirs.map(d => doRegularRm(d, includeRootFolders))).then(
+    () => {
+      debug("-- PURGE COMPLETE! ---");
+    }
+  );
 }
 
-gulp.task('purge',
-    'Purges all bins, objs, node_modules, bower_components and packages not in the root',
-    function () {
-    return doPurge(false);
-});
+function listPurgeDirs(...varNames) {
+  return varNames.reduce(
+    (acc, cur) => {
+      const resolved = env.resolveArray(cur);
+      acc.push.apply(acc, resolved);
+      return acc;
+    }, []);
+}
 
-gulp.task('mega-purge',
-  'Performs regular purge and in the root (you\'ll have to `npm install` afterwards!',
+const
+  js = "PURGE_JS_DIRS",
+  dotnet = "PURGE_DOTNET_DIRS",
+  other = "PURGE_ADDITIONAL_DIRS";
+
+gulp.task(
+  "purge",
+  "Purges all bins, objs, node_modules, bower_components and packages not in the root",
   function() {
-  return doPurge(true);
+    return doPurge(listPurgeDirs(dotnet, js, other), false);
+  }
+);
+
+gulp.task("purge-dotnet", "Purges dotnet artifacts", () => {
+  return doPurge(listPurgeDirs(dotnet, other), false);
 });
 
+gulp.task(
+  "mega-purge",
+  "Performs regular purge and in the root (you'll have to `npm install` afterwards!",
+  function() {
+    return doPurge(listPurgeDirs(dotnet, js, other), true);
+  }
+);

@@ -191,28 +191,46 @@ function taskHelp(task) {
 }
 
 function resolve(name) {
+  const result = resolveInternal(name);
+  logResolved(name, result);
+  return result;
+}
+
+function resolveInternal(name) {
   const target = registeredEnvironmentVariables[name] || {};
   return process.env[name] === undefined
     ? target.default
     : process.env[name];
 }
 
+function logResolved(name, value) {
+  debug(`resolved: ${name} => ${quoteString(value)}`);
+}
+
+function quoteString(val) {
+  return typeof(val) === "string"
+    ? `"${val}"`
+    : val;
+}
+
 function resolveArray(name) {
   const
-    value = resolve(name) || "",
+    value = resolveInternal(name) || "",
     valueArray = Array.isArray(value)
       ? value
       : explode(value);
+  logResolved(name, valueArray);
   return valueArray;
 }
 
 function resolveNumber(name) {
   const
-    value = resolve(name),
+    value = resolveInternal(name),
     asNumber = parseInt(value, 10);
   if (isNaN(asNumber)) {
     throw new Error(`${value} is not a valid numeric value for ${name}`);
   }
+  logResolved(name, asNumber);
   return asNumber;
 }
 
@@ -229,11 +247,13 @@ const negativeFlags = [
 
 function resolveFlag(name) {
   const
-    value = (resolve(name) || "").toLowerCase();
+    value = (resolveInternal(name) || "").toLowerCase();
   if (positiveFlags.indexOf(value) > -1) {
+    logResolved(name, true);
     return true;
   }
   if (negativeFlags.indexOf(value) > -1) {
+    logResolved(name, false);
     return false;
   }
   throw new Error(`environmental flag not set and no default: ${name}`);

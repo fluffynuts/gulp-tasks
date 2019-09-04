@@ -73,7 +73,7 @@ module.exports = function(env) {
   });
 
   env.register({
-    name: "BUILD_DOTNET_CORE",
+    name: "DOTNET_CORE",
     default: "false",
     help: "Set to a truthy value to guide build to use 'dotnet build'"
   });
@@ -97,7 +97,7 @@ module.exports = function(env) {
    - globs match dotnet core projects or .net framework built assemblies
    - elements surrounded with () are treated as pure gulp.src masks`,
     defaultTestInclude = "*.Tests,*.Tests.*,Tests,Test,Test.*",
-    defaultTestExclude = `(!**/node_modules/**/*),(!./${getToolsFolder(env)}/**/*)`;
+    defaultTestExclude = `{!**/node_modules/**/*},{!./${getToolsFolder(env)}/**/*}`;
   env.register({
     name: "TEST_INCLUDE",
     help: `comma-separated list of test projects to match${extra}`,
@@ -199,6 +199,30 @@ module.exports = function(env) {
     name: "PUBLISH_BUILD_CONFIGURATION",
     help: "Build configuration to use when publishing dotnet core projects",
     default: "Release"
+  });
+
+  env.register({
+    name: "PURGE_DRY_RUN",
+    help: "Whether or not to run purge operations in dry-run mode",
+    default: "false"
+  });
+
+  env.register({
+    name: "PURGE_JS_DIRS",
+    help: "Comma-separated list of directory names to search for when purging js",
+    default: "node_modules,bower_components"
+  });
+
+  env.register({
+    name: "PURGE_DOTNET_DIRS",
+    help: "Comma-separated list of directory names to search for when purging dotnet",
+    default: "obj,bin,packages"
+  });
+
+  env.register({
+    name: "PURGE_ADDITIONAL_DIRS",
+    help: "Comma-separated list of directory names to purge in addition to js & dotnet",
+    default: ""
   });
 
   debug("-- env registration complete --");

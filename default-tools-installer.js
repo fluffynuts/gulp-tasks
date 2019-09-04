@@ -9,13 +9,13 @@ const debug = require("debug")("default-tools-installer"),
     `${nugetSourceName}/reportgenerator`
   ];
 
-env.associate("default-tools-installer", "BUILD_TOOLS_FOLDER");
+env.associate("default-tools-installer", [ "BUILD_TOOLS_FOLDER", "DOTNET_CORE" ]);
 
 gulp.task(
   "default-tools-installer",
   `Installs the default toolset: ${tools.join(", ")}`,
   () => {
-    if (env.resolveFlag("BUILD_DOTNET_CORE")) {
+    if (env.resolveFlag("DOTNET_CORE")) {
       debug("not invoked for dotnet core builds");
       return Promise.resolve();
     }

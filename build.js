@@ -11,6 +11,7 @@ const chalk = require("chalk"),
   gutil = requireModule("gulp-util"),
   log = requireModule("log"),
   resolveMasks = requireModule("resolve-masks"),
+  logConfig = requireModule("log-config"),
   msbuild = require("gulp-msbuild");
 
 gulp.task("prebuild", ["nuget-restore"]);
@@ -55,7 +56,7 @@ async function doBuild() {
   // TODO: find a reliable, quick way to determine if the projects to be compiled
   //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
   //       here, so for now, DNC build must be requested via env BUILD_DONET_CORE
-  return env.resolveFlag("BUILD_DOTNET_CORE")
+  return env.resolveFlag("DOTNET_CORE")
     ? buildForNetCore(solutions)
     : buildForNETFramework(solutions);
 }
@@ -103,7 +104,18 @@ function buildAsStream(solutions) {
   };
 
   if (env.resolveFlag("BUILD_SHOW_INFO")) {
-    logBuildInfo(config);
+    logConfig(config, {
+      toolsVersion: "Tools version",
+      targets: "Build targets",
+      configuration: "Build configuration",
+      stdout: "Log to stdout",
+      verbosity: "Build verbosity",
+      errorOnFail: "Any error fails the build",
+      solutionPlatform: "Build platform",
+      architecture: "Build architecture",
+      nodeReuse: "Re-use MSBUILD nodes",
+      maxcpucount: "Max CPUs to use for build",
+    });
   }
   return solutions
     .pipe(gulpDebug({ title: "before msbuild" }))
@@ -112,39 +124,4 @@ function buildAsStream(solutions) {
       console.log("moo cakes");
     })
     .pipe(gulpDebug({ title: "after msbuild" }));
-}
-
-function logBuildInfo(config) {
-  const logLines = [];
-  store("toolsVersion", "Tools version");
-  store("targets", "Build targets"),
-    store("configuration", "Build configuration");
-  store("stdout", "Log to stdout");
-  store("verbosity", "Build verbosity");
-  store("errorOnFail", "Any error fails the build");
-  store("solutionPlatform", "Build platform");
-  store("architecture", "Build architecture");
-  store("nodeReuse", "Re-use MSBUILD nodes");
-  store("maxcpucount", "Max CPUs to use for build");
-
-  outputLogs();
-
-  function outputLogs() {
-    const longest = logLines
-      .map(o => o.title.length)
-      .reduce((acc, cur) => (acc > cur ? acc : cur), 0);
-    logLines
-      .sort((a, b) => (a.title > b.title ? 1 : 0))
-      .forEach(line => {
-        const pre = chalk.yellowBright(padRight(line.title, longest)),
-          next = chalk.cyanBright(`${line.value}`);
-        log.info(`${pre} : ${next}`);
-      });
-  }
-  function store(prop, title) {
-    const value = config[prop];
-    if (value !== undefined) {
-      logLines.push({ title, value });
-    }
-  }
 }
