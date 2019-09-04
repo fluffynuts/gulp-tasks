@@ -56,7 +56,7 @@ module.exports = function(env) {
 
   env.register({
     name: "MAX_NUNIT_AGENTS",
-    default: "(auto)",
+    default: os.cpus().length,
     help: "How many NUNit agents to use for testing (net framework)"
   });
 

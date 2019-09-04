@@ -1,5 +1,6 @@
 "use strict";
 var gutil = require("gulp-util"),
+  env = requireModule("env"),
   es = require("event-stream"),
   path = require("path"),
   fs = require("fs"),
@@ -224,20 +225,7 @@ function quoted(str) {
 }
 
 function generateAgentsLimitFor(nunit, options) {
-  var raw = options.maxAgents || process.env.NUNIT_MAX_AGENTS,
-    limit = parseInt(raw);
-  if (isNaN(limit)) {
-    limit = os.cpus().length;
-    console.warn(
-      [
-        `Limiting to the number of CPUs Node can find: ${limit}`,
-        `(specify your own limit with:`,
-        `- the 'maxAgents' option or`,
-        `- the NUNIT_MAX_AGENTS environment variable`
-      ].join("\n")
-    );
-  }
-
+  var limit = env.resolveNumber("MAX_NUNIT_AGENTS");
   return `--agents=${limit}`;
 }
 

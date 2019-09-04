@@ -123,10 +123,10 @@ function testWithNunitCli(configuration, testMask) {
                           .length;
             isBin = !!(parts.filter(p => p.match(/^bin$/i)).length),
             buildConfig = findBuildConfigFrom(parts),
-            isDebug = buildConfig === "debug",
-            isForConfig = buildConfig === configuration,
+            isDebug = buildConfig.toLowerCase() === "debug",
+            isForConfig = buildConfig.toLowerCase() === configuration.toLowerCase(),
             isAny = (parts[parts.length - 1] || "").toLowerCase() === "bin",
-            include = !isNetCore && isPrimary && (isDebug || isAny || isForConfig) ;
+            include = !isNetCore && isPrimary && isBin && (isDebug || isAny || isForConfig) ;
           debug({
             path: vinylFile.path,
             parts,
@@ -135,6 +135,7 @@ function testWithNunitCli(configuration, testMask) {
             isPrimary,
             isDebug,
             isAny,
+            isBin,
             isForConfig,
             include
           });

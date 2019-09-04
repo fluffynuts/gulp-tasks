@@ -125,7 +125,10 @@ function update(varName, fallbackValue, help, tasks) {
 }
 
 function trim(str) {
-  return (str || "").trim();
+  if (str === null || str === undefined) {
+    return "";
+  }
+  return (str.toString()).trim();
 }
 
 function printHelp() {
@@ -199,8 +202,8 @@ function resolve(name) {
 function resolveInternal(name) {
   const target = registeredEnvironmentVariables[name] || {};
   return process.env[name] === undefined
-    ? target.default
-    : process.env[name];
+    ? "" + target.default
+    : "" + process.env[name];
 }
 
 function logResolved(name, value) {
