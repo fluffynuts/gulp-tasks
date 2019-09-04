@@ -13,6 +13,18 @@ module.exports = function(env) {
   });
 
   env.register({
+    name: "BUILD_SHOW_INFO",
+    default: "true",
+    help: "Whether or not to show information about the build before it starts"
+  });
+
+  env.register({
+    name: "BUILD_FAIL_ON_ERROR",
+    default: "true",
+    help: "Whether to fail the build immediately on any build error"
+  });
+
+  env.register({
     name: "BUILD_MSBUILD_NODE_REUSE",
     default: "true",
     help: "Whether or not to allow modern msbuild to reuse msbuild.exe nodes"

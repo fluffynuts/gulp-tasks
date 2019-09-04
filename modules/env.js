@@ -1,4 +1,5 @@
 const chalk = require("chalk"),
+  debug = require("debug")("env"),
   registeredEnvironmentVariables = {},
   longestStringLength = require("./longest-string-length"),
   padRight = require("./pad-right"),
@@ -61,6 +62,8 @@ function register(config) {
     registeredEnvironmentVariables[name].default = pendingDefaultOverrides[name];
     delete pendingDefaultOverrides[name];
   }
+  const registered = registeredEnvironmentVariables[name];
+  debug(`registering env var ${name} (default: ${registered.default})`);
   return toExport;
 }
 

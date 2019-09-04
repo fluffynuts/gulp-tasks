@@ -1,10 +1,10 @@
-const os = require("os"),
+const chalk = require("chalk"),
+  padRight = requireModule("pad-right"),
+  os = require("os"),
   env = requireModule("env"),
   gulp = requireModule("gulp-with-help"),
   gulpDebug = require("gulp-debug"),
-  getToolsFolder = requireModule("get-tools-folder"),
   promisifyStream = requireModule("promisify"),
-  areAllDotnetCore = requireModule("are-all-dotnet-core"),
   { clean, build } = require("gulp-dotnet-cli"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
   xbuild = requireModule("gulp-xbuild"),
@@ -26,7 +26,9 @@ const myTasks = ["build"],
     "BUILD_MSBUILD_NODE_REUSE",
     "BUILD_MAX_CPUCOUNT",
     "BUILD_INCLUDE",
-    "BUILD_EXCLUDE"
+    "BUILD_EXCLUDE",
+    "BUILD_SHOW_INFO",
+    "BUILD_FAIL_ON_ERROR"
   ];
 env.associate(myVars, myTasks);
 
@@ -78,37 +80,71 @@ function buildForNetCore(solutions) {
 }
 
 function buildForNETFramework(solutions) {
-  log.info(gutil.colors.yellow("Building with full .NET framework"));
+  log.info(chalk.yellowBright("Building with full .NET framework"));
   return promisifyStream(buildAsStream(solutions));
 }
 
 function buildAsStream(solutions) {
   const builder = os.platform() === "win32" ? msbuild : xbuild;
-  console.log({
-    builder,
-    solutions
-  });
+  const config = {
+    toolsVersion: env.resolve("BUILD_TOOLSVERSION"),
+    targets: env.resolveArray("BUILD_TARGETS"),
+    configuration: env.resolve("BUILD_CONFIGURATION"),
+    stdout: true,
+    verbosity: env.resolve("BUILD_VERBOSITY"),
+    errorOnFail: env.resolveFlag("BUILD_FAIL_ON_ERROR"),
+    solutionPlatform: env.resolve("BUILD_PLATFORM"),
+    // NB: this is the MSBUILD architecture, NOT your desired output architecture
+    architecture: env.resolve("BUILD_ARCHITECTURE"),
+    nologo: false,
+    logCommand: true,
+    nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
+    maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT")
+  };
+
+  if (env.resolveFlag("BUILD_SHOW_INFO")) {
+    logBuildInfo(config);
+  }
   return solutions
     .pipe(gulpDebug({ title: "before msbuild" }))
-    .pipe(
-      builder({
-        toolsVersion: env.resolve("BUILD_TOOLSVERSION"),
-        targets: env.resolveArray("BUILD_TARGETS"),
-        configuration: env.resolve("BUILD_CONFIGURATION"),
-        stdout: true,
-        verbosity: env.resolve("BUILD_VERBOSITY"),
-        errorOnFail: true,
-        solutionPlatform: env.resolve("BUILD_PLATFORM"),
-        // NB: this is the MSBUILD architecture, NOT your desired output architecture
-        architecture: env.resolve("BUILD_ARCHITECTURE"),
-        nologo: false,
-        logCommand: true,
-        nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
-        maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT")
-      })
-    )
+    .pipe(builder(config))
     .on("end", function() {
       console.log("moo cakes");
     })
     .pipe(gulpDebug({ title: "after msbuild" }));
+}
+
+function logBuildInfo(config) {
+  const logLines = [];
+  store("toolsVersion", "Tools version");
+  store("targets", "Build targets"),
+    store("configuration", "Build configuration");
+  store("stdout", "Log to stdout");
+  store("verbosity", "Build verbosity");
+  store("errorOnFail", "Any error fails the build");
+  store("solutionPlatform", "Build platform");
+  store("architecture", "Build architecture");
+  store("nodeReuse", "Re-use MSBUILD nodes");
+  store("maxcpucount", "Max CPUs to use for build");
+
+  outputLogs();
+
+  function outputLogs() {
+    const longest = logLines
+      .map(o => o.title.length)
+      .reduce((acc, cur) => (acc > cur ? acc : cur), 0);
+    logLines
+      .sort((a, b) => (a.title > b.title ? 1 : 0))
+      .forEach(line => {
+        const pre = chalk.yellowBright(padRight(line.title, longest)),
+          next = chalk.cyanBright(`${line.value}`);
+        log.info(`${pre} : ${next}`);
+      });
+  }
+  function store(prop, title) {
+    const value = config[prop];
+    if (value !== undefined) {
+      logLines.push({ title, value });
+    }
+  }
 }

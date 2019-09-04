@@ -1,4 +1,4 @@
-module.exports = function pad(str, len, isRight) {
+module.exports = function pad(str, len, isRight, padString) {
   if (isRight === undefined) {
     // default to right-padding
     isRight = true;
@@ -13,7 +13,10 @@ module.exports = function pad(str, len, isRight) {
   if (requiredChars < 1) {
     return str;
   }
-  const toAdd = " ".repeat(requiredChars);
+  padString = padString || " ";
+  const
+    required = Math.ceil(requiredChars / padString.length),
+    toAdd = padString.repeat(required).slice(0, requiredChars);
   return isRight
     ? str + toAdd
     : toAdd + str;

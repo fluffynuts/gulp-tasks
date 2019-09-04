@@ -1,4 +1,4 @@
 const pad = require("./pad");
-module.exports = function padRight(str, len) {
-  return pad(str, len, true);
+module.exports = function padRight(str, len, padString) {
+  return pad(str, len, true, padString);
 }
