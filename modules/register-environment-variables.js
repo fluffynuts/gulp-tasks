@@ -156,7 +156,7 @@ module.exports = function(env) {
   env.register({
     name: "COVERAGE_EXCLUDE_ASSEMBLIES",
     help: ".NET assemblies to exclude in coverage testing",
-    default: defaultTestInclude
+    default: ""
   });
 
   const defaultReportsPath = path.join("buildreports", "coverage.xml");

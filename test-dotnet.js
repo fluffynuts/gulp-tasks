@@ -13,6 +13,7 @@ const gulp = requireModule("gulp-with-help"),
   env = requireModule("env"),
   resolveTestMasks = requireModule("resolve-test-masks"),
   logConfig = requireModule("log-config"),
+  netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter"),
   multiSplit = requireModule("multi-split");
 
 gulp.task(
@@ -80,10 +81,6 @@ function extractPureMask(str) {
   return str.substr(1, str.length - 2);
 }
 
-function dbg(o) {
-  console.log(o);
-  return o;
-}
 function testWithNunitCli(configuration, testMask) {
   const source = testMask.map(m => `${m}.dll`);
   let agents = parseInt(env.resolve("MAX_NUNIT_AGENTS"));
@@ -114,51 +111,13 @@ function testWithNunitCli(configuration, testMask) {
         read: false
       })
       .pipe(
-        filter(vinylFile => {
-          const parts = multiSplit(vinylFile.path, ["/", "\\"]),
-            isNetCore = !!(parts.filter(p => p.match(/^netcore/)).length),
-            assemblyName = parts[parts.length-1].replace(/\.dll$/gi, ""),
-            isPrimary = !!parts.slice(0, parts.length - 1)
-                          .filter(p => p.toLowerCase() === assemblyName.toLowerCase())
-                          .length;
-            isBin = !!(parts.filter(p => p.match(/^bin$/i)).length),
-            buildConfig = findBuildConfigFrom(parts),
-            isDebug = buildConfig.toLowerCase() === "debug",
-            isForConfig = buildConfig.toLowerCase() === configuration.toLowerCase(),
-            isAny = (parts[parts.length - 1] || "").toLowerCase() === "bin",
-            include = !isNetCore && isPrimary && isBin && (isDebug || isAny || isForConfig) ;
-          debug({
-            path: vinylFile.path,
-            parts,
-            buildConfig,
-            isNetCore,
-            isPrimary,
-            isDebug,
-            isAny,
-            isBin,
-            isForConfig,
-            include
-          });
-          return include;
-        })
+        filter(netFrameworkTestAssemblyFilter(configuration))
       )
       .pipe(gulpDebug({ title: "before filter", logger: debug }))
       .pipe(filter(file => isDistinctFile(file.path, seenAssemblies)))
       .pipe(gulpDebug({ title: "after filter", logger: debug }))
       .pipe(nunit(config))
   );
-}
-
-function findBuildConfigFrom(pathParts) {
-  const oneUp = pathParts[pathParts.length - 2];
-  if (oneUp === undefined) {
-    return "";
-  }
-  if (oneUp.match(/^net(standard\d\.\d|\d{3}|coreapp\d\.\d)$/)) {
-    // one-up is a release target... travel one higher
-    return pathParts[pathParts.length - 3] || "";
-  }
-  return oneUp;
 }
 
 function testAsDotnetCore(testProjects, configuration) {
