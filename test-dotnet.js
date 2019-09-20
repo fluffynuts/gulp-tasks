@@ -13,8 +13,7 @@ const gulp = requireModule("gulp-with-help"),
   env = requireModule("env"),
   resolveTestMasks = requireModule("resolve-test-masks"),
   logConfig = requireModule("log-config"),
-  netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter"),
-  multiSplit = requireModule("multi-split");
+  netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter");
 
 gulp.task(
   "test-dotnet",
