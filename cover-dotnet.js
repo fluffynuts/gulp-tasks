@@ -33,13 +33,6 @@ function runCoverage() {
     exclude = env
       .resolveArray("COVERAGE_EXCLUDE")
       .concat(env.resolveArray("COVERAGE_ADDITIONAL_EXCLUDE"));
-  console.log({
-    inputMasks,
-    exclude,
-    env: {
-      COVERAGE_INCLUDE_ASSEMBLIES: process.env.COVERAGE_INCLUDE_ASSEMBLIES
-    }
-  });
   return gulp
     .src(inputMasks, { allowEmpty: true })
     .pipe(filter(
