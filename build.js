@@ -37,12 +37,12 @@ gulp.task(
   "build",
   "Builds Visual Studio solutions in tree",
   ["prebuild"],
-  doBuild
+  build
 );
 
-gulp.task("quick-build", "Quick build without pre-cursors", doBuild);
+gulp.task("quick-build", "Quick build without pre-cursors", build);
 
-async function doBuild() {
+async function build() {
   const slnMasks = resolveMasks("BUILD_INCLUDE", "BUILD_EXCLUDE");
   const solutions = gulp
     .src(slnMasks, { allowEmpty: true })

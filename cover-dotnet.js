@@ -21,7 +21,7 @@ const myVars = [
 env.associate(myVars, [ "cover-dotnet", "quick-cover-dotnet" ]);
 
 const help = "Runs .NET tests with OpenCover or DotCover";
-function runCoverage() {
+function cover() {
   const
     configuration = env.resolve("BUILD_CONFIGURATION"),
     inputMasks = resolveMasks(
@@ -47,5 +47,5 @@ function runCoverage() {
   );
 }
 
-gulp.task("cover-dotnet", help, ["build"], runCoverage);
-gulp.task("quick-cover-dotnet", help, runCoverage);
+gulp.task("cover-dotnet", help, ["build"], cover);
+gulp.task("quick-cover-dotnet", help, cover);
