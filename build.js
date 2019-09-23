@@ -1,11 +1,12 @@
 const chalk = require("chalk"),
-  padRight = requireModule("pad-right"),
   os = require("os"),
   env = requireModule("env"),
   gulp = requireModule("gulp-with-help"),
   gulpDebug = require("gulp-debug"),
   promisifyStream = requireModule("promisify"),
-  { clean, build } = require("gulp-dotnet-cli"),
+  dotnetCli = require("gulp-dotnet-cli"),
+  dotnetClean = dotnetCli.clean,
+  dotnetBuild = dotnetCli.build,
   throwIfNoFiles = requireModule("throw-if-no-files"),
   xbuild = requireModule("gulp-xbuild"),
   gutil = requireModule("gulp-util"),
@@ -67,12 +68,12 @@ function buildForNetCore(solutions) {
   return promisifyStream(
     solutions
       .pipe(
-        clean({
+        dotnetClean({
           configuration
         })
       )
       .pipe(
-        build({
+        dotnetBuild({
           verbosity: "minimal",
           configuration
         })
