@@ -1,4 +1,5 @@
 const
+    debug = require("debug")("promisify-stream"),
     stream = require("stream"),
     promisifyFunction = require("./promisify-function");
 function isStream(o) {
@@ -31,12 +32,12 @@ function promisifyStream(s) {
   return new Promise((resolve, reject) => {
     var i = 1;
     function runResolve() {
-      console.log("runResolve");
+      debug("promisified stream ends successfully - resolving promise");
       reject = noop;
       resolve.apply(null, Array.from(arguments));
     }
     function runReject() {
-      console.log("runReject");
+      debug("promisified stream errors - rejecting promise");
       resolve = noop;
       reject.apply(null, Array.from(arguments));
     }

@@ -122,7 +122,7 @@ function buildAsStream(solutions) {
     .pipe(gulpDebug({ title: "before msbuild" }))
     .pipe(builder(config))
     .on("end", function() {
-      console.log("moo cakes");
+      gulpDebug({ title: "solutions pipe ends" });
     })
     .pipe(gulpDebug({ title: "after msbuild" }));
 }
