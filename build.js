@@ -2,7 +2,8 @@ const chalk = require("chalk"),
   os = require("os"),
   env = requireModule("env"),
   gulp = requireModule("gulp-with-help"),
-  gulpDebug = require("gulp-debug"),
+  gulpDebugGenerator = require("gulp-debug"),
+  debug = require("debug")("build"),
   promisifyStream = requireModule("promisify"),
   dotnetCli = require("gulp-dotnet-cli"),
   dotnetClean = dotnetCli.clean,
@@ -14,6 +15,13 @@ const chalk = require("chalk"),
   resolveMasks = requireModule("resolve-masks"),
   logConfig = requireModule("log-config"),
   msbuild = require("gulp-msbuild");
+
+function gulpDebug(title) {
+    return gulpDebugGenerator({
+            title,
+            logger: debug
+    });
+}
 
 gulp.task("prebuild", ["nuget-restore"]);
 
@@ -49,7 +57,7 @@ async function build() {
     .src(slnMasks, { allowEmpty: true })
     .pipe(
       gulpDebug({
-        title: "build-sln"
+        title: "build-sln",
       })
     )
     .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
