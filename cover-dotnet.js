@@ -30,9 +30,13 @@ function cover() {
     .map(
       s => `${s}.dll`
     ),
-    exclude = env
+    exclusions = env
       .resolveArray("COVERAGE_EXCLUDE")
-      .concat(env.resolveArray("COVERAGE_ADDITIONAL_EXCLUDE"));
+      .concat(env.resolveArray("COVERAGE_ADDITIONAL_EXCLUDE")),
+    include = env
+      .resolveArray("COVERAGE_INCLUDE"),
+    exclude = exclusions.filter(e => include.indexOf(e) === -1);
+
   return gulp
     .src(inputMasks, { allowEmpty: true })
     .pipe(filter(

@@ -135,11 +135,17 @@ module.exports = function(env) {
   });
 
   const defaultCoverageExclusions =
-    "FluentMigrator.*,PeanutButter.*,AutoMapper,AutoMapper.*,*.Tests.*";
+    "Dapper,MySql.Data,MySqlConnector,FluentMigrator.*,PeanutButter.*,AutoMapper,AutoMapper.*,*.Tests.*,nunit.framework,NExpect";
   env.register({
     name: "COVERAGE_EXCLUDE",
     help: "Exclusion masks to pass to coverage tool (overwrites defaults)",
     default: defaultCoverageExclusions
+  });
+
+  env.register({
+    name: "COVERAGE_INCLUDE",
+    help: "What to _include_ in coverage (defaults to everything but the excludes, also items mentioned here override excludes)",
+    default: "*"
   });
 
   env.register({
