@@ -5,11 +5,13 @@ const PLUGIN_NAME = __filename.replace(/\.js$/, ""),
   gitTag = requireModule("git-tag"),
   env = requireModule("env"),
   gitPushTags = requireModule("git-push-tags"),
-  gitPush = requireModule("git-push");
-defaultOptions = {
-  push: true
-};
-module.exports = function gitTagFromPackageNuspec(options) {
+  gitPush = requireModule("git-push"),
+  defaultOptions = {
+    push: true,
+    dryRun: false
+  }
+
+module.exports = function gitTagFromCsProj(options) {
   options = Object.assign({}, defaultOptions, options);
   const csprojFiles = [];
   return es.through(
@@ -30,7 +32,7 @@ module.exports = function gitTagFromPackageNuspec(options) {
       }
       const xml = await loadXmlFile(csprojFiles[0]),
         version = findPackageVersion(xml, csprojFiles[0]);
-      if (env.resolveFlag("DRY_RUN")) {
+      if (options.dryRun) {
         console.log(`Dry run: would have tagged at ${version}`);
         return this.emit("end");
       }

@@ -7,7 +7,7 @@ const gulp = requireModule("gulp-with-help"),
   debug = require("debug")("purge");
 
 env.associate([
-  "PURGE_DRY_RUN",
+  "DRY_RUN",
   "PURGE_JS_DIRS",
   "PURGE_DOTNET_DIRS",
   "PURGE_ADDITIONAL_DIRS"
@@ -23,7 +23,7 @@ function isNotInRootDir(dir) {
 
 function doRegularRm(dir, inRootToo) {
   const
-    dryRun = env.resolveFlag("PURGE_DRY_RUN"),
+    dryRun = env.resolveFlag("DRY_RUN"),
     del = d => dryRun ? log.info(`del: ${d}`) : rimraf.sync(d);
   return new Promise((resolve, reject) => {
     try {

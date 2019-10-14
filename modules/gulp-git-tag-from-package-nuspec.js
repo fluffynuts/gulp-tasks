@@ -7,7 +7,8 @@ const
   gitPushTags = requireModule("git-push-tags"),
   gitPush = requireModule("git-push");
   defaultOptions = {
-    push: true
+    push: true,
+    dryRun: false
   };
 module.exports = function gitTagFromPackageNuspec(options) {
   options = Object.assign({}, defaultOptions, options);
@@ -31,7 +32,7 @@ module.exports = function gitTagFromPackageNuspec(options) {
       const xml = await loadXmlFile(nuspecs[0]),
         version = xml.package.metadata[0].version[0].trim();
 
-      if (env.resolveFlag("DRY_RUN")) {
+      if (options.dryRun) {
         console.log(`Dry run: would have tagged at ${version}`);
         return this.emit("end");
       }

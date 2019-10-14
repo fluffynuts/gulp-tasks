@@ -208,12 +208,6 @@ module.exports = function(env) {
   });
 
   env.register({
-    name: "PURGE_DRY_RUN",
-    help: "Whether or not to run purge operations in dry-run mode",
-    default: "false"
-  });
-
-  env.register({
     name: "PURGE_JS_DIRS",
     help: "Comma-separated list of directory names to search for when purging js",
     default: "node_modules,bower_components"
