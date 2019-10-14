@@ -237,5 +237,29 @@ module.exports = function(env) {
     default: "packages"
   });
 
+  env.register({
+    name: "PACK_INCLUDE",
+    help: "Mask to apply for inclusions to 'dotnet pack'",
+    default: ""
+  });
+
+  env.register({
+    name: "PACK_EXCLUDE",
+    help: "Mask to apply for exclusions to 'dotnet pack'",
+    default: ""
+  });
+
+  env.register({
+    name: "PACK_CONFIGURATION",
+    help: "Build configuration for dotnet-core packing",
+    default: "Release"
+  });
+
+  env.register({
+    name: "PACK_INCREMENT_VERSION",
+    help: "Flag: should package version be incremented before packing?",
+    default: "true"
+  });
+
   debug("-- env registration complete --");
 };

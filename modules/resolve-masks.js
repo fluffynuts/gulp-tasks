@@ -30,7 +30,6 @@ module.exports = function resolveMasks(
   return env
     .resolveArray(includeVar)
     .map(p => (isPureMask(p) ? extractPureMask(p) : makeRecursive(p)))
-    .map(p => maskModifierFn(p))
     .concat(
       env.resolveArray(excludeVar).map(p => {
         if (isPureMask(p)) {
@@ -42,5 +41,6 @@ module.exports = function resolveMasks(
         }
         return `!${makeRecursive(p)}`;
       })
-    );
+    )
+    .map(p => maskModifierFn(p));
 };

@@ -53,6 +53,11 @@ async function runTests() {
     configuration = env.resolve("BUILD_CONFIGURATION"),
     tester = dotNetCore ? testAsDotnetCore : testWithNunitCli;
 
+  debug({
+    tester,
+    configuration,
+    testMasks
+  });
   return tester(configuration, testMasks);
 }
 

@@ -1,41 +1,39 @@
-const
-  PLUGIN_NAME = __filename.replace(/\.js$/, ""),
+const PLUGIN_NAME = __filename.replace(/\.js$/, ""),
   gutil = require("gulp-util"),
   loadXmlFile = requireModule("load-xml-file"),
   es = require("event-stream"),
   gitTag = requireModule("git-tag"),
+  env = requireModule("env"),
   gitPushTags = requireModule("git-push-tags"),
   gitPush = requireModule("git-push");
-  defaultOptions = {
-    push: true
-  };
+defaultOptions = {
+  push: true
+};
 module.exports = function gitTagFromPackageNuspec(options) {
   options = Object.assign({}, defaultOptions, options);
-  const nuspecs = [];
+  const csprojFiles = [];
   return es.through(
     async function write(file) {
-      nuspecs.push(file.path);
+      csprojFiles.push(file.path);
       this.emit("data", file);
     },
     async function end() {
-      if (nuspecs.length == 0) {
-        throw new Error("no nuspecs found to tag from?");
+      if (csprojFiles.length == 0) {
+        throw new Error("no csproj files found to tag from?");
       }
-      if (nuspecs.length > 1) {
+      if (csprojFiles.length > 1) {
         throw new Error(
-          `too many nuspecs! specify the one to use for creating a versioned tag!\n${nuspecs.join(
+          `too many csproj files! specify the one to use for creating a versioned tag!\n${csprojFiles.join(
             "\n- "
           )}`
         );
       }
-      const xml = await loadXmlFile(nuspecs[0]),
-        version = xml.package.metadata[0].version[0].trim();
-
+      const xml = await loadXmlFile(csprojFiles[0]),
+        version = findPackageVersion(xml, csprojFiles[0]);
       if (env.resolveFlag("DRY_RUN")) {
         console.log(`Dry run: would have tagged at ${version}`);
         return this.emit("end");
       }
-
       try {
         await gitTag(`v${version}`, `:bookmark: ${version}`);
         if (options.push) {
@@ -50,3 +48,13 @@ module.exports = function gitTagFromPackageNuspec(options) {
     }
   );
 };
+
+function findPackageVersion(xml, fileName) {
+  const packageVersionPropGroup = xml.Project.PropertyGroup.filter(
+    g => !!g.PackageVersion
+  )[0];
+  if (!packageVersionPropGroup || (packageVersionPropGroup.PackageVersion[0] || "").trim() === "") {
+    throw new Error(`No valid PackageVersion node found in any PropertyGroup within ${fileName}`);
+  }
+  return packageVersionPropGroup.PackageVersion[0].trim();
+}
