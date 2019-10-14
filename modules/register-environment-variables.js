@@ -261,5 +261,11 @@ module.exports = function(env) {
     default: "true"
   });
 
+  env.register({
+    name: "DRY_RUN",
+    help: "Flag that tasks may observe to only report what they are doing, not actually do it",
+    default: "false"
+  })
+
   debug("-- env registration complete --");
 };
