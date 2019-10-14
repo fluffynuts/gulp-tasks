@@ -45,8 +45,18 @@ function incrementPackageVersionInCsProj(xml, file) {
     g => !!g.PackageId
   )[0];
   let packageName = "(unknown)";
-  const filePath = file.history[0];
   if (!packageIdPropGroup) {
+    if (!file) {
+      throw new Error([
+        `the installed version of gulp-edit-xml does not pass in the file being operated on.`,
+        `either:`,
+        `- update to the latest version`,
+        `  or`,
+        `- set the version to use "https://github.com/fluffynuts/gulp-edit-xml.git#pass-file-to-transform"`,
+        ` (if the update doesn't make this message go away)`
+      ].join("\n"));
+    }
+    const filePath = file.history[0];
     packageIdPropGroup = xml.Project.PropertyGroup.filter(
       g => !!g.AssemblyName
     )[0];
