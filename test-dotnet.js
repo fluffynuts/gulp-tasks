@@ -48,40 +48,15 @@ async function runTests() {
     fs.mkdirSync(buildReportFolder);
   }
 
-  const testMask = resolveTestMasks(),
-    configuration = env.resolve("BUILD_CONFIGURATION"),
-    dotnetTestProjects = resolveDotNetCoreTestProjects(testMask);
-
   const dotNetCore = env.resolveFlag("DOTNET_CORE");
-  return dotNetCore
-    ? testAsDotnetCore(dotnetTestProjects, configuration)
-    : testWithNunitCli(configuration, testMask);
+  const testMasks = resolveTestMasks(dotNetCore),
+    configuration = env.resolve("BUILD_CONFIGURATION"),
+    tester = dotNetCore ? testAsDotnetCore : testWithNunitCli;
+
+  return tester(configuration, testMasks);
 }
 
-function resolveDotNetCoreTestProjects(masks) {
-  return masks.map(p => {
-    if (isPureMask(p)) {
-      // have path spec, don't do magic!
-      return extractPureMask(p);
-    }
-    if (p.indexOf("!") === 0) {
-      p = p.substr(1);
-      return `!**/**/${p}.csproj`;
-    } else {
-      return `**/${p}.csproj`;
-    }
-  });
-}
-
-function isPureMask(str) {
-  return str && str[0] === "(" && str[str.length - 1] === ")";
-}
-function extractPureMask(str) {
-  return str.substr(1, str.length - 2);
-}
-
-function testWithNunitCli(configuration, testMask) {
-  const source = testMask.map(m => `${m}.dll`);
+function testWithNunitCli(configuration, source) {
   let agents = parseInt(env.resolve("MAX_NUNIT_AGENTS"));
   if (isNaN(agents)) {
     agents = os.cpus().length - 1;
@@ -119,7 +94,7 @@ function testWithNunitCli(configuration, testMask) {
   );
 }
 
-function testAsDotnetCore(testProjects, configuration) {
+function testAsDotnetCore(configuration, testProjects) {
   return promisifyStream(
     gulp.src(testProjects).pipe(
       test({

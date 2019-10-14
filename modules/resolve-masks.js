@@ -16,10 +16,21 @@ function makeRecursive(mask) {
   return mask.indexOf("**") === 0 ? mask : `**/${mask}`;
 }
 
-module.exports = function resolveMasks(includeVar, excludeVar) {
+function passThrough(s) {
+  return s;
+}
+
+module.exports = function resolveMasks(
+  includeVar,
+  excludeVar,
+  maskModifierFn) {
+    if (!maskModifierFn) {
+      maskModifierFn = passThrough;
+    }
   return env
     .resolveArray(includeVar)
-    .map(p => isPureMask(p) ? extractPureMask(p) : makeRecursive(p))
+    .map(p => (isPureMask(p) ? extractPureMask(p) : makeRecursive(p)))
+    .map(p => maskModifierFn(p))
     .concat(
       env.resolveArray(excludeVar).map(p => {
         if (isPureMask(p)) {

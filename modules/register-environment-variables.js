@@ -231,5 +231,11 @@ module.exports = function(env) {
     default: ""
   });
 
+  env.register({
+    name: "PACKAGE_TARGET_FOLDER",
+    help: "Folder to serve as output for package build tasks",
+    default: "packages"
+  });
+
   debug("-- env registration complete --");
 };
