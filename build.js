@@ -35,8 +35,10 @@ const myTasks = ["build"],
     "BUILD_VERBOSITY",
     "BUILD_MSBUILD_NODE_REUSE",
     "BUILD_MAX_CPUCOUNT",
+    "MAX_CONCURRENCY",
     "BUILD_INCLUDE",
     "BUILD_EXCLUDE",
+    "BUILD_ADDITIONAL_EXCLUDE",
     "BUILD_SHOW_INFO",
     "BUILD_FAIL_ON_ERROR"
   ];
@@ -52,19 +54,22 @@ gulp.task(
 gulp.task("quick-build", "Quick build without pre-cursors", build);
 
 async function build() {
-  const slnMasks = resolveMasks("BUILD_INCLUDE", "BUILD_EXCLUDE");
+  const slnMasks = resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
+  debug({
+    slnMasks
+  });
   const solutions = gulp
     .src(slnMasks, { allowEmpty: true })
     .pipe(
       gulpDebug({
         title: "build-sln",
       })
-    )
+    )/
     .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
 
   // TODO: find a reliable, quick way to determine if the projects to be compiled
   //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
-  //       here, so for now, DNC build must be requested via env BUILD_DONET_CORE
+  //       here, so for now, DNC build must be requested via env DONET_CORE
   return env.resolveFlag("DOTNET_CORE")
     ? buildForNetCore(solutions)
     : buildForNETFramework(solutions);

@@ -38,11 +38,11 @@ function fallback(name, defaultValue) {
 }
 
 function register(config) {
-  let { name, help, tasks } = config;
+  let { name, help, tasks, overriddenBy } = config;
   // 'default' seems like a more natural name, but we can't use it for a var name...
   let fallback = config.default;
   if (registeredEnvironmentVariables[name]) {
-    return update(name, fallback, help, tasks);
+    return update(name, fallback, help, tasks, overriddenBy);
   }
   tasks = normaliseArray(tasks);
   help = trim(help);
@@ -51,7 +51,8 @@ function register(config) {
   registeredEnvironmentVariables[name] = {
     help,
     tasks,
-    default: fallback
+    default: fallback,
+    overriddenBy: overriddenBy || []
   };
   if (pendingAssociations[name]) {
     const otherTasks = pendingAssociations[name];
@@ -59,7 +60,8 @@ function register(config) {
     tasks.push.apply(tasks, otherTasks);
   }
   if (pendingDefaultOverrides[name]) {
-    registeredEnvironmentVariables[name].default = pendingDefaultOverrides[name];
+    registeredEnvironmentVariables[name].default =
+      pendingDefaultOverrides[name];
     delete pendingDefaultOverrides[name];
   }
   const registered = registeredEnvironmentVariables[name];
@@ -111,7 +113,7 @@ function normaliseArray(arr) {
   return Array.isArray(arr) ? arr : [arr];
 }
 
-function update(varName, fallbackValue, help, tasks) {
+function update(varName, fallbackValue, help, tasks, overriddenBy) {
   const target = registeredEnvironmentVariables[varName];
   if (!target.help) {
     target.help = trim(help);
@@ -121,6 +123,7 @@ function update(varName, fallbackValue, help, tasks) {
   }
   tasks = normaliseArray(tasks);
   target.tasks = target.tasks.concat(tasks);
+  target.overriddenBy = target.overriddenBy.concat(overriddenBy || []);
   return toExport;
 }
 
@@ -128,7 +131,7 @@ function trim(str) {
   if (str === null || str === undefined) {
     return "";
   }
-  return (str.toString()).trim();
+  return str.toString().trim();
 }
 
 function printHelp() {
@@ -178,6 +181,12 @@ function createHelpFor(k, longest) {
       )
     );
   }
+  if (target.overriddenBy !== undefined) {
+    const overrides = Array.isArray(target.overriddenBy)
+      ? target.overriddenBy.join(",")
+      : target.overriddenBy;
+    result.push(indent(chalk.magenta(`overridden by: ${overrides}`)));
+  }
   return result;
 }
 
@@ -200,10 +209,27 @@ function resolve(name) {
 }
 
 function resolveInternal(name) {
-  const target = registeredEnvironmentVariables[name] || {};
-  return process.env[name] === undefined
+  if (Array.isArray(name)) {
+    return name.reduce(
+      (acc, cur) => {
+        acc.push(resolveInternal(cur));
+        return acc;
+      }, []).join(",");
+  }
+
+  const target = registeredEnvironmentVariables[name] || {},
+    configuredOverrides = target.overriddenBy,
+    overrides = configuredOverrides
+      ? Array.isArray(configuredOverrides)
+        ? configuredOverrides
+        : [configuredOverrides]
+      : [],
+    search = overrides.concat(name),
+    first = search.reduce((acc, cur) => acc || (!!process.env[cur] ? cur: undefined), null) || name;
+
+  return process.env[first] === undefined
     ? "" + target.default
-    : "" + process.env[name];
+    : "" + process.env[first];
 }
 
 function logResolved(name, value) {
@@ -211,24 +237,19 @@ function logResolved(name, value) {
 }
 
 function quoteString(val) {
-  return typeof(val) === "string"
-    ? `"${val}"`
-    : val;
+  return typeof val === "string" ? `"${val}"` : val;
 }
 
 function resolveArray(name) {
   const
     value = resolveInternal(name) || "",
-    valueArray = Array.isArray(value)
-      ? value
-      : explode(value);
+    valueArray = Array.isArray(value) ? value : explode(value);
   logResolved(name, valueArray);
   return valueArray;
 }
 
 function resolveNumber(name) {
-  const
-    value = resolveInternal(name),
+  const value = resolveInternal(name),
     asNumber = parseInt(value, 10);
   if (isNaN(asNumber)) {
     throw new Error(`${value} is not a valid numeric value for ${name}`);
@@ -237,20 +258,11 @@ function resolveNumber(name) {
   return asNumber;
 }
 
-const positiveFlags = [
-  "yes",
-  "true",
-  "1"
-];
-const negativeFlags = [
-  "no",
-  "false",
-  "0"
-];
+const positiveFlags = ["yes", "true", "1"];
+const negativeFlags = ["no", "false", "0"];
 
 function resolveFlag(name) {
-  const
-    value = (resolveInternal(name) || "").toLowerCase();
+  const value = (resolveInternal(name) || "").toLowerCase();
   if (positiveFlags.indexOf(value) > -1) {
     logResolved(name, true);
     return true;

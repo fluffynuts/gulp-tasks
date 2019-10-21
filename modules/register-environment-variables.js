@@ -31,9 +31,16 @@ module.exports = function(env) {
   });
 
   env.register({
+    name: "MAX_CONCURRENCY",
+    default: os.cpus().length.toString(),
+    help: "Overrides other concurrency settings (BUILD_MAX_CPU_COUNT, MAX_NUNIT_AGENTS)"
+  });
+
+  env.register({
     name: "BUILD_MAX_CPU_COUNT",
     default: os.cpus().length.toString(),
-    help: "Max number of cpus to use whilst building"
+    help: "Max number of cpus to use whilst building",
+    overriddenBy: "MAX_CONCURRENCY"
   });
 
   env.register({
@@ -56,8 +63,9 @@ module.exports = function(env) {
 
   env.register({
     name: "MAX_NUNIT_AGENTS",
-    default: os.cpus().length,
-    help: "How many NUNit agents to use for testing (net framework)"
+    default: os.cpus().length - 1,
+    help: "How many NUNit agents to use for testing (net framework)",
+    overriddenBy: "MAX_CONCURRENCY"
   });
 
   env.register({
@@ -70,6 +78,12 @@ module.exports = function(env) {
     name: "BUILD_EXCLUDE",
     default: `**/node_modules/**/*.sln,./${getToolsFolder(env)}/**/*.sln`,
     help: "Mask to use for specifically omitting solutions from build"
+  });
+
+  env.register({
+    name: "BUILD_ADDITIONAL_EXCLUDE",
+    default: "",
+    help: "Mast of extra exclusions on top of the default set"
   });
 
   env.register({

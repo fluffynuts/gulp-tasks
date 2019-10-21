@@ -35,6 +35,7 @@ const myTasks = ["test-dotnet", "quick-test-dotnet"],
     "TEST_INCLUDE",
     "TEST_EXCLUDE",
     "MAX_NUNIT_AGENTS",
+    "MAX_CONCURRENCY",
     "BUILD_REPORT_XML",
     "NUNIT_ARCHITECTURE",
     "NUNIT_LABELS",
@@ -62,10 +63,7 @@ async function runTests() {
 }
 
 function testWithNunitCli(configuration, source) {
-  let agents = parseInt(env.resolve("MAX_NUNIT_AGENTS"));
-  if (isNaN(agents)) {
-    agents = os.cpus().length - 1;
-  }
+  const agents = env.resolveNumber("MAX_NUNIT_AGENTS");
   const seenAssemblies = [];
   const config = {
     executable: testUtilFinder.latestNUnit({
@@ -83,6 +81,9 @@ function testWithNunitCli(configuration, source) {
     result: "Where to store test result (xml file)",
     agents: "Number of NUnit agents to engage",
     labels: "What labels NUnit should display as tests run"
+  });
+  debug({
+    config
   });
   return promisifyStream(
     gulp
