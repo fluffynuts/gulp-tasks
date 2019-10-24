@@ -64,8 +64,7 @@ async function build() {
       gulpDebug({
         title: "build-sln",
       })
-    )/
-    .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
+    ).pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
 
   // TODO: find a reliable, quick way to determine if the projects to be compiled
   //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
