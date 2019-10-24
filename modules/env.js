@@ -38,11 +38,11 @@ function fallback(name, defaultValue) {
 }
 
 function register(config) {
-  let { name, help, tasks, overriddenBy } = config;
+  let { name, help, tasks, overriddenBy, when } = config;
   // 'default' seems like a more natural name, but we can't use it for a var name...
   let fallback = config.default;
   if (registeredEnvironmentVariables[name]) {
-    return update(name, fallback, help, tasks, overriddenBy);
+    return update(name, fallback, help, tasks, overriddenBy, when);
   }
   tasks = normaliseArray(tasks);
   help = trim(help);
@@ -52,7 +52,8 @@ function register(config) {
     help,
     tasks,
     default: fallback,
-    overriddenBy: overriddenBy || []
+    overriddenBy: overriddenBy || [],
+    when
   };
   if (pendingAssociations[name]) {
     const otherTasks = pendingAssociations[name];
@@ -65,7 +66,10 @@ function register(config) {
     delete pendingDefaultOverrides[name];
   }
   const registered = registeredEnvironmentVariables[name];
-  debug(`registering env var ${name} (default: ${registered.default})`);
+  debug({
+    label: `register env var: ${name}`,
+    config: registeredEnvironmentVariables[name]
+  });
   return toExport;
 }
 
@@ -113,7 +117,7 @@ function normaliseArray(arr) {
   return Array.isArray(arr) ? arr : [arr];
 }
 
-function update(varName, fallbackValue, help, tasks, overriddenBy) {
+function update(varName, fallbackValue, help, tasks, overriddenBy, when) {
   const target = registeredEnvironmentVariables[varName];
   if (!target.help) {
     target.help = trim(help);
@@ -124,6 +128,12 @@ function update(varName, fallbackValue, help, tasks, overriddenBy) {
   tasks = normaliseArray(tasks);
   target.tasks = target.tasks.concat(tasks);
   target.overriddenBy = target.overriddenBy.concat(overriddenBy || []);
+  // TODO: composite when? this code is first-come-first-wins
+  target.when = target.when || when;
+  debug({
+    label: `update env var: ${varName}`,
+    config: target
+  });
   return toExport;
 }
 
@@ -210,11 +220,12 @@ function resolve(name) {
 
 function resolveInternal(name) {
   if (Array.isArray(name)) {
-    return name.reduce(
-      (acc, cur) => {
+    return name
+      .reduce((acc, cur) => {
         acc.push(resolveInternal(cur));
         return acc;
-      }, []).join(",");
+      }, [])
+      .join(",");
   }
 
   const target = registeredEnvironmentVariables[name] || {},
@@ -224,12 +235,49 @@ function resolveInternal(name) {
         ? configuredOverrides
         : [configuredOverrides]
       : [],
-    search = overrides.concat(name),
-    first = search.reduce((acc, cur) => acc || (!!process.env[cur] ? cur: undefined), null) || name;
+    overrideValues = overrides
+      .map(s => process.env[s])
+      .filter(s => s !== undefined),
+    initialValue =
+      process.env[name] === undefined ? target.default : process.env[name];
+  if (overrideValues.length === 0) {
+    return initialValue;
+  }
+  if (target.when === undefined) {
+    if (overrideValues.length > 0) {
+      console.warn(
+        `multiple override values found for '${name}' and no strategy for discriminating set; selecting the first`
+      );
+      debug({
+        when: target.when,
+        overrides,
+        overrideValues,
+        initialValue
+      });
+    }
+    return overrideValues[0];
+  }
 
-  return process.env[first] === undefined
-    ? "" + target.default
-    : "" + process.env[first];
+  var result = overrideValues.reduce((acc, cur) => {
+    debug({
+      label: "invoke override discriminator",
+      when: target.when,
+      acc,
+      cur
+    });
+    return target.when(acc, cur) ? cur : acc;
+  }, initialValue);
+
+  debug({
+    when: target.when,
+    overrides,
+    overrideValues,
+    initialValue,
+    envVar: name,
+    envValue: process.env[name],
+  });
+
+  return result;
 }
 
 function logResolved(name, value) {
@@ -241,8 +289,7 @@ function quoteString(val) {
 }
 
 function resolveArray(name) {
-  const
-    value = resolveInternal(name) || "",
+  const value = resolveInternal(name) || "",
     valueArray = Array.isArray(value) ? value : explode(value);
   logResolved(name, valueArray);
   return valueArray;

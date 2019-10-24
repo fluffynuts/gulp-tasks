@@ -1,4 +1,8 @@
-const debug = require("debug")("register env vars"),
+// when adding items to this file, it's a good idea to add them
+// in alphabetical ordering so that it's easier to scan debug logs
+// for vars you're looking for (:
+
+const debug = require("debug")("env"),
   os = require("os"),
   path = require("path"),
   getToolsFolder = requireModule("get-tools-folder");
@@ -40,8 +44,28 @@ module.exports = function(env) {
     name: "BUILD_MAX_CPU_COUNT",
     default: os.cpus().length.toString(),
     help: "Max number of cpus to use whilst building",
-    overriddenBy: "MAX_CONCURRENCY"
+    overriddenBy: "MAX_CONCURRENCY",
+    when: overrideIsSmaller
   });
+
+  function overrideIsSmaller(existing, override) {
+    var existingNumber = parseInt(existing, 10);
+    var overrideNumber = parseInt(override, 10);
+    if (isNaN(existingNumber) || isNaN(overrideNumber)) {
+      throw new Error(
+        `Can't determine if override '${override}' should take precedence over '${existing}'`
+      );
+    }
+    var result = overrideNumber < existingNumber;
+    debug({
+      existing,
+      override,
+      existingNumber,
+      overrideNumber,
+      result
+    });
+    return overrideNumber < existingNumber;
+  }
 
   env.register({
     name: "BUILD_CONFIGURATION",
@@ -65,7 +89,8 @@ module.exports = function(env) {
     name: "MAX_NUNIT_AGENTS",
     default: os.cpus().length - 1,
     help: "How many NUNit agents to use for testing (net framework)",
-    overriddenBy: "MAX_CONCURRENCY"
+    overriddenBy: "MAX_CONCURRENCY",
+    when: overrideIsSmaller
   });
 
   env.register({
@@ -216,6 +241,12 @@ module.exports = function(env) {
   });
 
   env.register({
+    name: "DRY_RUN",
+    help: "Flag that tasks may observe to only report what they are doing, not actually do it",
+    default: "false"
+  })
+
+  env.register({
     name: "PUBLISH_BUILD_CONFIGURATION",
     help: "Build configuration to use when publishing dotnet core projects",
     default: "Release"
@@ -268,12 +299,6 @@ module.exports = function(env) {
     help: "Flag: should package version be incremented before packing?",
     default: "true"
   });
-
-  env.register({
-    name: "DRY_RUN",
-    help: "Flag that tasks may observe to only report what they are doing, not actually do it",
-    default: "false"
-  })
 
   debug("-- env registration complete --");
 };
