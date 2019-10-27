@@ -20,10 +20,14 @@ gulp.task(
     var options = {
       debug: false
     };
+    const start = allDNC
+      ? Promise.resolve()
+      : findLocalNuget();
     if (allDNC) {
       options.nuget = "dotnet";
+
     }
-    return findLocalNuget().then(() => {
+    return start.then(() => {
       return promisify(
         gulp
           .src([

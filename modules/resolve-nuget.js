@@ -27,6 +27,14 @@ function findNugetInPath() {
   }
 }
 
+function findInPath(file) {
+  try {
+    return which.sync(file);
+  } catch (e) {
+    return null;
+  }
+}
+
 function checkExists(nugetPath) {
   return fs.existsSync(nugetPath) ? nugetPath : null;
 }
@@ -35,6 +43,7 @@ const parentOfTasksFolder = path.resolve(path.join(__dirname, "..", ".."));
 
 let lastResolution = null;
 function resolveNuget(nugetPath, errorOnMissing) {
+
   if (lastResolution !== null) {
     return lastResolution;
   }
@@ -56,6 +65,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
   const config = configGenerator();
   const resolved = [
     checkExists(nugetPath),
+    findInPath(nugetPath),
     checkExists(toolsNuget),
     checkExists(path.join(parentOfTasksFolder, nugetExe)),
     checkExists(path.join(parentOfTasksFolder, "override-tasks", nugetExe)),
@@ -66,7 +76,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
     return acc || cur;
   }, null);
   if (resolved) {
-    log.info(`using nuget: ${resolved}`);
+    log.info(`using restore tool: ${resolved}`);
     return (lastResolution = quoteIfRequired(
       resolveMonoScriptIfRequiredFor(resolved)
     ));
@@ -75,7 +85,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
     return undefined;
   }
   if (nugetPath) {
-    throw `configured nuget: "${nugetPath}" not found`;
+    throw `configured restore tool: "${nugetPath}" not found`;
   }
   throw `${config.localNuget} not found! Suggestion: add "get-local-nuget" to your pipeline`;
 }

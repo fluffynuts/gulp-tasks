@@ -27,10 +27,6 @@ gulp.task(
       .resolveArray("COVERAGE_EXCLUDE")
       .concat(env.resolveArray("COVERAGE_ADDITIONAL_EXCLUDE"))
       .filter(e => inclusions.indexOf(e) === -1);
-
-      console.log({
-        exclusions
-      });
     const
       coverageExclude = exclusions.map(e => `-${e}`).join(";"),
       coverageInclude = inclusions.map(e => `+${e}`).join(";"),

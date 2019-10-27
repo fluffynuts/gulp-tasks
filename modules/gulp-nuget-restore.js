@@ -20,7 +20,6 @@ function nugetRestore(options) {
     log.setThreshold(log.LogLevels.Debug);
   }
   var solutionFiles = [];
-
   var stream = es.through(function write(file) {
     if (!file) {
       fail(stream, 'file may not be empty or undefined');
@@ -43,11 +42,11 @@ function end(stream) {
 function determineRestoreCommandFor(nugetPath, stream) {
   try {
     var nuget = resolveNuget(nugetPath);
-    log.info('Using nuget.exe from: ' + nuget);
+    debug('Resolved restore tool at: ' + nuget);
     return nuget;
   } catch (ex) {
     fail(stream, [
-      `No nuget.exe resolved: ${ex}`,
+      `No restore tool (nuget / dotnet) resolved: ${ex}`,
       `stack: ${ex.stack || "no stack"}`
     ].join("\n"));
   }
