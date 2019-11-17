@@ -60,11 +60,7 @@ async function build() {
   });
   const solutions = gulp
     .src(slnMasks, { allowEmpty: true })
-    .pipe(
-      gulpDebug({
-        title: "build-sln",
-      })
-    ).pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
+    .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
 
   // TODO: find a reliable, quick way to determine if the projects to be compiled
   //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
@@ -131,10 +127,5 @@ function buildAsStream(solutions) {
     });
   }
   return solutions
-    .pipe(gulpDebug({ title: "before msbuild" }))
-    .pipe(builder(config))
-    .on("end", function() {
-      gulpDebug({ title: "solutions pipe ends" });
-    })
-    .pipe(gulpDebug({ title: "after msbuild" }));
+    .pipe(builder(config));
 }
