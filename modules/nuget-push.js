@@ -1,12 +1,15 @@
 const
   spawn = require("./spawn"),
+  quoteIfRequired = require("./quote-if-required"),
   splitPath = require("./split-path"),
   env = require("./env"),
   findLocalNuget = require("./find-local-nuget");
 
 function isDotnetCore(binaryPath) {
   const
-    parts = splitPath(binaryPath),
+    trimmed = binaryPath.replace(/^"/, "")
+              .replace(/"$/, ""),
+    parts = splitPath(trimmed),
     executable = (parts[parts.length-1] || "");
   return !!executable.match(/^dotnet(:?\.exe)?$/i);
 }
@@ -14,7 +17,12 @@ function isDotnetCore(binaryPath) {
 async function nugetPush(packageFile, sourceName) {
   const
     nuget = await findLocalNuget(),
-    args = [ "push", packageFile, "-Source", sourceName || "nuget.org" ];
+    args = [
+      "push",
+      quoteIfRequired(packageFile),
+      "-Source",
+      sourceName || "nuget.org"
+    ];
   if (isDotnetCore(nuget)) {
     // ffs dotnet core breaks things that used to be simple
     // -> _some_ nuget commands require 'dotnet nuget ...'
