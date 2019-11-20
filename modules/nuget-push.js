@@ -20,7 +20,7 @@ async function nugetPush(packageFile, sourceName) {
     args = [
       "push",
       quoteIfRequired(packageFile),
-      "-Source",
+      "-source",
       sourceName || "nuget.org"
     ];
   if (isDotnetCore(nuget)) {
