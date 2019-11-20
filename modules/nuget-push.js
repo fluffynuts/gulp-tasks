@@ -17,18 +17,18 @@ function isDotnetCore(binaryPath) {
 async function nugetPush(packageFile, sourceName) {
   const
     nuget = await findLocalNuget(),
-    args = [
-      "push",
-      quoteIfRequired(packageFile),
-      "-source",
-      sourceName || "nuget.org"
-    ];
-  if (isDotnetCore(nuget)) {
+    dnc = isDotnetCore(nuget),
+    sourceArg = dnc ? "--source" : "-Source",
     // ffs dotnet core breaks things that used to be simple
     // -> _some_ nuget commands require 'dotnet nuget ...'
     // -> _others_ don't, eg 'dotnet restore'
-    args.splice(0, 0, "nuget");
-  }
+    start = dnc ? [ "nuget" ] : [],
+    args = start.concat([
+      "push",
+      quoteIfRequired(packageFile),
+      sourceArg,
+      sourceName || "nuget.org"
+    ]);
   if (env.resolveFlag("DRY_RUN")) {
     console.log(`nuget publish dry run: ${nuget} ${args.join(" ")}`);
     return;
