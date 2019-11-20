@@ -5,7 +5,7 @@ const
 
 module.exports = async function gitPushTags(dryRun) {
   if (dryRun) {
-    gutil.log(gutil.colors.green("dry run: should push tags now...");
+    gutil.log(gutil.colors.green("dry run: should push tags now..."));
     return Promise.resolve();
   }
   gutil.log(gutil.colors.green("pushing tags..."));
