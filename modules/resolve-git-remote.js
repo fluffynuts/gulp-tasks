@@ -8,7 +8,7 @@ module.exports = async function() {
     return fromEnv;
   }
   const
-    raw = await git().remote(),
+    raw = await git().remote([]),
     all = raw.trim().split("\n").map(remote => remote.trim()),
     first = all[0];
   if (all.length > 1) {
