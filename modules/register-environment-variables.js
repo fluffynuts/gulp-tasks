@@ -300,5 +300,29 @@ module.exports = function(env) {
     default: "true"
   });
 
+  env.register({
+    name: "GIT_OVERRIDE_BRANCH",
+    help: "set this to override the GIT_BRANCH set by CI when, eg, you'd like to push to a different branch"
+  });
+
+  env.register({
+    name: "GIT_BRANCH",
+    help: "the checked-out branch according to git (should be set by CI, and CI may check out a sha but report a branch, so this is useful)",
+    default: "",
+    overriddenBy: [ "GIT_OVERRIDE_BRANCH" ]
+  });
+
+  env.register({
+    name: "GIT_OVERRIDE_REMOTE",
+    help: "set this to override the GIT_REMOTE set by CI when, eg, you'd like to push to a different remote"
+  });
+
+  env.register({
+    name: "GIT_REMOTE",
+    help: "the checked-out remote according to git (should be set by CI, and CI may check out a sha but report a remote, so this is useful)",
+    default: "",
+    overriddenBy: [ "GIT_OVERRIDE_REMOTE" ]
+  });
+
   debug("-- env registration complete --");
 };

@@ -1,5 +1,8 @@
-const Git = require("simple-git/promise"),
+const
+  Git = require("simple-git/promise"),
+  readCurrentBranch = requireModule("read-current-branch"),
   gutil = require("gulp-util"),
+  env = requireModule("env"),
   git = new Git();
 
 module.exports = async function gitPush(dryRun) {
@@ -8,8 +11,12 @@ module.exports = async function gitPush(dryRun) {
     return Promise.resolve();
   }
   gutil.log(gutil.colors.green("pushing local commits..."));
+  const
+    remote = env.resolve("GIT_REMOTE"),
+    branch = env.resolve("GIT_BRANCH");
+    currentBranch = await readCurrentBranch();
   await git.push(
-    process.env.GIT_REMOTE || "origin",
-    process.env.GIT_BRANCH || "master"
+    remote,
+    branch || currentBranch
   );
 };
