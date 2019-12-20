@@ -1,8 +1,8 @@
 const
   Git = require("simple-git/promise"),
-  readCurrentBranch = requireModule("read-current-branch"),
+  resolveGitBranch = requireModule("resolve-git-branch"),
+  resolveGitRemote = requireModule("resolve-git-remote"),
   gutil = requireModule("gulp-util"),
-  env = requireModule("env"),
   git = new Git();
 
 module.exports = async function gitPush(dryRun) {
@@ -12,11 +12,10 @@ module.exports = async function gitPush(dryRun) {
   }
   gutil.log(gutil.colors.green("pushing local commits..."));
   const
-    remote = env.resolve("GIT_REMOTE"),
-    branch = env.resolve("GIT_BRANCH");
-    currentBranch = await readCurrentBranch();
+    remote = await resolveGitRemote(),
+    branch = await resolveGitBranch();
   await git.push(
     remote,
-    branch || currentBranch
+    branch
   );
 };
