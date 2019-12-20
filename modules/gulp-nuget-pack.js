@@ -15,7 +15,7 @@ const
     });
   },
   looksLikeAPromise = requireModule("looks-like-a-promise"),
-  gutil = require("gulp-util"),
+  gutil = requireModule("gulp-util"),
   spawnNuget = requireModule("spawn-nuget"),
   es = require("event-stream");
 

@@ -1,5 +1,5 @@
 const
-  gutil = require("gulp-util"),
+  gutil = requireModule("gulp-util"),
   editXml = require("gulp-edit-xml"),
   incrementVersion = require("./increment-version-string");
 

@@ -2,7 +2,7 @@ const
   gulpVersion = requireModule("gulp-version");
 
 if (gulpVersion.major === 3) {
-    module.exports = require("gulp-util");
+    module.exports = requireModule("gulp-util");
 } else {
     // gulp-util is deprecated in 4 :/
     module.exports = {

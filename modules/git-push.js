@@ -1,7 +1,7 @@
 const
   Git = require("simple-git/promise"),
   readCurrentBranch = requireModule("read-current-branch"),
-  gutil = require("gulp-util"),
+  gutil = requireModule("gulp-util"),
   env = requireModule("env"),
   git = new Git();
 

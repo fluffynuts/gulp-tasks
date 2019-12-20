@@ -1,5 +1,5 @@
 var gulp = requireModule("gulp-with-help"),
-  gutil = require("gulp-util"),
+  gutil = requireModule("gulp-util"),
   runSequence = requireModule("run-sequence");
 
 gulp.task("default", "Purges, updates git submodules, builds, covers dotnet", function () {

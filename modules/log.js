@@ -1,4 +1,4 @@
-var gutil = require("gulp-util"),
+var gutil = requireModule("gulp-util"),
   DEBUG = 1,
   INFO = 2,
   NOTICE = 3,

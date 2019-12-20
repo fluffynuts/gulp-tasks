@@ -1,5 +1,5 @@
 "use strict";
-var gutil = require("gulp-util"),
+var gutil = requireModule("gulp-util"),
   env = requireModule("env"),
   es = require("event-stream"),
   path = require("path"),

@@ -1,6 +1,6 @@
 const
   Git = require("simple-git/promise"),
-  gutil = require("gulp-util"),
+  gutil = requireModule("gulp-util"),
   git = new Git();
 
 module.exports = async function gitTag(tag, comment) {

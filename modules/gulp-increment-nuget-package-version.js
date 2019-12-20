@@ -1,4 +1,4 @@
-const gutil = require("gulp-util"),
+const gutil = requireModule("gulp-util"),
   debug = require("debug")("gulp-increment-nuget-package-version"),
   editXml = require("gulp-edit-xml"),
   incrementVersion = require("./increment-version-string"),

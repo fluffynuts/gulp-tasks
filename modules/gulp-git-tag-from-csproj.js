@@ -1,5 +1,5 @@
 const PLUGIN_NAME = __filename.replace(/\.js$/, ""),
-  gutil = require("gulp-util"),
+  gutil = requireModule("gulp-util"),
   loadXmlFile = requireModule("load-xml-file"),
   es = require("event-stream"),
   gitTag = requireModule("git-tag"),
