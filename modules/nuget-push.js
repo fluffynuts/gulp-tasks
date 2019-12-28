@@ -16,6 +16,7 @@ function isDotnetCore(binaryPath) {
 
 async function nugetPush(packageFile, sourceName) {
   const
+    apiKey = env.resolve("NUGET_API_KEY"),
     nuget = await findLocalNuget(),
     dnc = isDotnetCore(nuget),
     sourceArg = dnc ? "--source" : "-Source",
@@ -28,7 +29,11 @@ async function nugetPush(packageFile, sourceName) {
       quoteIfRequired(packageFile),
       sourceArg,
       sourceName || "nuget.org"
-    ]);
+    ]),
+    apiKeyArg = dnc ? "-k" : "-ApiKey";
+  if (apiKey) {
+    args.push.call(args, apiKeyArg, apiKey);
+  }
   if (env.resolveFlag("DRY_RUN")) {
     console.log(`nuget publish dry run: ${nuget} ${args.join(" ")}`);
     return;

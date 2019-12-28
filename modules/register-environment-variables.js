@@ -244,7 +244,37 @@ module.exports = function(env) {
     name: "DRY_RUN",
     help: "Flag that tasks may observe to only report what they are doing, not actually do it",
     default: "false"
-  })
+  });
+
+  env.register({
+    name: "GIT_OVERRIDE_BRANCH",
+    help: "set this to override the GIT_BRANCH set by CI when, eg, you'd like to push to a different branch"
+  });
+
+  env.register({
+    name: "GIT_BRANCH",
+    help: "the checked-out branch according to git (should be set by CI, and CI may check out a sha but report a branch, so this is useful)",
+    default: "",
+    overriddenBy: [ "GIT_OVERRIDE_BRANCH" ]
+  });
+
+  env.register({
+    name: "GIT_OVERRIDE_REMOTE",
+    help: "set this to override the GIT_REMOTE set by CI when, eg, you'd like to push to a different remote"
+  });
+
+  env.register({
+    name: "GIT_REMOTE",
+    help: "the checked-out remote according to git (should be set by CI, and CI may check out a sha but report a remote, so this is useful)",
+    default: "",
+    overriddenBy: [ "GIT_OVERRIDE_REMOTE" ]
+  });
+
+  env.register({
+    name: "NUGET_API_KEY",
+    help: "api key to use when attempting to publish to nuget (required for dotnet core, can be used for regular nuget.exe too)",
+    default: ""
+  });
 
   env.register({
     name: "PUBLISH_BUILD_CONFIGURATION",
@@ -298,30 +328,6 @@ module.exports = function(env) {
     name: "PACK_INCREMENT_VERSION",
     help: "Flag: should package version be incremented before packing?",
     default: "true"
-  });
-
-  env.register({
-    name: "GIT_OVERRIDE_BRANCH",
-    help: "set this to override the GIT_BRANCH set by CI when, eg, you'd like to push to a different branch"
-  });
-
-  env.register({
-    name: "GIT_BRANCH",
-    help: "the checked-out branch according to git (should be set by CI, and CI may check out a sha but report a branch, so this is useful)",
-    default: "",
-    overriddenBy: [ "GIT_OVERRIDE_BRANCH" ]
-  });
-
-  env.register({
-    name: "GIT_OVERRIDE_REMOTE",
-    help: "set this to override the GIT_REMOTE set by CI when, eg, you'd like to push to a different remote"
-  });
-
-  env.register({
-    name: "GIT_REMOTE",
-    help: "the checked-out remote according to git (should be set by CI, and CI may check out a sha but report a remote, so this is useful)",
-    default: "",
-    overriddenBy: [ "GIT_OVERRIDE_REMOTE" ]
   });
 
   debug("-- env registration complete --");
