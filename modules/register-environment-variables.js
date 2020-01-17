@@ -236,11 +236,6 @@ module.exports = function(env) {
   });
 
   env.register({
-    name: "DOTNET_PUBLISH_RUNTIMES",
-    help: "Runtimes to publish dotnet core targets for, if required"
-  });
-
-  env.register({
     name: "DRY_RUN",
     help: "Flag that tasks may observe to only report what they are doing, not actually do it",
     default: "false"
@@ -277,9 +272,19 @@ module.exports = function(env) {
   });
 
   env.register({
-    name: "PUBLISH_BUILD_CONFIGURATION",
+    name: "DOTNET_PUBLISH_RUNTIMES",
+    help: "Runtimes to publish dotnet core targets for, if required"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_BUILD_CONFIGURATION",
     help: "Build configuration to use when publishing dotnet core projects",
     default: "Release"
+  });
+
+  env.register({
+    name: "OUTPUT",
+    help: "Override output for whatever task you're running"
   });
 
   env.register({

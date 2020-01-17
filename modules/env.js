@@ -212,20 +212,29 @@ function taskHelp(task) {
   printHelpFor(matchingRequest);
 }
 
-function resolve(name) {
-  const result = resolveInternal(name);
-  logResolved(name, result);
+function resolve() {
+  const names = Array.from(arguments).flatMap(a => a);
+  const result = resolveInternal(names);
+  logResolved(names, result);
   return result;
 }
 
-function resolveInternal(name) {
+function resolveFirst(names, ignoreDefault) {
+    return names
+      .reduce((acc, cur) =>
+        acc === undefined
+        ? resolveInternal(cur, ignoreDefault)
+        : acc, undefined);
+}
+
+function resolveInternal(name, ignoreDefault) {
   if (Array.isArray(name)) {
-    return name
-      .reduce((acc, cur) => {
-        acc.push(resolveInternal(cur));
-        return acc;
-      }, [])
-      .join(",");
+    // attempt to resolve the first defined variable
+    const firstDefined = resolveFirst(name, true);
+    // if that doesn't work, get the first default value
+    return firstDefined === undefined
+      ? resolveFirst(name, false)
+      : firstDefined;
   }
 
   const target = registeredEnvironmentVariables[name] || {},
@@ -239,7 +248,7 @@ function resolveInternal(name) {
       .map(s => process.env[s])
       .filter(s => s !== undefined),
     initialValue =
-      process.env[name] === undefined ? target.default : process.env[name];
+      (!ignoreDefault && process.env[name] === undefined) ? target.default : process.env[name];
   if (overrideValues.length === 0) {
     return initialValue;
   }

@@ -7,12 +7,11 @@ gulp.task(
   "Performs `dotnet publish` on all non-test projects in the tree",
   () => {
     var publishOpts = {
-      configuration: env.resolve("PUBLISH_BUILD_CONFIGURATION"),
+      configuration: env.resolve("DOTNET_PUBLISH_BUILD_CONFIGURATION", "BUILD_CONFIGURATION"),
+      runtime: env.resolve("DOTNET_PUBLISH_RUNTIMES"),
+      output: env.resolve("OUTPUT")
     };
-    const publishRuntimes = env.resolve("DOTNET_PUBLISH_RUNTIMES");
-    if (publishRuntimes) {
-      publishOpts.runtime = publishRuntimes
-    }
+
     const testInclusionsInverted = env.resolveArray("TEST_INCLUDE")
     .map(p => `!${p}.csproj`)
     return gulp
