@@ -1,3 +1,13 @@
+if (!Array.prototype.flatMap) {
+    try {
+        var flatMap = require("array.prototype.flatmap");
+        flatMap.shim();
+    } catch {
+        console.error(
+            "Array.prototype.flatmap is required -- either use a newer Node or install the npm package array.prototype.flatmap"
+        );
+    }
+}
 const chalk = require("chalk"),
   debug = require("debug")("env"),
   registeredEnvironmentVariables = {},
