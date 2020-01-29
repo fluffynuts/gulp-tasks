@@ -2,7 +2,7 @@ if (!Array.prototype.flatMap) {
     try {
         var flatMap = require("array.prototype.flatmap");
         flatMap.shim();
-    } catch {
+    } catch (e) {
         console.error(
             "Array.prototype.flatmap is required -- either use a newer Node or install the npm package array.prototype.flatmap"
         );
