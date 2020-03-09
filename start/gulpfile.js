@@ -7,10 +7,10 @@
   particular, I highly recommend reading about how to use `local-tasks` to extend
   and / or override the default task-set.
  */
-var 
+var
   fs = require("fs"),
   path = require("path"),
-  gulpTasksFolder = "gulp-tasks", // if you cloned elsewhere, you"ll need to modify this
+  gulpTasksFolder = "gulp-tasks" || process.env.GULP_TASKS_FOLDER, // if you cloned elsewhere, you"ll need to modify this
   requireModule = global.requireModule = function(mod) {
     var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
     if (fs.existsSync(modulePath + ".js")) {
@@ -20,7 +20,6 @@ var
     }
   };
 
-
 if (!fs.existsSync(gulpTasksFolder)) {
   console.error("Either clone `gulp-tasks` to the `gulp-tasks` folder or modify this script to avoid sadness");
   process.exit(2);
@@ -28,7 +27,7 @@ if (!fs.existsSync(gulpTasksFolder)) {
 
 let autoWorking = null;
 function pauseWhilstWorking() {
-  const 
+  const
     args = process.argv,
     lastTwo = args.slice(args.length - 2),
     runningGulp = isGulpJs(lastTwo[0]),
@@ -133,7 +132,7 @@ function testBin(cmds, pkg) {
     cmds = [ cmds ];
   }
   cmds.forEach(cmd => {
-    const 
+    const
       expected = path.join("node_modules", ".bin", "cmd"),
       modPath = path.join("node_modules", pkg || cmds[0]);
     if (!fs.existsSync(expected)) {

@@ -1,18 +1,19 @@
 // use for spawning actual processes.
 // You must use exec if you want to run batch files
-var tryLoadDebug = function() {
+const tryLoadDebug = function () {
     try {
       return require("debug")("spawn");
     } catch (e) {
-      return function() {};
+      return function () {
+      };
     }
   },
   quoteIfRequired = require("./quote-if-required"),
   debug = tryLoadDebug(),
   child_process = require("child_process");
 
-var defaultOptions = {
-  stdio: [process.stdin, process.stdout, process.stderr],
+const defaultOptions = {
+  stdio: [ process.stdin, process.stdout, process.stderr ],
   cwd: process.cwd(),
   shell: true
 };
@@ -21,7 +22,7 @@ function spawn(executable, args, opts) {
   args = args || [];
   opts = Object.assign({}, defaultOptions, opts);
 
-  var stdOutWriter = null,
+  let stdOutWriter = null,
     stdErrWriter = null;
   if (typeof opts.stdout === "function") {
     stdOutWriter = opts.stdout;
@@ -32,19 +33,24 @@ function spawn(executable, args, opts) {
     opts.stdio[2] = "pipe";
   }
 
-  var result = {
+  const result = {
     executable: executable,
     args: args
   };
 
   executable = quoteIfRequired(executable);
 
+  console.log({
+    label: "spawn",
+    debug: process.env.DEBUG
+  });
+
   debug(`spawning: ${executable} ${args.map(a => '"' + a + '"').join(" ")}`);
   debug({ opts });
 
   return new Promise((resolve, reject) => {
     try {
-      var child = child_process.spawn(executable, args, opts);
+      const child = child_process.spawn(executable, args, opts);
       child.on("error", function(err) {
         debug(`child error: ${err}`);
         result.error = err;
