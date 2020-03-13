@@ -40,11 +40,6 @@ function spawn(executable, args, opts) {
 
   executable = quoteIfRequired(executable);
 
-  console.log({
-    label: "spawn",
-    debug: process.env.DEBUG
-  });
-
   debug(`spawning: ${executable} ${args.map(a => '"' + a + '"').join(" ")}`);
   debug({ opts });
 
