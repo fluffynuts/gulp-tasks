@@ -11,14 +11,7 @@ var
   fs = require("fs"),
   path = require("path"),
   gulpTasksFolder = "gulp-tasks" || process.env.GULP_TASKS_FOLDER, // if you cloned elsewhere, you"ll need to modify this
-  requireModule = global.requireModule = function(mod) {
-    var modulePath = [".", gulpTasksFolder, "modules", mod].join("/");
-    if (fs.existsSync(modulePath + ".js")) {
-        return require(modulePath);
-    } else {
-        return require(mod);
-    }
-  };
+  requireModule = require(path.join(gulpTasksFolder, "modules", "require-module"));
 
 if (!fs.existsSync(gulpTasksFolder)) {
   console.error("Either clone `gulp-tasks` to the `gulp-tasks` folder or modify this script to avoid sadness");
