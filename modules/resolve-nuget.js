@@ -1,4 +1,5 @@
-const os = require("os"),
+const
+  os = require("os"),
   debug = require("debug")("resolve-nuget"),
   env = requireModule("env"),
   fs = requireModule("fs"),
@@ -9,7 +10,8 @@ const os = require("os"),
   toolsDir = require("./get-tools-folder")(),
   findNpmBase = require("./find-npm-base"),
   quoteIfRequired = require("./quote-if-required"),
-  nugetExe = "nuget.exe";
+  dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet",
+  nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
 
 env.associate("USE_SYSTEM_NUGET", [ "install-default-tools", "nuget-restore" ]);
 
@@ -19,7 +21,7 @@ function findNugetInPath() {
       debug("Usage of system-wide nuget must be opted-in via USE_SYSTEM_NUGET; will prefer local nuget.exe");
       return null;
     }
-    const nuget = which.sync("nuget");
+    const nuget = which.sync(nugetExe);
     log.info(`found nuget in PATH: ${nuget}`);
     return nuget;
   } catch (ignored) {
@@ -43,7 +45,6 @@ const parentOfTasksFolder = path.resolve(path.join(__dirname, "..", ".."));
 
 let lastResolution = null;
 function resolveNuget(nugetPath, errorOnMissing) {
-
   if (lastResolution !== null) {
     return lastResolution;
   }
@@ -71,6 +72,7 @@ function resolveNuget(nugetPath, errorOnMissing) {
     checkExists(path.join(parentOfTasksFolder, "override-tasks", nugetExe)),
     checkExists(path.join(parentOfTasksFolder, "local-tasks", nugetExe)),
     findNugetInPath(),
+    findDotNetIfRequired(),
     checkExists(config.localNuget)
   ].reduce(function(acc, cur) {
     return acc || cur;
@@ -88,6 +90,13 @@ function resolveNuget(nugetPath, errorOnMissing) {
     throw `configured restore tool: "${nugetPath}" not found`;
   }
   throw `${config.localNuget} not found! Suggestion: add "get-local-nuget" to your pipeline`;
+}
+
+function findDotNetIfRequired() {
+  if (!env.resolveFlag("DOTNET_CORE")) {
+    return null;
+  }
+  return which.sync(dotnetExe);
 }
 
 function resolveMonoScriptIfRequiredFor(nugetPath) {

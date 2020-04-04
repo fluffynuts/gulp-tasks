@@ -7,6 +7,8 @@ var
   spawn = require('./spawn'),
   log = require('./log'),
   resolveNuget = require('./resolve-nuget'),
+  env = requireModule("env"),
+  nugetExe = env.resolveFlag("DOTNET_CORE") ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe",
   debug = require('debug')('gulp-nuget-restore');
 
 var PLUGIN_NAME = 'gulp-nuget-restore';
@@ -85,7 +87,7 @@ function restoreNugetPackagesWith(stream, solutionFiles, options) {
       return fail(stream, 'No solutions defined for nuget restore');
     }
   }
-  var nuget = options.nuget || 'nuget.exe';
+  var nuget = options.nuget || nugetExe;
   var nugetCmd = determineRestoreCommandFor(nuget, stream);
   if (nugetCmd) {
     return runNuget(nugetCmd, solutions, stream);
