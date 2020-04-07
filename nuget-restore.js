@@ -1,12 +1,9 @@
-var
+const
   env = requireModule("env"),
   gulp = requireModule("gulp-with-help"),
-  getToolsFolder = requireModule("get-tools-folder"),
-  debug = require("debug")("nuget-restore"),
   debug = require("debug")("nuget-restore"),
   nugetRestore = requireModule("./gulp-nuget-restore"),
   promisify = requireModule("promisify"),
-  getToolsFolder = requireModule("get-tools-folder"),
   resolveMasks = requireModule("resolve-masks"),
   findLocalNuget = requireModule("find-local-nuget");
 
@@ -36,7 +33,6 @@ gulp.task(
       : findLocalNuget();
     if (allDNC) {
       options.nuget = "dotnet";
-
     }
     return start.then(() => {
       return promisify(

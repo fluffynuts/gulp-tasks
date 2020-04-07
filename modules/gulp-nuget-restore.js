@@ -8,7 +8,8 @@ var
   log = require('./log'),
   resolveNuget = require('./resolve-nuget'),
   env = requireModule("env"),
-  nugetExe = env.resolveFlag("DOTNET_CORE") ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe",
+  isDotnetCore = env.resolveFlag("DOTNET_CORE"),
+  nugetExe = isDotnetCore ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe",
   debug = require('debug')('gulp-nuget-restore');
 
 var PLUGIN_NAME = 'gulp-nuget-restore';
@@ -63,6 +64,15 @@ function runNuget(restoreCommand, solutions, stream) {
     var sln = pathParts[pathParts.length - 1];
     var slnFolder = pathParts.slice(0, pathParts.length - 1).join(path.sep);
     var args = ['restore', sln];
+    if (env.resolveFlag("ENABLE_NUGET_PARALLEL_PROCESSING")) {
+      log.warning("Processing restore in parallel. If you get strange build errors, unset ENABLE_NUGET_PARALLEL_PROCESSING");
+    } else {
+      if (isDotnetCore) {
+        args.push("--disable-parallel");
+      } else {
+        args.push("-DisableParallelProcessing");
+      }
+    }
     return promise.then(function () {
       return spawn(restoreCommand, args, { cwd: slnFolder }).then(function () {
         'Packages restored for: ' + item;

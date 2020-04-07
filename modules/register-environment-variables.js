@@ -17,6 +17,12 @@ module.exports = function(env) {
   });
 
   env.register({
+    name: "ENABLE_NUGET_PARALLEL_PROCESSING",
+    default: "false",
+    help: "Whether to enable parallel processing for nuget restore. Disabled by default as large restores can fail without proper errors"
+  });
+
+  env.register({
     name: "BUILD_SHOW_INFO",
     default: "true",
     help: "Whether or not to show information about the build before it starts"
