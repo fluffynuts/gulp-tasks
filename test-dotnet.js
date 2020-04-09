@@ -101,11 +101,14 @@ function testWithNunitCli(configuration, source) {
 }
 
 function testAsDotnetCore(configuration, testProjects) {
+  // TODO: collect all projects in an array and then
+  //  run test projects in parallel, throttled by MAX_CONCURRENCY
   return promisifyStream(
     gulp.src(testProjects).pipe(
       test({
         verbosity: env.resolve("TEST_VERBOSITY"),
-        configuration
+        configuration,
+        noBuild: true
       })
     )
   );
