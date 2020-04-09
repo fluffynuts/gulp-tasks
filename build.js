@@ -87,12 +87,13 @@ function buildForNetCore(solutions) {
       )
       .pipe(
         dotnetBuild({
-          verbosity: "minimal",
+          verbosity: env.resolve("BUILD_VERBOSITY"),
           configuration,
           // msbuild attempts to re-use nodes, which causes issues
           // if you're building unrelated projects on the same machine with,
           // eg, different versions of Microsoft.Net.Compilers
-          msbuildArgs
+          msbuildArgs,
+          echo: true
         })
       )
   );
