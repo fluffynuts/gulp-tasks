@@ -72,7 +72,12 @@ async function build() {
 
 function buildForNetCore(solutions) {
   log.info(gutil.colors.yellow("Building with dotnet core"));
-  const configuration = env.resolve("BUILD_CONFIGURATION");
+  const
+    configuration = env.resolve("BUILD_CONFIGURATION"),
+    msbuildArgs = [];
+  if (!env.resolveFlag("BUILD_MSBUILD_NODE_REUSE")) {
+    msbuildArgs.push("/nodeReuse:false")
+  }
   return promisifyStream(
     solutions
       .pipe(
@@ -83,7 +88,11 @@ function buildForNetCore(solutions) {
       .pipe(
         dotnetBuild({
           verbosity: "minimal",
-          configuration
+          configuration,
+          // msbuild attempts to re-use nodes, which causes issues
+          // if you're building unrelated projects on the same machine with,
+          // eg, different versions of Microsoft.Net.Compilers
+          msbuildArgs
         })
       )
   );

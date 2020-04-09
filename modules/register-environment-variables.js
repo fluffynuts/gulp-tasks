@@ -37,7 +37,7 @@ module.exports = function(env) {
   env.register({
     name: "BUILD_MSBUILD_NODE_REUSE",
     default: "true",
-    help: "Whether or not to allow modern msbuild to reuse msbuild.exe nodes"
+    help: "Whether or not to allow modern msbuild to reuse msbuild.exe nodes. WARNING: enabling this may cause esoteric build failures."
   });
 
   env.register({
