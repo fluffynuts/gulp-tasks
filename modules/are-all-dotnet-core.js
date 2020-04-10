@@ -3,7 +3,8 @@ const
   fs = require("fs"),
   xml2js = require("xml2js"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
-  debug = require("debug")(__filename.replace(/\.js$/, "")),
+  path = require("path"),
+  debug = require("debug")(path.basename(__filename.replace(/\.js$/, ""))),
   es = require("event-stream");
 
 module.exports = async function areAllDotnetCore(

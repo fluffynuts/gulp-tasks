@@ -1,6 +1,6 @@
 const
   path = require("path"),
-  debug = require("debug")(__filename);
+  debug = require("debug")(path.basename(__filename.replace(/\.js$/, "")));
 
 const mocks = {};
 

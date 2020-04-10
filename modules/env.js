@@ -1,14 +1,16 @@
 if (!Array.prototype.flatMap) {
-    try {
-        var flatMap = require("array.prototype.flatmap");
-        flatMap.shim();
-    } catch (e) {
-        console.error(
-            "Array.prototype.flatmap is required -- either use a newer Node or install the npm package array.prototype.flatmap"
-        );
-    }
+  try {
+    var flatMap = require("array.prototype.flatmap");
+    flatMap.shim();
+  } catch (e) {
+    console.error(
+      "Array.prototype.flatmap is required -- either use a newer Node or install the npm package array.prototype.flatmap"
+    );
+  }
 }
-const chalk = require("chalk"),
+const
+  Chalk = require("chalk"),
+  chalk = process.env.FORCE_COLOR ? (new Chalk.constructor({ level: 3 })) : Chalk.default,
   debug = require("debug")("env"),
   registeredEnvironmentVariables = {},
   longestStringLength = require("./longest-string-length"),
@@ -29,7 +31,7 @@ const chalk = require("chalk"),
     resolveFlag
   };
 
-const positives = ["1", "yes", "true"];
+const positives = [ "1", "yes", "true" ];
 if (process.env.POSITIVE_FLAG) {
   positives.push(process.env.POSITIVE_FLAG);
 }
@@ -95,7 +97,7 @@ function associate(varName, tasks) {
     return toExport;
   }
   if (!Array.isArray(tasks)) {
-    tasks = [tasks];
+    tasks = [ tasks ];
   }
 
   const target = registeredEnvironmentVariables[varName]
@@ -111,6 +113,7 @@ function associate(varName, tasks) {
 }
 
 const pendingDefaultOverrides = {};
+
 function overrideDefault(varName, newDefault) {
   const target = registeredEnvironmentVariables[varName];
   if (target) {
@@ -124,7 +127,7 @@ function normaliseArray(arr) {
   if (!arr) {
     return [];
   }
-  return Array.isArray(arr) ? arr : [arr];
+  return Array.isArray(arr) ? arr : [ arr ];
 }
 
 function update(varName, fallbackValue, help, tasks, overriddenBy, when) {
@@ -150,6 +153,9 @@ function update(varName, fallbackValue, help, tasks, overriddenBy, when) {
 function trim(str) {
   if (str === null || str === undefined) {
     return "";
+  }
+  if (Array.isArray(str)) {
+    return str.map(s => s.trim());
   }
   return str.toString().trim();
 }
@@ -205,7 +211,9 @@ function createHelpFor(k, longest) {
     const overrides = Array.isArray(target.overriddenBy)
       ? target.overriddenBy.join(",")
       : target.overriddenBy;
-    result.push(indent(chalk.magenta(`overridden by: ${overrides}`)));
+    if (overrides.trim()) {
+      result.push(indent(chalk.magenta(`overridden by: ${overrides}`)));
+    }
   }
   return result;
 }
@@ -230,9 +238,9 @@ function resolve() {
 }
 
 function resolveFirst(names, ignoreDefault) {
-    return names
-      .reduce((acc, cur) =>
-        acc === undefined
+  return names
+    .reduce((acc, cur) =>
+      acc === undefined
         ? resolveInternal(cur, ignoreDefault)
         : acc, undefined);
 }
@@ -252,7 +260,7 @@ function resolveInternal(name, ignoreDefault) {
     overrides = configuredOverrides
       ? Array.isArray(configuredOverrides)
         ? configuredOverrides
-        : [configuredOverrides]
+        : [ configuredOverrides ]
       : [],
     overrideValues = overrides
       .map(s => process.env[s])
@@ -324,8 +332,8 @@ function resolveNumber(name) {
   return asNumber;
 }
 
-const positiveFlags = ["yes", "true", "1"];
-const negativeFlags = ["no", "false", "0"];
+const positiveFlags = [ "yes", "true", "1" ];
+const negativeFlags = [ "no", "false", "0" ];
 
 function resolveFlag(name) {
   const value = (resolveInternal(name) || "").toLowerCase();

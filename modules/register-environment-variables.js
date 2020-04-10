@@ -37,7 +37,10 @@ module.exports = function(env) {
   env.register({
     name: "BUILD_MSBUILD_NODE_REUSE",
     default: "false",
-    help: "Whether or not to allow modern msbuild to reuse msbuild.exe nodes. WARNING: enabling this may cause esoteric build failures."
+    help: [
+      "Whether or not to allow modern msbuild to reuse msbuild.exe nodes",
+      "WARNING: enabling node reuse may cause esoteric build errors on shared environments"
+    ].join("\n")
   });
 
   env.register({
@@ -114,7 +117,7 @@ module.exports = function(env) {
   env.register({
     name: "BUILD_ADDITIONAL_EXCLUDE",
     default: "",
-    help: "Mast of extra exclusions on top of the default set"
+    help: "Mask of extra exclusions on top of the default set"
   });
 
   env.register({

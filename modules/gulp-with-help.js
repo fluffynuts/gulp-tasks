@@ -3,8 +3,7 @@
 // -> in 4.x, this is shimmed in. In addition, we need to
 //    - facilitate forward references, as per original gulp
 //    -
-var
-  setTaskName = requireModule("set-task-name"),
+const setTaskName = requireModule("set-task-name"),
   gulpVersion = requireModule("gulp-version");
 
 if (gulpVersion.major === 3) {
@@ -52,7 +51,7 @@ if (gulpVersion.major === 3) {
     };
   gulp.task = newTask.bind(gulp);
   gulp.task("help", () => {
-    var chalk = require("chalk"),
+    const chalk = require("chalk"),
       green = chalk.greenBright.bind(chalk),
       yellow = chalk.yellowBright.bind(chalk),
       cyan = chalk.cyanBright.bind(chalk);
@@ -61,15 +60,15 @@ if (gulpVersion.major === 3) {
       console.log(yellow("Task help"));
       console.log(yellow(" - Tasks marked with * are affected by environment variables"));
       console.log(yellow(" - run the help:environment task for more info"));
-      var keys = Object.keys(help).sort();
-      var longestKeyLength = keys.reduce(function(acc, cur) {
+      const keys = Object.keys(help).sort();
+      const longestKeyLength = keys.reduce(function (acc, cur) {
         return cur.length > acc ? cur.length : acc;
       }, 0);
       keys.forEach(function(key) {
         if (!help[key]) {
           return console.log(cyan(key));
         }
-        var helpMessage = help[key];
+        const helpMessage = help[key];
         while (key.length < longestKeyLength) {
           key += " ";
         }
