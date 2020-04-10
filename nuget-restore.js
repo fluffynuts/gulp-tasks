@@ -24,7 +24,11 @@ gulp.task(
     const
       allDNC = env.resolveFlag("DOTNET_CORE"),
       slnMasks = resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_EXTRA_EXCLUDE" ]);
-
+    debug({
+      allDNC,
+      slnMasks,
+      cwd: process.cwd()
+    });
     var options = {
       debug: false
     };

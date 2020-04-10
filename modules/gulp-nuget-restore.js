@@ -17,7 +17,7 @@ var DEBUG = true;
 
 function nugetRestore(options) {
   options = options || {};
-  DEBUG = options.debug || false;
+  DEBUG = options.debug || process.env.DEBUG === "*" || false;
   options.force = options.force || false;
   if (DEBUG) {
     log.setThreshold(log.LogLevels.Debug);

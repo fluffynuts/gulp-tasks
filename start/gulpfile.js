@@ -7,10 +7,11 @@
   particular, I highly recommend reading about how to use `local-tasks` to extend
   and / or override the default task-set.
  */
+
 var
   fs = require("fs"),
   path = require("path"),
-  gulpTasksFolder = "gulp-tasks" || process.env.GULP_TASKS_FOLDER, // if you cloned elsewhere, you"ll need to modify this
+  gulpTasksFolder = process.env.GULP_TASKS_FOLDER || path.join(__dirname, "gulp-tasks"),
   requireModule = require(path.join(gulpTasksFolder, "modules", "require-module"));
 
 if (!fs.existsSync(gulpTasksFolder)) {
@@ -70,19 +71,24 @@ if (!fs.existsSync("package.json")) {
 }
 
 function requiredDeps() {
-    var starter = require([".", gulpTasksFolder, "start", "package.json"].join("/"));
+    var starter = require(path.join(gulpTasksFolder, "start", "package.json"));
     return Object.keys(starter.devDependencies);
 }
 
 function mustInstallDeps() {
+  if (process.env.RUNNING_AS_ZARRO) {
+    // deps should be properly handled by zarro package index and initial installation
+    return false;
+  }
   var
     package = require("./package.json"),
     devDeps = package.devDependencies || {},
     haveDeps = Object.keys(devDeps),
     needDeps = requiredDeps();
-  return needDeps.reduce((acc, cur) => {
+  const result = needDeps.reduce((acc, cur) => {
     return acc || haveDeps.indexOf(cur) == -1;
   }, false);
+  return result;
 }
 
 function initializeNpm() {
@@ -144,10 +150,11 @@ function bootstrapGulp() {
   try {
     importNpmTasks();
     var requireDir = require("require-dir");
-    requireDir("gulp-tasks");
+    requireDir(gulpTasksFolder);
     ["override-tasks", "local-tasks"].forEach(function(dirname) {
-      if (fs.existsSync(dirname)) {
-        requireDir(dirname);
+      const fullPath = path.join(process.cwd(), dirname);
+      if (fs.existsSync(fullPath)) {
+        requireDir(fullPath);
       }
     });
   } catch (e) {
@@ -164,7 +171,9 @@ function bootstrapGulp() {
   }
 
   function shouldDump(e) {
-    return process.env.ALWAYS_DUMP_GULP_ERRORS || probablyNotReportedByGulp(e);
+    return process.env.ALWAYS_DUMP_GULP_ERRORS ||
+      process.env.DEBUG === "*" ||
+      probablyNotReportedByGulp(e);
   }
 
   function probablyNotReportedByGulp(e) {

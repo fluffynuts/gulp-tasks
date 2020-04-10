@@ -56,7 +56,8 @@ gulp.task("quick-build", "Quick build without pre-cursors", build);
 async function build() {
   const slnMasks = resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
   debug({
-    slnMasks
+    slnMasks,
+    cwd: process.cwd()
   });
   const solutions = gulp
     .src(slnMasks, { allowEmpty: true })

@@ -1,4 +1,6 @@
-const path = require("path");
+const
+  path = require("path"),
+  debug = require("debug")(__filename);
 
 const mocks = {};
 
@@ -7,6 +9,11 @@ function requireModule(mod) {
     return mocks[mod];
   }
   const modulePath = path.join(__dirname, mod);
+  debug({
+    label: "attempt to require",
+    mod,
+    modulePath,
+  });
   return require(modulePath);
 }
 
