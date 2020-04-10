@@ -10,8 +10,8 @@ if (!Array.prototype.flatMap) {
 }
 const
   Chalk = require("chalk"),
-  ChalkConstructor = Chalk.Instance || Chalk.constructor,
-  chalk = process.env.FORCE_COLOR ? (new ChalkConstructor({ level: 3 })) : Chalk.default,
+  ChalkConstructor = Chalk.Instance || Chalk.constructor, // current || legacy
+  chalk = process.env.FORCE_COLOR ? (new ChalkConstructor({ level: 3 })) : (Chalk.default || Chalk), // legacy || current
   debug = require("debug")("env"),
   registeredEnvironmentVariables = {},
   longestStringLength = require("./longest-string-length"),

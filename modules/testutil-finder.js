@@ -31,7 +31,16 @@ function finder(searchBaseFolders, searchBaseSubFolder, searchFolderPrefix, sear
     searchBaseFolders = [ searchBaseFolders ];
   }
   const runner = searchBaseFolders
-    .map(f => searchBaseSubFolder ? path.join(f, searchBaseSubFolder) : f)
+    .filter(f => !!f)
+    .map(f => {
+      console.error({
+        searchBaseSubFolder,
+        f
+      });
+      return searchBaseSubFolder
+        ? path.join(f, searchBaseSubFolder)
+        : f;
+    })
     .filter(checkExists)
     .reduce((possibles, baseFolder) => {
       debug("Searching: " + baseFolder);
@@ -80,7 +89,13 @@ function findWrapper(func, name) {
 }
 
 var findInstalledNUnit3 = function () {
+  if (!programFilesFolder) {
+    return null;
+  }
   var search = path.join(programFilesFolder, "NUnit.org", "nunit-console", "nunit3-console.exe");
+  if (!search) {
+    return null;
+  }
   return fs.existsSync(search) ? search : null;
 };
 
@@ -101,6 +116,9 @@ function latestNUnit(options) {
 }
 
 function nunit2Finder(searchBin, options) {
+  if (!programFilesFolder) {
+    return null;
+  }
   return finder([programFilesFolder], undefined, "NUnit", searchBin, options);
 }
 
