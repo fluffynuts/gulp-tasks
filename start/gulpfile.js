@@ -151,7 +151,7 @@ function bootstrapGulp() {
     importNpmTasks();
     var requireDir = require("require-dir");
     requireDir(gulpTasksFolder);
-    ["override-tasks", "local-tasks"].forEach(function(dirname) {
+    ["local-tasks", "override-tasks"].forEach(function(dirname) {
       const fullPath = path.join(process.cwd(), dirname);
       if (fs.existsSync(fullPath)) {
         requireDir(fullPath);

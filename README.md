@@ -55,8 +55,6 @@ Available tasks (at time of writing) include:
     - builds all Visual Studio solutions\*
 - clean
     - invokes the 'Clean' target in all Visual Studio solutions\*
-- karma
-    - runs karma in continuous testing mode\*\*
 - test-javascript
     - runs karma in a single-run mode, recording coverage\*\*
 - git-submodules
@@ -65,8 +63,6 @@ Available tasks (at time of writing) include:
 - nuget-restore
     - attempts to restore all nuget packages for all solutions\*. Will download it's own
     `nuget.exe` unless you specify otherwise.
-- sonar
-    - attempts to run sonar in your project folder. Note that this task is highly dependant on a path to sonar, so you'll probably want to modify it to point at where you have Sonar installed.
 - test-dotnet
     - (currently) attempts to run nunit tests from all Test projects, using a
         convention-over-configuration method: All assemblies that it can find which end in
