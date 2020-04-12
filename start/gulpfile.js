@@ -8,6 +8,8 @@
   and / or override the default task-set.
  */
 
+require("ts-node/register");
+
 var
   fs = require("fs"),
   path = require("path"),

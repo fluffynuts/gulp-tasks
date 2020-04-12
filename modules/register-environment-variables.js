@@ -7,7 +7,7 @@ const debug = require("debug")("env"),
   path = require("path"),
   getToolsFolder = requireModule("get-tools-folder");
 
-module.exports = function(env) {
+module.exports = function (env) {
   debug("-- start env var registration --");
 
   env.register({
@@ -246,7 +246,7 @@ module.exports = function(env) {
 
   env.register({
     name: "DRY_RUN",
-    help: "Flag that tasks may observe to only report what they are doing, not actually do it",
+    help: "Flag that tasks may observe to only report what they are doing instead of actually doing it",
     default: "false"
   });
 
@@ -341,6 +341,30 @@ module.exports = function(env) {
   env.register({
     name: "PACK_INCREMENT_VERSION",
     help: "Flag: should package version be incremented before packing?",
+    default: "true"
+  });
+
+  env.register({
+    name: "PACKAGE_JSON",
+    help: "Path to package.json to be used for subsequent processing",
+    default: "package.json"
+  });
+
+  env.register({
+    name: "VERSION_INCREMENT_STRATEGY",
+    help: [
+      "Selects which part of a version is incremented when attempting to increment version numbers",
+      "- select from major, minor, patch"
+    ].join("\n"),
+    default: "patch"
+  });
+
+  env.register({
+    name: "VERSION_INCREMENT_ZERO",
+    help: [
+      "Flag: whether or not to reset lower-order version parts when incrementing higher-order ones",
+      "eg: when incrementing the MAJOR version, should the MINOR and PATCH be set to zero?"
+    ],
     default: "true"
   });
 
