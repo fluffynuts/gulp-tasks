@@ -1,4 +1,5 @@
 import "../interfaces";
+
 const
   gulp = requireModule<GulpWithHelp>("gulp-with-help"),
   taskName = "increment-package-json-version",
@@ -12,7 +13,7 @@ const
   incrementVersion = requireModule<IncrementVersion>("increment-version"),
   env = requireModule<Env>("env");
 
-env.associate([ dryRunVar, filenameEnvVar, strategyVar, zeroVar ], taskName);
+env.associate([dryRunVar, filenameEnvVar, strategyVar, zeroVar], taskName);
 
 function guessIndent(text) {
   const
@@ -33,9 +34,10 @@ gulp.task("increment-package-json-version", () => {
       packageJson = env.resolve(filenameEnvVar),
       st = await stat(packageJson);
     if (!st) {
-      return reject(`Can't find file at '${packageJson}'`);
+      return reject(`Can't find file at '${ packageJson }'`);
     }
     const
+      dryRun = env.resolveFlag(dryRunVar),
       strategy = env.resolve(strategyVar),
       zero = env.resolveFlag(zeroVar),
       json = await readTextFile(packageJson),
@@ -43,11 +45,13 @@ gulp.task("increment-package-json-version", () => {
       index = JSON.parse(json),
       currentVersion = index.version || "0.0.0",
       incremented = incrementVersion(currentVersion, strategy, zero);
-    if (env.resolveFlag(dryRunVar)) {
-      console.log(`Would increment version in '${packageJson}' from '${currentVersion}' to '${incremented}'`);
-      return resolve();
+    index.version = incremented;
+    const newJson = JSON.stringify(index, null, indent);
+    if (dryRun) {
+      console.log(`Would increment version in '${ packageJson }' from '${ currentVersion }' to '${ incremented }'`);
+      console.log(newJson);
     }
-    index.version = currentVersion
-    return writeTextFile(packageJson, JSON.stringify(index, null, indent));
+    await writeTextFile(packageJson, newJson);
+    resolve();
   });
 });

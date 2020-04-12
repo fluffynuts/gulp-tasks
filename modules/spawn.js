@@ -27,10 +27,14 @@ function spawn(executable, args, opts) {
   if (typeof opts.stdout === "function") {
     stdOutWriter = opts.stdout;
     opts.stdio[1] = "pipe";
+  } else {
+    opts.stdio[1] = "inherit";
   }
   if (typeof opts.stderr === "function") {
     stdErrWriter = opts.stderr;
     opts.stdio[2] = "pipe";
+  } else {
+    opts.stdio[2] = "inherit";
   }
 
   const result = {
