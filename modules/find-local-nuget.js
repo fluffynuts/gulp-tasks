@@ -5,10 +5,9 @@ const
   pathUnquote = require("./path-unquote"),
   downloadNuget = require("./download-nuget")
 
-var
-  startedDownload = false,
+let startedDownload = false,
   resolver = null,
-  lastResolution = new Promise(function(resolve) {
+  lastResolution = new Promise(function (resolve) {
     resolver = resolve;
   });
 

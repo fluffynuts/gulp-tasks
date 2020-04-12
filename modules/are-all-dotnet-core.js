@@ -4,14 +4,16 @@ const
   xml2js = require("xml2js"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
   path = require("path"),
+  env = require("./env"),
   debug = require("debug")(path.basename(__filename.replace(/\.js$/, ""))),
   es = require("event-stream");
 
 module.exports = async function areAllDotnetCore(
   gulpSrcSpecs
-) {
+)
+{
   if (process.env.DOTNETCORE !== undefined) {
-    return ["1", "true", "yes"].indexOf(process.env.DOTNETCORE.toLowerCase()) > -1;
+    return env.resolveFlag("DOTNET_CORE");
   }
   return await new Promise(async (resolve, reject) => {
     const projFiles = [];

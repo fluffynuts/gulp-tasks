@@ -316,9 +316,9 @@ function quoteString(val) {
   return typeof val === "string" ? `"${val}"` : val;
 }
 
-function resolveArray(name) {
+function resolveArray(name, delimiter) {
   const value = resolveInternal(name) || "",
-    valueArray = Array.isArray(value) ? value : explode(value);
+    valueArray = Array.isArray(value) ? value : explode(value, delimiter);
   logResolved(name, valueArray);
   return valueArray;
 }
