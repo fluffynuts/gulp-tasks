@@ -35,8 +35,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-require("../interfaces");
 var gulp = requireModule("gulp-with-help"), taskName = "increment-package-json-version", filenameEnvVar = "PACKAGE_JSON", strategyVar = "VERSION_INCREMENT_STRATEGY", zeroVar = "VERSION_INCREMENT_ZERO", dryRunVar = "DRY_RUN", stat = requireModule("stat"), readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version"), env = requireModule("env");
 env.associate([dryRunVar, filenameEnvVar, strategyVar, zeroVar], taskName);
 function guessIndent(text) {

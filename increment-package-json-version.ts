@@ -1,5 +1,3 @@
-import "../interfaces";
-
 const
   gulp = requireModule<GulpWithHelp>("gulp-with-help"),
   taskName = "increment-package-json-version",

@@ -1,5 +1,3 @@
-import "../../interfaces";
-
 const
   readTextFile = requireModule<ReadTextFile>("read-text-file");
 
@@ -9,3 +7,5 @@ module.exports = async function readPackageVersion(packageJsonFile: string) {
     index = JSON.parse(json);
   return index.version;
 }
+
+export {};
