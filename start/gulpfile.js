@@ -8,13 +8,33 @@
   and / or override the default task-set.
  */
 
-const path = require("path");
-process.env.TS_NODE_PROJECT=path.join("..", __dirname, "tsconfig.json");
+const
+  fs = require("fs"),
+  path = require("path");
+let
+  test = __dirname,
+  tsproject = null;
+while (true) {
+  const proj = path.join(test, "tsconfig.json");
+  if (fs.existsSync(proj)) {
+    tsproject = proj;
+    break;
+  }
+  const next = path.dirname(test);
+  if (!next || next === test) {
+    // can't go up any more
+    break;
+  }
+  test = next;
+}
+
+if (tsproject) {
+  process.env.TS_NODE_PROJECT = tsproject;
+}
 console.log(`using ts-node project at ${process.env.TS_NODE_PROJECT}`);
 require("ts-node/register");
 
 var
-  fs = require("fs"),
   gulpTasksFolder = process.env.GULP_TASKS_FOLDER || path.join(__dirname, "gulp-tasks"),
   requireModule = require(path.join(gulpTasksFolder, "modules", "require-module"));
 
