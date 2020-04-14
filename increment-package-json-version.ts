@@ -15,7 +15,7 @@ const
 
 env.associate([dryRunVar, filenameEnvVar, strategyVar, zeroVar], taskName);
 
-function guessIndent(text) {
+function guessIndent(text: string) {
   const
     lines = text.split("\n"),
     firstIndented = lines.find(line => line.match(/^\s+/));
@@ -23,7 +23,8 @@ function guessIndent(text) {
     return 2; // guess
   }
   const
-    leadingWhitespace = firstIndented.match(/(^\s+)/)[0] || "  ",
+    firstMatch = firstIndented.match(/(^\s+)/) || [],
+    leadingWhitespace = firstMatch[0] || "  ",
     asSpaces = leadingWhitespace.replace(/\t/g, "  ");
   return asSpaces.length;
 }

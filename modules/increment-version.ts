@@ -11,7 +11,7 @@ function incrementAt(parts: number[], index: number) {
   parts[index]++;
 }
 
-const incrementLookup = {
+const incrementLookup: { [key: string]: number } = {
   "major": 0,
   "minor": 1,
   "patch": 2
@@ -20,7 +20,7 @@ const incrementLookup = {
 
 module.exports = function incrementVersion(
   version: string,
-  strategy: string,
+  strategy: "major" | "minor" | "patch",
   zeroLowerOrder: boolean) {
   const parts = version.split(".").map(i => parseInt(i));
   let toIncrement = incrementLookup[(strategy || "").toLowerCase()]
