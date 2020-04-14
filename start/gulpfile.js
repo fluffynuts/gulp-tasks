@@ -8,11 +8,13 @@
   and / or override the default task-set.
  */
 
+const path = require("path");
+process.env.TS_NODE_PROJECT=path.join("..", __dirname, "tsconfig.json");
+console.log(`using ts-node project at ${process.env.TS_NODE_PROJECT}`);
 require("ts-node/register");
 
 var
   fs = require("fs"),
-  path = require("path"),
   gulpTasksFolder = process.env.GULP_TASKS_FOLDER || path.join(__dirname, "gulp-tasks"),
   requireModule = require(path.join(gulpTasksFolder, "modules", "require-module"));
 
