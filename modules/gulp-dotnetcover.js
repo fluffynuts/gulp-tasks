@@ -31,7 +31,7 @@ function dotCover(options) {
   options.baseFilters =
     options.baseFilters || "+:module=*;class=*;function=*;-:*.Tests";
   options.exclude = options.exclude || [];
-  options.nunitOptions = options.nunitOptions || "--labels=All";
+  options.nunitOptions = options.nunitOptions || "--labels=Before";
   if (Array.isArray(options.nunitOptions)) {
     options.nunitOptions = options.nunitOptions.join(" ");
   }
@@ -217,7 +217,7 @@ function updateLabelsOptionFor(nunitOptions) {
   if (nunitOptions.indexOf("labels:") > -1) {
     return nunitOptions; // caller already updated for new labels= syntax
   }
-  return nunitOptions.replace(/\/labels/, "/labels:All");
+  return nunitOptions.replace(/\/labels/, "/labels:Before");
 }
 
 function quoted(str) {
