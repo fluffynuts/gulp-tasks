@@ -29,6 +29,7 @@ module.exports = function resolveMasks(
     }
   return env
     .resolveArray(includeVar)
+    .filter(p => !!p)
     .map(p => (isPureMask(p) ? extractPureMask(p) : makeRecursive(p)))
     .concat(
       env.resolveArray(excludeVar).map(p => {
