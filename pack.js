@@ -48,9 +48,13 @@ function packWithNuget(target, incrementVersion) {
     .src(["**/*.nuspec", `!${getToolsFolder()}/**/*`])
     .pipe(throwIfNoFiles("No nuspec files found"));
   if (incrementVersion) {
-    stream = stream.pipe(incrementPackageVersion()).pipe(rewriteFile());
+    stream = stream
+      .pipe(incrementPackageVersion())
+      .pipe(rewriteFile());
   }
-  return stream.pipe(pack()).pipe(target);
+  return stream
+    .pipe(pack())
+    .pipe(gulp.dest(target));
 }
 
 function packWithDotnetCore(target, incrementVersion) {
@@ -84,10 +88,7 @@ gulp.task(
   "prepack",
   "Skeleton task which you can replace to run logic just before packing",
   () => {
-    if (env.resolveFlag("DOTNET_CORE")) {
-      return Promise.resolve();
-    }
-    return gulp.series("build");
+    return Promise.resolve();
   }
 );
 
