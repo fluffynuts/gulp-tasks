@@ -62,7 +62,30 @@ async function runTests() {
   return tester(configuration, testMasks);
 }
 
+function consolidatePathEnvVar() {
+  const keys = Object.keys(process.env)
+    .filter(k => k.toLowerCase() === "path");
+  if (keys.length === 1) {
+    return;
+  }
+  const sep = process.platform === "win32"
+    ? ";"
+    : ":";
+  const include = [];
+  keys.forEach(k => {
+    const parts = process.env[k].split(sep);
+    parts.forEach(p => {
+      if (include.indexOf(p) === -1) {
+        include.push(p);
+      }
+    });
+  });
+  keys.forEach(k => process.env[k] = "");
+  process.env.PATH = include.join(sep);
+}
+
 function testWithNunitCli(configuration, source) {
+  consolidatePathEnvVar();
   const agents = env.resolveNumber("MAX_NUNIT_AGENTS");
   const seenAssemblies = [];
   const config = {
@@ -72,16 +95,23 @@ function testWithNunitCli(configuration, source) {
     options: {
       result: env.resolve("BUILD_REPORT_XML"),
       agents: agents,
-      labels: env.resolve("NUNIT_LABELS")
+      labels: env.resolve("NUNIT_LABELS"),
     }
   };
-  log.info(`Using NUnit runner at ${config.executable}`);
-  log.info("Find files:", source);
-  logConfig(config.options, {
+  const nunitProcess = env.resolve("NUNIT_PROCESS");
+  const logInfo = {
     result: "Where to store test result (xml file)",
     agents: "Number of NUnit agents to engage",
-    labels: "What labels NUnit should display as tests run"
-  });
+    labels: "What labels NUnit should display as tests run",
+    agents: "How many NUnit agents to run"
+  }
+  if (nunitProcess !== "auto") {
+    config.options.process = nunitProcess;
+    logInfo.process = "Process model for NUnit";
+  }
+  log.info(`Using NUnit runner at ${config.executable}`);
+  log.info("Find files:", source);
+  logConfig(config.options, logInfo);
   debug({
     config
   });

@@ -138,7 +138,12 @@ module.exports = function (env) {
 
   env.register({
     name: "NUNIT_LABELS",
-    default: "All"
+    default: "Before"
+  });
+
+  env.register({
+    name: "NUNIT_PROCESS",
+    default: "auto"
   });
 
   const extra = `
