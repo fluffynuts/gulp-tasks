@@ -135,7 +135,7 @@ function gulpNugetPack(options) {
 
 function logBuilt(packagePath) {
   gutil.log(
-    gutil.colors.yellow(`build package: ${path.basename(packagePath)}`)
+    gutil.colors.yellow(`build package: ${packagePath}`)
   );
 }
 
