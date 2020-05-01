@@ -17,6 +17,7 @@ const
   looksLikeAPromise = requireModule("looks-like-a-promise"),
   gutil = requireModule("gulp-util"),
   spawnNuget = requireModule("spawn-nuget"),
+  debug = require("debug")("gulp-nuget-pack"),
   es = require("event-stream");
 
 async function grokNuspec(xmlString) {
@@ -134,8 +135,9 @@ function gulpNugetPack(options) {
 }
 
 function logBuilt(packagePath) {
+  debug(`built intermediate package: ${packagePath}`);
   gutil.log(
-    gutil.colors.yellow(`build package: ${packagePath}`)
+    gutil.colors.yellow(`built package: ${path.basename(packagePath)}`)
   );
 }
 
