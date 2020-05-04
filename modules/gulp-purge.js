@@ -1,5 +1,5 @@
 'use strict';
-var gutil = require('gulp-util');
+var gutil = requireModule('gulp-util');
 var es = require('event-stream');
 var fs = require('fs');
 var q = require('q');
@@ -40,7 +40,7 @@ function purge(options) {
         } catch (e) {
             fail(this, e);
         }
-    }); 
+    });
     return stream;
 };
 

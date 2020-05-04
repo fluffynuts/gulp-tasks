@@ -1,7 +1,7 @@
 'use strict';
 var
   path = require("path"),
-  gutil = require('gulp-util'),
+  gutil = requireModule('gulp-util'),
   es = require('event-stream'),
   q = require('q'),
   spawn = require('./spawn'),
