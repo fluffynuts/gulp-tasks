@@ -72,8 +72,17 @@ function updateZarroPipe(beta: boolean) {
       promises.push(spawn.call(null, proc, args, opts))
     }
   }, async function end() {
-    await Promise.all(promises);
-    stream.emit("end");
+    try {
+      await Promise.all(promises)
+      stream.emit("end");
+    } catch (err) {
+      console.error(chalk.redBright(`
+ ==================================================
+| WARNING: Unable to update zarro, error(s) follow |
+ ==================================================
+`));
+      stream.emit("error", err);
+    }
   });
   return stream;
 }
