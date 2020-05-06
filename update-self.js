@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const spawn = requireModule("spawn"), gulp = requireModule("gulp-with-help"), env = requireModule("env"), resolveMasks = requireModule("resolve-masks"), debug = require("debug")("update-self"), es = require("event-stream");
+const spawn = requireModule("spawn"), gulp = requireModule("gulp-with-help"), env = requireModule("env"), chalk = require("chalk"), resolveMasks = requireModule("resolve-masks"), debug = require("debug")("update-self"), es = require("event-stream");
 env.associate([
     env.DRY_RUN,
     env.INCLUDE_PACKAGE_JSON,
@@ -32,8 +32,8 @@ function updateZarroPipe(beta) {
             debug(`${file.path} is not valid JSON`);
             return;
         }
-        debug(`update zarro in: ${file.dirname}`);
-        const proc = "npm", tag = beta ? "beta" : "latest", args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress"], opts = {
+        console.log(chalk.yellow(`update zarro in: ${file.dirname}`));
+        const proc = "npm", tag = beta ? "beta" : "latest", args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress", "--silent"], opts = {
             cwd: file.dirname
         };
         if (env.resolveFlag(env.DRY_RUN)) {

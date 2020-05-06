@@ -5,6 +5,7 @@ const
   spawn = requireModule<Spawn>("spawn"),
   gulp = requireModule<GulpWithHelp>("gulp-with-help"),
   env = requireModule<Env>("env"),
+  chalk = require("chalk"),
   resolveMasks = requireModule<ResolveMasks>("resolve-masks"),
   debug = require("debug")("update-self"),
   es = require("event-stream");
@@ -52,11 +53,11 @@ function updateZarroPipe(beta: boolean) {
       debug(`${ file.path } is not valid JSON`);
       return;
     }
-    debug(`update zarro in: ${ file.dirname }`);
+    console.log(chalk.yellow(`update zarro in: ${ file.dirname }`));
     const
       proc = "npm",
       tag = beta ? "beta" : "latest",
-      args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress"],
+      args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress", "--silent"],
       opts = {
         cwd: file.dirname
       }
