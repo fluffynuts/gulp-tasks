@@ -1,20 +1,21 @@
 // when adding items to this file, it's a good idea to add them
 // in alphabetical ordering so that it's easier to scan debug logs
 // for vars you're looking for (:
+// dev note: when updating here, don't forget to add to interfaces.d.ts/global/Env
 
 const debug = require("debug")("env"),
   os = require("os"),
   path = require("path"),
   getToolsFolder = requireModule("get-tools-folder");
 
-module.exports = function (env) {
+module.exports = function _env(env) {
   debug("-- start env var registration --");
 
   env.register({
     name: "USE_SYSTEM_NUGET",
     default: "false",
     help: "Whether or not to use nuget.exe if found in the path"
-  });
+  }, _env);
 
   env.register({
     name: "ENABLE_NUGET_PARALLEL_PROCESSING",
@@ -58,14 +59,14 @@ module.exports = function (env) {
   });
 
   function overrideIsSmaller(existing, override) {
-    var existingNumber = parseInt(existing, 10);
-    var overrideNumber = parseInt(override, 10);
+    const existingNumber = parseInt(existing, 10);
+    const overrideNumber = parseInt(override, 10);
     if (isNaN(existingNumber) || isNaN(overrideNumber)) {
       throw new Error(
         `Can't determine if override '${override}' should take precedence over '${existing}'`
       );
     }
-    var result = overrideNumber < existingNumber;
+    const result = overrideNumber < existingNumber;
     debug({
       existing,
       override,
@@ -371,6 +372,30 @@ module.exports = function (env) {
       "eg: when incrementing the MAJOR version, should the MINOR and PATCH be set to zero?"
     ],
     default: "true"
+  });
+
+  env.register({
+    name: "INCLUDE_PACKAGE_JSON",
+    help: [
+      "Mask for which package.json files to include"
+    ],
+    default: "**/package.json"
+  });
+
+  env.register({
+    name: "EXCLUDE_PACKAGE_JSON",
+    help: [
+      "Mask for which package.json files to exclude"
+    ],
+    default: "**/node_modules/**"
+  });
+
+  env.register({
+    name: "BETA",
+    help: [
+      "Enable beta flag for operation"
+    ],
+    default: "false"
   });
 
   debug("-- env registration complete --");

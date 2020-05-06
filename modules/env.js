@@ -52,6 +52,10 @@ function fallback(name, defaultValue) {
 
 function register(config) {
   let { name, help, tasks, overriddenBy, when } = config;
+  if (toExport[name] !== undefined) {
+    throw new Error(`env var already registered: ${name}`);
+  }
+  toExport[name] = name;
   // 'default' seems like a more natural name, but we can't use it for a var name...
   let fallback = config.default;
   if (registeredEnvironmentVariables[name]) {
