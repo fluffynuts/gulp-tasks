@@ -56,7 +56,7 @@ function updateZarroPipe(beta: boolean) {
     const
       proc = "npm",
       tag = beta ? "beta" : "latest",
-      args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`],
+      args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress"],
       opts = {
         cwd: file.dirname
       }

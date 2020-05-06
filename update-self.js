@@ -33,7 +33,7 @@ function updateZarroPipe(beta) {
             return;
         }
         debug(`update zarro in: ${file.dirname}`);
-        const proc = "npm", tag = beta ? "beta" : "latest", args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`], opts = {
+        const proc = "npm", tag = beta ? "beta" : "latest", args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress"], opts = {
             cwd: file.dirname
         };
         if (env.resolveFlag(env.DRY_RUN)) {
