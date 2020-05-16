@@ -1,19 +1,9 @@
 const
   temp = require("temp"),
-  xml2js = require("xml2js"),
   Vinyl = require("vinyl"),
   fs = require("./fs"),
   path = require("path"),
-  parseXml = function(data) {
-    return new Promise((resolve, reject) => {
-      xml2js.parseString(data, (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
-  },
+  parseXml = requireModule("parseXml"),
   looksLikeAPromise = requireModule("looks-like-a-promise"),
   gutil = requireModule("gulp-util"),
   spawnNuget = requireModule("spawn-nuget"),
