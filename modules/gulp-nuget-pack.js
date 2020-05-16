@@ -3,7 +3,7 @@ const
   Vinyl = require("vinyl"),
   fs = require("./fs"),
   path = require("path"),
-  parseXml = requireModule("parseXml"),
+  parseXml = requireModule("parse-xml"),
   looksLikeAPromise = requireModule("looks-like-a-promise"),
   gutil = requireModule("gulp-util"),
   spawnNuget = requireModule("spawn-nuget"),
