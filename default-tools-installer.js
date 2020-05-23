@@ -14,6 +14,7 @@ env.associate("default-tools-installer", [ "BUILD_TOOLS_FOLDER", "DOTNET_CORE" ]
 gulp.task(
   "default-tools-installer",
   `Installs the default toolset: ${tools.join(", ")}`,
+  ["get-local-nuget"],
   () => {
     if (env.resolveFlag("DOTNET_CORE")) {
       debug("not invoked for dotnet core builds");
