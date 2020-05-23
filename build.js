@@ -101,7 +101,7 @@ function buildForNetCore(solutions) {
 }
 
 function buildForNETFramework(solutions) {
-  log.info(chalk.yellowBright("Building with full .NET framework"));
+  log.info(chalk.yellowBright("Building with MsBuild"));
   return promisifyStream(buildAsStream(solutions));
 }
 

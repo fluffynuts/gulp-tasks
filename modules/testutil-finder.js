@@ -33,10 +33,6 @@ function finder(searchBaseFolders, searchBaseSubFolder, searchFolderPrefix, sear
   const runner = searchBaseFolders
     .filter(f => !!f)
     .map(f => {
-      console.error({
-        searchBaseSubFolder,
-        f
-      });
       return searchBaseSubFolder
         ? path.join(f, searchBaseSubFolder)
         : f;

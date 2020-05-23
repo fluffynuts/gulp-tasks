@@ -372,10 +372,28 @@ function onCoverageComplete(stream) {
   end(stream);
 }
 
+function findCaseInsensitiveUniqueEnvironmentVariables() {
+  // naive: last wins
+  return Object.keys(process.env).reduce(
+    (acc, cur) => {sub
+      const existing = Object.keys(acc).find(k => k.toLowerCase() === cur);
+      if (existing) {
+        acc[existing] = process.env[cur];
+      } else {
+        acc[cur] = process.env[cur];
+      }
+      return acc;
+    }, {});
+}
+
 function spawnOpenCover(stream, exe, cliOptions, globalOptions) {
   debug(`Running opencover:`);
   debug(`${exe} ${cliOptions.join(" ")}`);
-  return spawn(exe, cliOptions)
+  const env = findCaseInsensitiveUniqueEnvironmentVariables();
+  debug("setting open-cover env:", {
+    env
+  });
+  return spawn(exe, cliOptions, { env })
     .then(() => onCoverageComplete(stream))
     .catch(err => handleCoverageFailure(stream, err, globalOptions));
 }
