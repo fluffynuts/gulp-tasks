@@ -5,6 +5,7 @@ const debug = require("debug")("default-tools-installer"),
   env = requireModule("env"),
   tools = [
     `${nugetSourceName}/nunit.console`,
+    `${nugetSourceName}/opencover`,
     `${nugetSourceName}/Jetbrains.dotCover.CommandLineTools`,
     `${nugetSourceName}/reportgenerator`
   ];

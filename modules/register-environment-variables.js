@@ -51,6 +51,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "DOTNET_TEST_PARALLEL",
+    default: false,
+    help: "(experimental) run your dotnet core tests in parallel"
+  });
+
+  env.register({
     name: "BUILD_MAX_CPU_COUNT",
     default: os.cpus().length.toString(),
     help: "Max number of cpus to use whilst building",

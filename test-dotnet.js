@@ -1,4 +1,6 @@
-const gulp = requireModule("gulp-with-help"),
+const
+  seed = requireModule("seed"),
+  gulp = requireModule("gulp-with-help"),
   log = requireModule("log"),
   path = require("path"),
   gulpDebug = require("gulp-debug"),
@@ -6,19 +8,19 @@ const gulp = requireModule("gulp-with-help"),
   filter = require("gulp-filter"),
   fs = require("fs"),
   promisifyStream = requireModule("promisify"),
-  os = require("os"),
   { test } = require("gulp-dotnet-cli"),
   nunit = require("gulp-nunit-runner"),
   testUtilFinder = requireModule("testutil-finder"),
   env = requireModule("env"),
   resolveTestMasks = requireModule("resolve-test-masks"),
   logConfig = requireModule("log-config"),
+  gatherPaths = requireModule("gather-paths"),
   netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter");
 
 gulp.task(
   "test-dotnet",
   `Runs all tests in your solution via NUnit *`,
-  ["build"],
+  [ "build" ],
   runTests
 );
 
@@ -28,7 +30,7 @@ gulp.task(
   runTests
 );
 
-const myTasks = ["test-dotnet", "quick-test-dotnet"],
+const myTasks = [ "test-dotnet", "quick-test-dotnet" ],
   myVars = [
     "BUILD_CONFIGURATION",
     "DOTNET_CORE",
@@ -39,7 +41,8 @@ const myTasks = ["test-dotnet", "quick-test-dotnet"],
     "BUILD_REPORT_XML",
     "NUNIT_ARCHITECTURE",
     "NUNIT_LABELS",
-    "TEST_VERBOSITY"
+    "TEST_VERBOSITY",
+    "DOTNET_TEST_PARALLEL"
   ];
 env.associate(myVars, myTasks);
 
@@ -101,7 +104,6 @@ function testWithNunitCli(configuration, source) {
   const nunitProcess = env.resolve("NUNIT_PROCESS");
   const logInfo = {
     result: "Where to store test result (xml file)",
-    agents: "Number of NUnit agents to engage",
     labels: "What labels NUnit should display as tests run",
     agents: "How many NUnit agents to run"
   }
@@ -130,11 +132,15 @@ function testWithNunitCli(configuration, source) {
   );
 }
 
-function testAsDotnetCore(configuration, testProjects) {
-  // TODO: collect all projects in an array and then
-  //  run test projects in parallel, throttled by MAX_CONCURRENCY
+function makeTestsPromise(
+  projectPaths,
+  configuration
+) {
+  if (!Array.isArray(projectPaths)) {
+    projectPaths = [ projectPaths ];
+  }
   return promisifyStream(
-    gulp.src(testProjects).pipe(
+    gulp.src(projectPaths).pipe(
       test({
         verbosity: env.resolve("TEST_VERBOSITY"),
         configuration,
@@ -142,6 +148,41 @@ function testAsDotnetCore(configuration, testProjects) {
       })
     )
   );
+}
+
+
+async function testAsDotnetCore(configuration, testProjects) {
+  // TODO: collect all projects in an array and then
+  //  run test projects in parallel, throttled by MAX_CONCURRENCY
+  if (env.resolveFlag("DOTNET_TEST_PARALLEL")) {
+    const
+      testProjectPaths = await gatherPaths(testProjects),
+      concurrency = env.resolveNumber("MAX_CONCURRENCY"),
+      chains = seed(concurrency).map(() => Promise.resolve());
+    let p, current = 0;
+    while (p = testProjectPaths.shift()) {
+      p = p.replace(/\\/g, "/");
+      console.log("add test run:", p);
+      const
+        idx = current++ % concurrency,
+        localP = p;
+      chains[idx] = chains[idx].then(() => {
+        console.log(`${idx}  start test run: ${localP}`);
+        return makeTestsPromise(localP, configuration);
+      });
+    }
+    return Promise.all(chains);
+  } else {
+    return promisifyStream(
+      gulp.src(testProjects).pipe(
+        test({
+          verbosity: env.resolve("TEST_VERBOSITY"),
+          configuration,
+          noBuild: true
+        })
+      )
+    );
+  }
 }
 
 function isDistinctFile(filePath, seenFiles) {

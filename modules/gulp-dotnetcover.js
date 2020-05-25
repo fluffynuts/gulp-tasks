@@ -1,5 +1,5 @@
 "use strict";
-var gutil = requireModule("gulp-util"),
+const gutil = requireModule("gulp-util"),
   env = requireModule("env"),
   es = require("event-stream"),
   path = require("path"),
@@ -8,12 +8,11 @@ var gutil = requireModule("gulp-util"),
   getToolsFolder = require("./get-tools-folder"),
   spawn = require("./spawn"),
   mkdirp = require("mkdirp"),
-  os = require("os"),
   coverageTarget = process.env.COVERAGE_TARGET || "Debug",
   debug = require("debug")("gulp-dotnetcover"),
   log = require("./log");
 
-var PLUGIN_NAME = "gulp-dotnetcover";
+const PLUGIN_NAME = "gulp-dotnetcover";
 
 function projectPathFor(p) {
   return path.resolve(p);
@@ -21,6 +20,7 @@ function projectPathFor(p) {
 
 function dotCover(options) {
   options = options || {};
+  options.failOnError = options.failOnError || true;
   options.exec = options.exec || {};
   options.exec.dotCover =
     options.exec.dotCover || testUtilFinder.latestDotCover(options);
@@ -32,6 +32,7 @@ function dotCover(options) {
     options.baseFilters || "+:module=*;class=*;function=*;-:*.Tests";
   options.exclude = options.exclude || [];
   options.nunitOptions = options.nunitOptions || "--labels=Before";
+  options.allowProjectAssemblyMismatch = options.allowProjectAssemblyMismatch || false;
   if (Array.isArray(options.nunitOptions)) {
     options.nunitOptions = options.nunitOptions.join(" ");
   }
@@ -44,40 +45,40 @@ function dotCover(options) {
   options.coverageOutput = projectPathFor(
     options.coverageOutput || "buildreports/coveragesnapshot"
   );
-  options.agents = options.agents || process.env.MAX_NUNIT_AGENTS; // allow setting max agents via environment variable
+  options.agents = options.agents || env.resolveNumber("MAX_NUNIT_AGENTS"); // allow setting max agents via environment variable
   mkdirp(options.coverageReportBase); // because open-cover is too lazy to do it itself :/
   if (typeof options.testAssemblyFilter !== "function") {
-    var regex = options.testAssemblyFilter;
+    const regex = options.testAssemblyFilter;
     options.testAssemblyFilter = function(file) {
       return !!file.match(regex);
     };
   }
 
-  var assemblies = [];
+  const assemblies = [];
 
-  var stream = es.through(
+  const stream = es.through(
     function write(file) {
       if (!file) {
         fail(this, "file may not be empty or undefined");
       }
-      var filePath = file.history[0];
-      var parts = filePath.split("\\");
+      const filePath = file.history[0];
+      let parts = filePath.split("\\");
       if (parts.length === 1) {
         parts = filePath.split("/");
       }
       // only accept the one which is in the debug project output for itself
-      var filePart = parts[parts.length - 1];
-      var projectParts = filePart.split(".");
-      var projectName = projectParts
+      const filePart = parts[parts.length - 1];
+      const projectParts = filePart.split(".");
+      const projectName = projectParts
         .slice(0, projectParts.length - 1)
         .join(".");
-      var isBin = parts.indexOf("bin") > -1;
-      var isRelevantForCoverageTarget =
+      const isBin = parts.indexOf("bin") > -1;
+      const isRelevantForCoverageTarget =
         parts.indexOf(coverageTarget) > -1 ||
         parts.indexOf("bin") === parts.length - 2;
-      var isProjectMatch =
+      const isProjectMatch =
         options.allowProjectAssemblyMismatch || parts.indexOf(projectName) > -1;
-      var include = isBin && isRelevantForCoverageTarget && isProjectMatch;
+      const include = isBin && isRelevantForCoverageTarget && isProjectMatch;
       if (include) {
         debug("include: " + filePath);
         assemblies.push(file);
@@ -87,7 +88,7 @@ function dotCover(options) {
         debug("isDebugOrAgnostic: " + isRelevantForCoverageTarget);
         debug("isProjectMatch: " + isProjectMatch);
       }
-      this.emit("data", file);
+      stream.emit("data", file);
     },
     function end() {
       runCoverageWith(this, assemblies, options);
@@ -97,12 +98,12 @@ function dotCover(options) {
 }
 
 function findLocalExactExecutable(options, what) {
-  var toolsFolder = path.join(process.cwd(), getToolsFolder()).toLowerCase();
+  const toolsFolder = path.join(process.cwd(), getToolsFolder()).toLowerCase();
   return what.reduce((acc, cur) => {
     if (acc || !options.exec[cur]) {
       return acc;
     }
-    var exe = trim(options.exec[cur], "\\s", '"', "'");
+    const exe = trim(options.exec[cur], "\\s", '"', "'");
     if (exe.toLowerCase().indexOf(toolsFolder) === 0) {
       log.info(`preferring local tool: ${exe}`);
       return exe;
@@ -115,17 +116,17 @@ function findExactExecutable(stream, options, what, deferLocal) {
     what = [what];
   }
   if (!deferLocal) {
-    var local = findLocalExactExecutable(options, what);
+    const local = findLocalExactExecutable(options, what);
     if (local) {
       return local;
     }
   }
-  var resolved = what.reduce((acc, cur) => {
+  const resolved = what.reduce((acc, cur) => {
     cur = findKeyInsensitive(options.exec, cur);
     if (!options.exec[cur]) {
       return acc;
     }
-    var exe = trim(options.exec[cur], "\\s", '"', "'");
+    const exe = trim(options.exec[cur], "\\s", '"', "'");
     if (!fs.existsSync(exe)) {
       fail(
         stream,
@@ -158,7 +159,7 @@ function findKeyInsensitive(obj, seekKey) {
 function findCoverageTool(stream, options) {
   return options.coverageTool
     ? findExactExecutable(stream, options, [options.coverageTool], true)
-    : findExactExecutable(stream, options, ["dotCover", "openCover"]);
+    : findExactExecutable(stream, options, ["openCover", "dotCover" ]);
 }
 
 function findNunit(stream, options) {
@@ -174,10 +175,10 @@ function end(stream) {
 }
 
 function trim() {
-  var args = Array.prototype.slice.call(arguments);
-  var source = args[0];
-  var replacements = args.slice(1).join(",");
-  var regex = new RegExp(
+  const args = Array.prototype.slice.call(arguments);
+  const source = args[0];
+  const replacements = args.slice(1).join(",");
+  const regex = new RegExp(
     "^[" + replacements + "]+|[" + replacements + "]+$",
     "g"
   );
@@ -197,7 +198,7 @@ function generateXmlOutputSwitchFor(nunitRunner, options) {
     );
     return "";
   }
-  var outFile = options.nunitOutput;
+  const outFile = options.nunitOutput;
   return isNunit3(nunitRunner)
     ? `/result:${outFile};format=nunit2`
     : `/xml=${outFile}`;
@@ -208,7 +209,7 @@ function generateNoShadowFor(nunitRunner) {
 }
 
 function generatePlatformSwitchFor(nunitRunner, options) {
-  var isX86 =
+  const isX86 =
     options.x86 || (options.platform || options.architecture) === "x86";
   return isNunit3(nunitRunner) && isX86 ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
 }
@@ -225,24 +226,24 @@ function quoted(str) {
 }
 
 function generateAgentsLimitFor(nunit, options) {
-  var limit = env.resolveNumber("MAX_NUNIT_AGENTS");
+  const limit = options.agents;
   return `--agents=${limit}`;
 }
 
 function runCoverageWith(stream, allAssemblies, options) {
-  var scopeAssemblies = [];
-  var testAssemblies = allAssemblies
-    .map(function(file) {
+  const scopeAssemblies = [];
+  const testAssemblies = allAssemblies
+    .map(function (file) {
       const replace = [
         process.cwd() + "\\",
         process.cwd().replace(/\\\\/g, "/") + "/"
       ];
       return replace.reduce((acc, cur) => acc.replace(cur, ""), file.path);
     })
-    .filter(function(file) {
+    .filter(function (file) {
       return options.testAssemblyFilter(file) || !scopeAssemblies.push(file);
     })
-    .map(function(file) {
+    .map(function (file) {
       return file.replace(/\\/g, "/");
     });
   if (testAssemblies.length === 0) {
@@ -255,12 +256,12 @@ function runCoverageWith(stream, allAssemblies, options) {
     );
   }
   options.testAssemblies = testAssemblies; // so other things can use this
-  var coverageToolExe = findCoverageTool(stream, options);
+  const coverageToolExe = findCoverageTool(stream, options);
   debug(`selected coverage tool exe: ${coverageToolExe}`);
-  var nunit = findNunit(stream, options);
+  const nunit = findNunit(stream, options);
   debug("testAssemblies:", testAssemblies);
-  var q = quoteIfSpaced;
-  var nunitOptions = [
+  const q = quoteIfSpaced;
+  let nunitOptions = [
     q(generateXmlOutputSwitchFor(nunit, options)),
     q(generateNoShadowFor(nunit)),
     q(generatePlatformSwitchFor(nunit, options)),
@@ -268,15 +269,15 @@ function runCoverageWith(stream, allAssemblies, options) {
     testAssemblies.map(quoted).join(" ")
   ].concat(q(updateLabelsOptionFor(options.nunitOptions).split(" ")));
   debug("nunit options: ", nunitOptions);
-  var agents = parseInt(options.agents);
+  const agents = parseInt(options.agents);
   if (!isNaN(agents)) {
     nunitOptions.push("--agents=" + agents);
   }
   nunitOptions = nunitOptions.join(" ");
 
-  var coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
+  const coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
   debug(`Running tool: ${coverageToolName}`);
-  var cliOptions = getCliOptionsFor(
+  const cliOptions = getCliOptionsFor(
     stream,
     coverageToolName,
     options,
@@ -292,12 +293,12 @@ function runCoverageWith(stream, allAssemblies, options) {
   );
 }
 
-var commandLineOptionsGenerators = {
+const commandLineOptionsGenerators = {
   dotcover: getDotCoverOptionsFor,
   opencover: getOpenCoverOptionsFor
 };
 
-var coverageSpawners = {
+const coverageSpawners = {
   dotcover: spawnDotCover,
   opencover: spawnOpenCover
 };
@@ -351,8 +352,10 @@ function stringify(err) {
 
 function dumpTopLevel(obj) {
   const result = [];
-  for (var prop in obj) {
-    result.push(`${prop}: ${obj}`);
+  for (let prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
+      result.push(`${prop}: ${obj[prop]}`);
+    }
   }
   return `{\n\t${result.join("\n\t")}}`;
 }
@@ -417,7 +420,7 @@ function shouldFailOnError(options) {
     : !!options.failOnError;
 }
 function quoteIfSpaced(str, quote) {
-  if (str.indexOf(" ") == -1) {
+  if (str.indexOf(" ") === -1) {
     return str;
   }
   quote = quote || "\"";
@@ -428,8 +431,7 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
   const exclude =
       options.exclude && options.exclude.length ? options.exclude : ["*.Tests"],
     failOnError = shouldFailOnError(options),
-    excludeFilter = generateOpenCoverFilter("-", exclude),
-    dq = "\"\"";
+    excludeFilter = generateOpenCoverFilter("-", exclude);
 
   const result = [
     `"-target:${nunit}"`,
@@ -450,8 +452,8 @@ function getOpenCoverOptionsFor(options, nunit, nunitOptions) {
 function getUniqueDirsFrom(filePaths) {
   return filePaths
     .reduce((acc, cur) => {
-      var dirName = path.dirname(cur);
-      var required = !acc.filter(p => cur === p)[0];
+      const dirName = path.dirname(cur);
+      const required = !acc.filter(p => cur === p)[0];
       if (required) {
         acc.push(quoteIfSpaced(dirName, "\"\""));
       }
@@ -467,7 +469,7 @@ function spawnCoverageTool(
   cliOptions,
   globalOptions
 ) {
-  var spawner = coverageSpawners[toolName];
+  const spawner = coverageSpawners[toolName];
   debug({
     toolName,
     toolExe,
@@ -490,7 +492,7 @@ function getCliOptionsFor(
   nunit,
   nunitOptions
 ) {
-  var generator = commandLineOptionsGenerators[coverageToolName];
+  const generator = commandLineOptionsGenerators[coverageToolName];
   return generator
     ? generator(options, nunit, nunitOptions)
     : unsupportedTool(stream, coverageToolName);
@@ -506,15 +508,15 @@ function grokCoverageToolNameFrom(options, toolExe) {
 }
 
 function getDotCoverOptionsFor(options, nunit, nunitOptions) {
-  var filterJoin = ";-:",
+  const filterJoin = ";-:",
     scopeAssemblies = options.testAssemblies;
 
-  var filters = options.baseFilters;
+  let filters = options.baseFilters;
   if (options.exclude.length) {
     filters = [filters, options.exclude.join(filterJoin)].join(filterJoin);
   }
 
-  var dotCoverOptions = [
+  const dotCoverOptions = [
     "cover",
     `/TargetExecutable=${quoted(nunit)}`,
     `/AnalyseTargetArguments=False`,
