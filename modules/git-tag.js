@@ -6,8 +6,8 @@ async function gitTag(tag, comment, where) {
   let dryRun = false;
   if (typeof tag === "object") {
     comment = tag.comment;
-    where = tag.where;
-    dryRun = tag.dryRun;
+    where = tag.where || ".";
+    dryRun = tag.dryRun || false;
     tag = tag.tag;
   } else {
     gutil.log.warn(
@@ -16,7 +16,10 @@ async function gitTag(tag, comment, where) {
       )
     );
   }
-  comment = comment || `:bookmark: tagging at ${tag}`;
+  if (!(tag || "").trim()) {
+    throw new Error("No tag supplied!");
+  }
+  comment = comment || `:bookmark: tagging ${where} at ${tag}`;
   if (dryRun) {
     gutil.log(gutil.colors.green(`would tag at ${tag} with comment: ${comment}`));
   } else {
