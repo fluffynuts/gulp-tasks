@@ -24,7 +24,7 @@ async function gitTag(tag, comment, where) {
     gutil.log(gutil.colors.green(`would tag at ${tag} with comment: ${comment}`));
   } else {
     const git = new Git(where);
-    gutil.log(gutil.colors.cyan(`Tagging at: "${tag}"`));
+    gutil.log(gutil.colors.cyan(`Tagging ${where} at: "${tag}"`));
     await git.addAnnotatedTag(tag, comment);
   }
 }
