@@ -4,16 +4,27 @@ const
   resolveGitRemote = requireModule("resolve-git-remote"),
   gutil = requireModule("gulp-util");
 
-module.exports = async function gitPush(
+async function gitPush(
   dryRun,
   quiet,
   where
 ) {
+  if (typeof dryRun === "object") {
+    quiet = dryRun.quiet || false;
+    where = dryRun.where || ".";
+    dryRun = dryRun.dryRun || false;
+  } else {
+    gutil.log.warn(
+      gutil.colors.red(
+        "depreciation warning: options for git-push should be sent via an object"
+      )
+    );
+  }
   const
     git = new Git(where),
     more = where ? ` (${where})` : "";
   if (dryRun) {
-    gutil.log(gutil.colors.green(`dry run: should push local commits now${more}...`));
+    gutil.log(gutil.colors.green(`dry run: whould push local commits now${more}...`));
     return Promise.resolve();
   }
   if (!quiet) {
@@ -26,4 +37,6 @@ module.exports = async function gitPush(
     remote,
     branch
   );
-};
+}
+
+module.exports = gitPush;

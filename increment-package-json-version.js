@@ -20,7 +20,6 @@ gulp.task("increment-package-json-version", () => {
         const newJson = JSON.stringify(index, null, indent);
         if (dryRun) {
             console.log(`Would increment version in '${packageJson}' from '${currentVersion}' to '${incremented}'`);
-            console.log(newJson);
         }
         await writeTextFile(packageJson, newJson);
         resolve();
