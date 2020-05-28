@@ -44,7 +44,10 @@ function checkExists(nugetPath) {
 const parentOfTasksFolder = path.resolve(path.join(__dirname, "..", ".."));
 
 let lastResolution = null;
-function resolveNuget(nugetPath, errorOnMissing) {
+function resolveNuget(
+  nugetPath,
+  errorOnMissing
+) {
   if (lastResolution !== null) {
     return lastResolution;
   }

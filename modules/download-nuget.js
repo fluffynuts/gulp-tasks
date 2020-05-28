@@ -28,12 +28,11 @@ function validateCanRunExe(exePath) {
     logger.debug(`validating exe at: ${exePath}`);
   }
   return validators[exePath] = new Promise((resolve, reject) => {
-    var
-      lastMessage = "unknown error",
+    let lastMessage = "unknown error",
       attempts = 0;
     setTimeout(function testExe() {
       if (cached[exePath]) {
-        return resolve();
+        return resolve(exePath);
       }
       if (attempts === 10) {
         return reject(`Unable to run executable at ${exePath}: ${lastMessage}`);
@@ -42,18 +41,24 @@ function validateCanRunExe(exePath) {
       if (shouldLog) {
         logger.debug(`attempt #${attempts} to run ${exePath}`);
       }
-      var a = attempts;
+      const a = attempts;
       nugetUpdateSelf(exePath).then(() => {
         if (shouldLog) {
           const sub = a > 1 ? ` (${a})` : "";
           logger.info(`nuget.exe appears to be valid!${sub}`);
         }
         cached[exePath] = true;
-        return resolve();
+        return resolve(exePath);
       }).catch(e => {
         lastMessage = e.message || lastMessage;
         if (shouldLog) {
-          logger.debug(`failed to run executable (${e.message}); ${i < 9 ? "will try again" : "giving up"}`);
+          logger.debug(`failed to run executable (${
+            e.message
+          }); ${
+            attempts < 9
+              ? "will try again"
+              : "giving up"
+          }`);
         }
         setTimeout(testExe, 1000);
       });
@@ -88,5 +93,11 @@ function retry(fn, attempt, maxAttempts, wait) {
 }
 
 module.exports = function downloadNuget(targetFolder) {
-  return retry(() => downloadNugetTo(targetFolder)).then(() => console.log("nuget downloaded to: " + targetFolder));
+  return retry(() =>
+    downloadNugetTo(targetFolder)
+  ).then(downloaded => {
+    console.log(`nuget downloaded to: ${downloaded}`);
+    return downloaded;
+  });
 };
+
