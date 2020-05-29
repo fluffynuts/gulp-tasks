@@ -1,7 +1,7 @@
 // when adding items to this file, it's a good idea to add them
 // in alphabetical ordering so that it's easier to scan debug logs
 // for vars you're looking for (:
-// dev note: when updating here, don't forget to add to interfaces.d.ts/global/Env
+// dev note: when updating here, don't forget to add to types.d.ts/global/Env
 
 const debug = require("debug")("env"),
   os = require("os"),
@@ -354,6 +354,12 @@ module.exports = function _env(env) {
     name: "PACK_INCREMENT_VERSION",
     help: "Flag: should package version be incremented before packing?",
     default: "true"
+  });
+
+  env.register({
+    name: "PACK_INCREMENT_VERSION_BY",
+    help: "Number (default 1): increment the selected version number by this value",
+    default: "1"
   });
 
   env.register({

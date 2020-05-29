@@ -13,13 +13,15 @@ async function gitPush(
     quiet = dryRun.quiet || false;
     where = dryRun.where || ".";
     dryRun = dryRun.dryRun || false;
-  } else {
+  } else if (quiet !== undefined) {
     gutil.log.warn(
       gutil.colors.red(
         "depreciation warning: options for git-push should be sent via an object"
       )
     );
   }
+  where = where || ".";
+  quiet = !!quiet;
   const
     git = new Git(where),
     more = where ? ` (${where})` : "";

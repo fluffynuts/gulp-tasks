@@ -1,27 +1,11 @@
 "use strict";
-const gulp = requireModule("gulp-with-help"), taskName = "increment-package-json-version", filenameEnvVar = "PACKAGE_JSON", strategyVar = "VERSION_INCREMENT_STRATEGY", zeroVar = "VERSION_INCREMENT_ZERO", dryRunVar = "DRY_RUN", stat = requireModule("stat"), readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version"), env = requireModule("env");
-env.associate([dryRunVar, filenameEnvVar, strategyVar, zeroVar], taskName);
-function guessIndent(text) {
-    const lines = text.split("\n"), firstIndented = lines.find(line => line.match(/^\s+/));
-    if (!firstIndented) {
-        return 2; // guess
-    }
-    const firstMatch = firstIndented.match(/(^\s+)/) || [], leadingWhitespace = firstMatch[0] || "  ", asSpaces = leadingWhitespace.replace(/\t/g, "  ");
-    return asSpaces.length;
-}
-gulp.task("increment-package-json-version", () => {
-    return new Promise(async (resolve, reject) => {
-        const packageJson = env.resolve(filenameEnvVar), st = await stat(packageJson);
-        if (!st) {
-            return reject(`Can't find file at '${packageJson}'`);
-        }
-        const dryRun = env.resolveFlag(dryRunVar), strategy = env.resolve(strategyVar), zero = env.resolveFlag(zeroVar), json = await readTextFile(packageJson), indent = guessIndent(json), index = JSON.parse(json), currentVersion = index.version || "0.0.0", incremented = incrementVersion(currentVersion, strategy, zero);
-        index.version = incremented;
-        const newJson = JSON.stringify(index, null, indent);
-        if (dryRun) {
-            console.log(`Would increment version in '${packageJson}' from '${currentVersion}' to '${incremented}'`);
-        }
-        await writeTextFile(packageJson, newJson);
-        resolve();
-    });
+const alterPackageJsonVersion = requireModule("alter-package-json-version"), env = requireModule("env"), gulp = requireModule("gulp-with-help"), taskName = "increment-package-json-version";
+env.associate([
+    env.DRY_RUN,
+    env.PACKAGE_JSON,
+    env.VERSION_INCREMENT_STRATEGY,
+    env.VERSION_INCREMENT_ZERO
+], taskName);
+gulp.task(taskName, async () => {
+    return await alterPackageJsonVersion();
 });

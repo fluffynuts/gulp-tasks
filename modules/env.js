@@ -1,6 +1,6 @@
 if (!Array.prototype.flatMap) {
   try {
-    var flatMap = require("array.prototype.flatmap");
+    const flatMap = require("array.prototype.flatmap");
     flatMap.shim();
   } catch (e) {
     console.error(
@@ -290,7 +290,7 @@ function resolveInternal(name, ignoreDefault) {
     return overrideValues[0];
   }
 
-  var result = overrideValues.reduce((acc, cur) => {
+  const result = overrideValues.reduce((acc, cur) => {
     debug({
       label: "invoke override discriminator",
       when: target.when,
@@ -360,7 +360,7 @@ function explode(str, delimiter) {
     .filter(p => !!p);
 }
 
-var register = require("./register-environment-variables");
-register(toExport);
+const registerEnvironmentVariables = require("./register-environment-variables");
+registerEnvironmentVariables(toExport);
 
 module.exports = toExport;

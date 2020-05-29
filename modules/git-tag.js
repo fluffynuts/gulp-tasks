@@ -1,5 +1,6 @@
 const
   Git = require("simple-git/promise"),
+  env = requireModule("env"),
   gutil = requireModule("gulp-util");
 
 async function gitTag(tag, comment, where) {
@@ -7,9 +8,9 @@ async function gitTag(tag, comment, where) {
   if (typeof tag === "object") {
     comment = tag.comment;
     where = tag.where || ".";
-    dryRun = tag.dryRun || false;
+    dryRun = tag.dryRun || env.resolve(env.DRY_RUN);
     tag = tag.tag;
-  } else {
+  } else if (comment !== undefined) {
     gutil.log.warn(
       gutil.colors.red(
         "depreciation warning: options for git-tag should be sent via an object"
@@ -19,12 +20,14 @@ async function gitTag(tag, comment, where) {
   if (!(tag || "").trim()) {
     throw new Error("No tag supplied!");
   }
-  comment = comment || `:bookmark: tagging ${where} at ${tag}`;
+  const more = where === "." ? "" : ` ${where}`
+  comment = comment || `:bookmark: tagging${more} at ${tag}`;
+  where = where || ".";
   if (dryRun) {
-    gutil.log(gutil.colors.green(`would tag at ${tag} with comment: ${comment}`));
+    gutil.log(gutil.colors.green(`dry run: would tag${more} at ${tag} with comment: ${comment}`));
   } else {
     const git = new Git(where);
-    gutil.log(gutil.colors.cyan(`Tagging ${where} at: "${tag}"`));
+    gutil.log(gutil.colors.cyan(`Tagging${more} at: "${tag}"`));
     await git.addAnnotatedTag(tag, comment);
   }
 }

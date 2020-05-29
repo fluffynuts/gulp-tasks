@@ -8,13 +8,14 @@ async function gitPushTags(dryRun, where) {
     where = dryRun.where || ".";
     quiet = dryRun.quiet || false;
     dryRun = dryRun.dryRun || false;
-  } else {
+  } else if (where !== undefined) {
     gutil.log.warn(
       gutil.colors.red(
         "depreciation warning: options for git-push-tags should be sent via an object"
       )
     );
   }
+  where = where || ".";
   const
     git = new Git(where),
     more = where ? ` (${where})` : ""
