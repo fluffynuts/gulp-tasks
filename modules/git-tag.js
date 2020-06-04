@@ -8,7 +8,7 @@ async function gitTag(tag, comment, where) {
   if (typeof tag === "object") {
     comment = tag.comment;
     where = tag.where || ".";
-    dryRun = tag.dryRun || env.resolve(env.DRY_RUN);
+    dryRun = tag.dryRun || env.resolveFlag(env.DRY_RUN);
     tag = tag.tag;
   } else if (comment !== undefined) {
     gutil.log.warn(
