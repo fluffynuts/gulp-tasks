@@ -10,12 +10,38 @@ const
   mkdir = promisify(fs.mkdir, fs),
   exists = promisify(fs.exists, fs, true);
 
+function isFile(p) {
+  return runStat(p, st => st.isFile());
+}
+
+function isFolder(p) {
+  return runStat(p, st => st.isDirectory());
+}
+
+function runStat(p, fn) {
+  return new Promise(resolve => {
+    fs.stat(p, (err, st) => {
+      if (err) {
+        return resolve(false);
+      }
+      try {
+        resolve(st && fn(st));
+      } catch (e) {
+        resolve(false);
+      }
+    });
+  });
+}
+
 const exported = {
+  ...fs.promises,  // if they exist
   stat,
   readFile,
   readdir,
   mkdir,
   exists,
+  isFile,
+  isFolder,
 
   ensureDirectoryExists: async function(expectedPath) {
     // forward-slashes can be valid (and mixed) on win32,
