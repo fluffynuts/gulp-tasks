@@ -5,7 +5,7 @@ import * as vinyl from "vinyl";
   const
     collectFiles = require("./collect-files"),
     promisifyStream = require("./promisify-stream"),
-    gulp = require("./gulp-with-help");
+    gulp = require("./gulp");
 
   module.exports = async function(pathSpecs: string | string[]) {
     return new Promise(async (resolve, reject) => {
