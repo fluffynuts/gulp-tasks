@@ -42,6 +42,8 @@ const exported = {
   exists,
   isFile,
   isFolder,
+  fileExists: isFile,
+  folderExists: isFolder,
 
   ensureDirectoryExists: async function(expectedPath) {
     // forward-slashes can be valid (and mixed) on win32,
