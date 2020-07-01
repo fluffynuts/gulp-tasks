@@ -1,5 +1,5 @@
 const
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   fs = require("fs"),
   xml2js = require("xml2js"),
   throwIfNoFiles = requireModule("throw-if-no-files"),

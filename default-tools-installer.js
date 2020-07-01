@@ -1,5 +1,5 @@
 const debug = require("debug")("default-tools-installer"),
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   nugetSourceName = process.env.NUGET_SOURCE || "nuget.org",
   installLocalTools = requireModule("install-local-tools"),
   env = requireModule("env"),

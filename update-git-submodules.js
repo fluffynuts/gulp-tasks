@@ -1,7 +1,6 @@
-const gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp"),
   status = requireModule("status"),
-  Git = require("simple-git/promise"),
-  chalk = require("chalk");
+  Git = require("simple-git/promise");
 
 gulp.task(
   "update-git-submodules",

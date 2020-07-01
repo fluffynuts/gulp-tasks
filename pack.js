@@ -12,7 +12,7 @@ const getToolsFolder = requireModule("get-tools-folder"),
   rewriteFile = requireModule("rewrite-file"),
   del = require("del"),
   debug = require("debug")("pack"),
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   pack = requireModule("gulp-nuget-pack");
 
 env.associate(

@@ -1,4 +1,4 @@
-const gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp"),
   msbuild = require("gulp-msbuild"),
   env = requireModule("env");
 

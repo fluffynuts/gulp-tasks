@@ -1,4 +1,4 @@
-const gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp"),
   env = requireModule("env"),
   path = require("path"),
   rimraf = require("rimraf"),

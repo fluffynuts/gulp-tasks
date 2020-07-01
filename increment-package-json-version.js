@@ -1,5 +1,5 @@
 "use strict";
-const alterPackageJsonVersion = requireModule("alter-package-json-version"), env = requireModule("env"), gulp = requireModule("gulp-with-help"), taskName = "increment-package-json-version";
+const alterPackageJsonVersion = requireModule("alter-package-json-version"), env = requireModule("env"), gulp = requireModule("gulp"), taskName = "increment-package-json-version";
 env.associate([
     env.DRY_RUN,
     env.PACKAGE_JSON,

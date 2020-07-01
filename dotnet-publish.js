@@ -1,6 +1,6 @@
 const { publish } = require("gulp-dotnet-cli"),
   env = requireModule("env"),
-  gulp = requireModule("gulp-with-help");
+  gulp = requireModule("gulp");
 
 gulp.task(
   "dotnet-publish",

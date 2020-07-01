@@ -1,5 +1,5 @@
 const
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   downloadNuget = requireModule("download-nuget"),
   env = requireModule("env"),
   path = require("path"),

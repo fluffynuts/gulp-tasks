@@ -1,5 +1,5 @@
 var spawn = requireModule('spawn'),
-  gulp = requireModule('gulp-with-help'),
+  gulp = requireModule('gulp'),
   log = requireModule('log'),
   fs = require('fs'),
   q = require('q'),

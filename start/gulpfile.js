@@ -116,7 +116,7 @@ function mustInstallDeps() {
 function initializeNpm() {
   var spawn = requireModule("spawn");
   var os = require("os");
-  runNpmWith([ "init" ])
+  return runNpmWith([ "init" ])
     .then(() => {
       if (os.platform() === "win32") {
         spawn("cmd", [ "/c", "node", process.argv[1] ])

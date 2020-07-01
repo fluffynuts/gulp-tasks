@@ -1,7 +1,7 @@
 const chalk = require("chalk"),
   os = require("os"),
   env = requireModule("env"),
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   gulpDebugGenerator = require("gulp-debug"),
   debug = require("debug")("build"),
   promisifyStream = requireModule("promisify"),

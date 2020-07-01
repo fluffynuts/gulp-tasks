@@ -1,6 +1,6 @@
 const
   seed = requireModule("seed"),
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   log = requireModule("log"),
   path = require("path"),
   gulpDebug = require("gulp-debug"),

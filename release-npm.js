@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const Git = require("simple-git/promise"), spawn = requireModule("spawn"), gulp = requireModule("gulp-with-help"), gutil = requireModule("gulp-util"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), env = requireModule("env"), readPackageVersion = requireModule("read-package-version"), alterPackageJsonVersion = requireModule("alter-package-json-version");
+    const Git = require("simple-git/promise"), spawn = requireModule("spawn"), gulp = requireModule("gulp"), gutil = requireModule("gulp-util"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), env = requireModule("env"), readPackageVersion = requireModule("read-package-version"), alterPackageJsonVersion = requireModule("alter-package-json-version");
     async function rollBackPackageJson() {
         await alterPackageJsonVersion({ loadUnsetFromEnvironment: true, incrementBy: -1 });
     }

@@ -1,4 +1,4 @@
-var gulp = requireModule("gulp-with-help");
+var gulp = requireModule("gulp");
 
 /*
   Installs tooling into the solution folder, into the `tools` folder, or, if specified

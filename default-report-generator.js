@@ -1,4 +1,4 @@
-const gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp"),
   path = require("path"),
   findTool = requireModule("testutil-finder").findTool,
   spawn = requireModule("spawn"),

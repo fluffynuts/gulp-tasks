@@ -100,7 +100,7 @@ own. If you think that the default behavior is what you want, create a task whic
 on the default behavior. For example, if you want local tooling and reports out of the box, you
 could create `local-tasks/use-default-tasks.js` with:
 ```
-const gulp = requireModule("gulp-with-help");
+const gulp = requireModule("gulp");
 gulp.task("generate-reports", "Generate coverage reports", ["default-report-generator"]);
 ```
 
@@ -109,8 +109,8 @@ The default behaviors here are left out so as not to interfere with existing use
 ## Using modules from `gulp-tasks`
 If you want to use any of the modules found under `gulp-tasks/modules`, make use of the
 globally-available `requireModule` function. Some available modules include:
-- `gulp-with-help`
-    - uses `gulp-help` to provide a modified `gulp` where a second parameter can
+- `gulp`
+    - uses `gulp-help` (for v3 gulp) to provide a modified `gulp` where a second parameter can
         be provided to give useful help. Read more on the `gulp-help` documentation.
 - `http-downloader`
     - provides a simple async http downloading class

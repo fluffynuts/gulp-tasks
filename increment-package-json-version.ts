@@ -1,7 +1,7 @@
 const
   alterPackageJsonVersion = requireModule<AlterPackageJson>("alter-package-json-version"),
   env = requireModule<Env>("env"),
-  gulp = requireModule<GulpWithHelp>("gulp-with-help"),
+  gulp = requireModule<GulpWithHelp>("gulp"),
   taskName = "increment-package-json-version";
 
 env.associate([

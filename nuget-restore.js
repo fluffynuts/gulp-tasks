@@ -1,6 +1,6 @@
 const
   env = requireModule("env"),
-  gulp = requireModule("gulp-with-help"),
+  gulp = requireModule("gulp"),
   debug = require("debug")("nuget-restore"),
   nugetRestore = requireModule("./gulp-nuget-restore"),
   promisify = requireModule("promisify"),

@@ -1,4 +1,4 @@
-const gulp = requireModule("gulp-with-help"),
+const gulp = requireModule("gulp"),
   dotNetCover = requireModule("gulp-dotnetcover"),
   resolveMasks = requireModule("resolve-masks"),
   filter = require("gulp-filter"),

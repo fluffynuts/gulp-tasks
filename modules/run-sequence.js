@@ -4,7 +4,7 @@ if (gulpVersion.major === 3) {
 } else {
   var setTaskName = requireModule("set-task-name");
   // it's shim time, baby!
-  const gulp = requireModule("gulp-with-help");
+  const gulp = requireModule("gulp");
   module.exports = function() {
     const
       args = Array.from(arguments),

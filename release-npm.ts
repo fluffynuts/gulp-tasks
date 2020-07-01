@@ -2,7 +2,7 @@
   const
     Git = require("simple-git/promise"),
     spawn = requireModule<Spawn>("spawn"),
-    gulp = requireModule<GulpWithHelp>("gulp-with-help"),
+    gulp = requireModule<GulpWithHelp>("gulp"),
     gutil = requireModule<GulpUtil>("gulp-util"),
     gitTag = requireModule<GitTag>("git-tag"),
     gitPushTags = requireModule<GitPushTags>("git-push-tags"),

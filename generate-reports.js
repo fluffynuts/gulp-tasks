@@ -1,4 +1,4 @@
-var gulp = requireModule("gulp-with-help");
+var gulp = requireModule("gulp");
 
 gulp.task(
 "generate-reports",

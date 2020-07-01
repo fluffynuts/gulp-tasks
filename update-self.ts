@@ -3,7 +3,7 @@ import * as vinyl from "vinyl";
 
 const
   spawn = requireModule<Spawn>("spawn"),
-  gulp = requireModule<GulpWithHelp>("gulp-with-help"),
+  gulp = requireModule<GulpWithHelp>("gulp"),
   env = requireModule<Env>("env"),
   chalk = require("chalk"),
   resolveMasks = requireModule<ResolveMasks>("resolve-masks"),

@@ -1,7 +1,7 @@
 // gulp4 introduces a lot of unnecessary noise
 // in logging, particularly with "<anonymous>" tasks
 // which seem to be created as part of the task dep graph
-// but also because the gulp-with-help shim will generate
+// but also because the gulp shim will generate
 // wrappers with `gulp.series` and `gulp.parallel` to
 // provide gulp3 backward-compatibility for task definition
 // -> the aim is to suppress that noise
