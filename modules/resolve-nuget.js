@@ -8,6 +8,7 @@ const
   configGenerator = requireModule("config-generator"),
   lsR = require("./ls-r"),
   toolsDir = require("./get-tools-folder")(),
+  log = require("./log"),
   findNpmBase = require("./find-npm-base"),
   quoteIfRequired = require("./quote-if-required"),
   dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet",

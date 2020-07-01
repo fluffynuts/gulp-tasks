@@ -25,8 +25,8 @@ module.exports = function() {
   });
   if (!overridden) {
     debug("importing npm scripts as gulp tasks")
-    var gulpNpmRun = requireModule("gulp-npm-run");
-    var gulp = requireModule("gulp");
+    const gulpNpmRun = requireModule("gulp-npm-run");
+    const gulp = requireModule("gulp");
     gulpNpmRun(gulp);
     debug("-> done");
   }

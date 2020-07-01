@@ -1,8 +1,13 @@
 (function() {
+  // replaces the gulp-npm-run node module
+  // which relies on ramda -- that keeps on having
+  // breaking changes released. NO MORE.
   const
     { readFileSync } = require("fs"),
+    debug = require("debug")("gulp-npm-run"),
     exec = require("./exec") as Exec,
     path = require("path"),
+    chalk = require("chalk"),
     findNpmBase = require("./find-npm-base");
 
   function gulpNpmRun(gulp: GulpWithHelp) {
@@ -11,7 +16,21 @@
       scripts = packageIndex.scripts || {};
     Object.keys(scripts).forEach(k => {
       gulp.task(k, `npm script: ${k}`, async () => {
-        await exec("npm", [ "run", k ]);
+        // npm run produces extra output, prefixed with >
+        // at the start, including package information and the script line
+        // -> we'll ignore it unless someone _really_ wants it
+        let ignoredFirstLine = false;
+        await exec("npm", [ "run", k ], undefined, {
+          stderr: (d: string) => console.error(chalk.red(d)),
+          stdout: (d: string) => {
+            if (!ignoredFirstLine) {
+              debug(`npm diagnostics:\n${d}`);
+              ignoredFirstLine = true;
+              return;
+            }
+            console.log(chalk.yellow(d))
+          }
+        });
       });
     });
   }

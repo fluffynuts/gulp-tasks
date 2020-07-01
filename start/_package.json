@@ -16,7 +16,6 @@
     "gulp-filter": "^6.0.0",
     "gulp-help": "^1.6.1",
     "gulp-msbuild": "^0.5.5",
-    "gulp-npm-run": "0.0.3",
     "gulp-nunit-runner": "^1.2.3",
     "inquirer": "^6.4.1",
     "mkdirp": "^0.5.1",
