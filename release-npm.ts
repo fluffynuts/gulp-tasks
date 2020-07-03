@@ -26,7 +26,16 @@
 
     try {
       const branchInfo = await git.branch();
-      await git.pull("origin", branchInfo.current, { "--rebase": true });
+      // ignore this error:  couldn't find remote ref HEAD
+      // -> means this is an unknown (new) branch: we should push -u
+      try {
+        await git.pull("origin", branchInfo.current, { "--rebase": true });
+      } catch (e) {
+        const isNewBranch = (e.message || "").indexOf("couldn't find remote ref HEAD") > -1;
+        if (!isNewBranch) {
+          throw e;
+        }
+      }
 
       if (dryRun) {
         gutil.log(gutil.colors.yellow(`would publish ${version}`));

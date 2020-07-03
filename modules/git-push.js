@@ -37,7 +37,9 @@ async function gitPush(
     branch = await resolveGitBranch();
   await git.push(
     remote,
-    branch
+    branch, [
+      "-u" // we're probably already tracking, but this will help a new branch
+    ]
   );
 }
 
