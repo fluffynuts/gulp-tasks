@@ -1,5 +1,3 @@
-import { ExecOpts } from "./exec";
-
 (function() {
   const
     resolveNuget = require("./resolve-nuget"),

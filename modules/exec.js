@@ -4,10 +4,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
     // MUST use for running batch files
     // you can use this for other commands but spawn is better
     // as it handles IO better
-    const quoteIfRequired = require("./quote-if-required"), os = require("os"), spawn = require("./spawn"), debug = require("debug")("exec"), log = require("./log"), child_process = require("child_process"), defaultOptions = {
-        cwd: process.cwd(),
-        shell: true
-    };
+    const quoteIfRequired = require("./quote-if-required"), os = require("os"), spawn = require("./spawn"), debug = require("debug")("exec"), log = require("./log"), child_process = require("child_process");
+    function makeDefaultOptions() {
+        return {
+            cwd: process.cwd(),
+            shell: true
+        };
+    }
     function doExecFile(cmd, args, opts, handlers) {
         return new Promise((resolve, reject) => {
             try {
@@ -36,7 +39,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         });
     }
-    ;
     function trim(data) {
         return ("" + (data || "")).trim();
     }
@@ -46,11 +48,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
     function isError(str) {
         return str.indexOf(" ERROR ") > -1;
     }
-    function printLines(collector, data) {
+    function printLines(collector, suppress, data) {
         const lines = trim(data).split("\n");
         lines.forEach(function (line) {
             line = trim(line);
             collector.push(line);
+            if (suppress) {
+                return;
+            }
             if (isError(line)) {
                 log.error(line);
             }
@@ -74,13 +79,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
     }
     function doSpawn(cmd, args, opts, handlers) {
+        var _a;
         handlers = handlers || {};
         const collectedStdOut = [];
         const collectedStdErr = [];
-        const stdoutHandler = handlers.stdout || (printLines.bind(null, collectedStdOut));
+        opts.suppressOutput = (_a = opts.suppressOutput) !== null && _a !== void 0 ? _a : false;
+        const stdoutHandler = handlers.stdout || (printLines.bind(null, collectedStdOut, opts.suppressOutput));
         const stderrHandler = handlers.stderr || ((line) => {
             collectedStdErr.push(line);
-            log.error(line);
+            if (!opts.suppressOutput) {
+                log.error(line);
+            }
         });
         return new Promise((resolve, reject) => {
             try {
@@ -140,15 +149,18 @@ stdout:
         return err;
     }
     function doExec(cmd, args, opts, handlers) {
-        return (opts._useExecFile)
+        return (opts === null || opts === void 0 ? void 0 : opts._useExecFile)
             ? doExecFile(cmd, args, opts, handlers)
             : doSpawn(cmd, args, opts, handlers);
     }
     function exec(cmd, args, opts, handlers) {
         args = args || [];
-        opts = Object.assign({}, defaultOptions, opts);
+        opts = Object.assign({}, makeDefaultOptions(), opts);
         opts.maxBuffer = Number.MAX_SAFE_INTEGER;
         cmd = quoteIfRequired(cmd);
+        if (exec.alwaysSuppressOutput) {
+            opts.suppressOutput = true;
+        }
         if (debug) {
             debug("executing:");
             debug(`- cmd: ${cmd}`);

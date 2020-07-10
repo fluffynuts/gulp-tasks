@@ -35,12 +35,14 @@ async function gitPush(
   const
     remote = await resolveGitRemote(),
     branch = await resolveGitBranch();
-  await git.push(
-    remote,
-    branch, [
-      "-u" // we're probably already tracking, but this will help a new branch
-    ]
-  );
+  if (remote && branch) {
+    await git.push(
+      remote,
+      branch, [
+        "-u" // we're probably already tracking, but this will help a new branch
+      ]
+    );
+  }
 }
 
 module.exports = gitPush;

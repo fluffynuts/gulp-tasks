@@ -7,6 +7,7 @@
     gitTag = requireModule<GitTag>("git-tag"),
     gitPushTags = requireModule<GitPushTags>("git-push-tags"),
     gitPush = requireModule<GitPush>("git-push"),
+    readGitInfo = requireModule<ReadGitInfo>("read-git-info"),
     env = requireModule<Env>("env"),
     readPackageVersion = requireModule<ReadPackageVersion>("read-package-version"),
     alterPackageJsonVersion = requireModule<AlterPackageJson>("alter-package-json-version");
@@ -22,27 +23,22 @@
       git = new Git(),
       version = await readPackageVersion(),
       isBeta = env.resolveFlag("BETA"),
-      tag = `v${ version }`;
-
-    let isGitRepo = true;
-    try {
-    } catch (e) {
-      const message = e.message || e.toString();
-      isGitRepo = !message.match(/not a git repository/);
-    }
-
+      tag = `v${ version }`,
+      gitInfo = await readGitInfo();
 
     try {
-      if (isGitRepo) {
+      if (gitInfo.isGitRepository) {
         const branchInfo = await git.branch();
         // ignore this error:  couldn't find remote ref HEAD
         // -> means this is an unknown (new) branch: we should push -u
-        try {
-          await git.pull("origin", branchInfo.current, { "--rebase": true });
-        } catch (e) {
-          const isNewBranch = (e.message || "").indexOf("couldn't find remote ref HEAD") > -1;
-          if (!isNewBranch) {
-            throw e;
+        if (gitInfo.remotes.length) {
+          try {
+            await git.pull(gitInfo.primaryRemote, branchInfo.current, { "--rebase": true });
+          } catch (e) {
+            const isNewBranch = (e.message || "").indexOf("couldn't find remote ref HEAD") > -1;
+            if (!isNewBranch) {
+              throw e;
+            }
           }
         }
       }
@@ -64,7 +60,7 @@
     if (dryRun) {
       gutil.log(gutil.colors.yellow(`would commit all updated files`));
       await rollBackPackageJson();
-    } else if (isGitRepo) {
+    } else if (gitInfo.isGitRepository) {
       await git.add(":/");
       await git.commit(`:bookmark: bump package version to ${ version }`);
       await gitTag({ tag });

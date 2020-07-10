@@ -1,9 +1,5 @@
 import { ExecFileOptionsWithBufferEncoding } from "child_process";
 
-export interface ExecOpts extends ExecFileOptionsWithBufferEncoding {
-  _useExecFile?: boolean
-}
-
 export type IoConsumer = (d: string) => void
 
 export interface IoHandlers {
@@ -32,16 +28,19 @@ export interface ExecError extends Error {
     spawn = require("./spawn"),
     debug = require("debug")("exec"),
     log = require("./log"),
-    child_process = require("child_process"),
-    defaultOptions = {
+    child_process = require("child_process");
+
+  function makeDefaultOptions() {
+    return {
       cwd: process.cwd(),
       shell: true
     };
+  }
 
   function doExecFile(
     cmd: string,
     args: string[],
-    opts: ExecFileOptionsWithBufferEncoding,
+    opts: ExecOpts,
     handlers?: IoHandlers) {
 
     return new Promise((resolve, reject) => {
@@ -69,7 +68,7 @@ export interface ExecError extends Error {
         reject(e);
       }
     });
-  };
+  }
 
   function trim(data: string) {
     return ("" + (data || "")).trim();
@@ -83,11 +82,14 @@ export interface ExecError extends Error {
     return str.indexOf(" ERROR ") > -1;
   }
 
-  function printLines(collector: string[], data: string) {
+  function printLines(collector: string[], suppress: boolean, data: string) {
     const lines = trim(data).split("\n");
     lines.forEach(function(line) {
       line = trim(line);
       collector.push(line);
+      if (suppress) {
+        return;
+      }
       if (isError(line)) {
         log.error(line);
       } else if (isWarning(line)) {
@@ -101,7 +103,7 @@ export interface ExecError extends Error {
   function start(
     cmd: string,
     args: string[],
-    opts: ExecFileOptionsWithBufferEncoding
+    opts: ExecOpts
   ) {
     if (os.platform() == "win32") {
       const cmdArgs = ["/c", cmd];
@@ -116,15 +118,18 @@ export interface ExecError extends Error {
   function doSpawn(
     cmd: string,
     args: string[],
-    opts: ExecFileOptionsWithBufferEncoding,
+    opts: ExecOpts,
     handlers?: IoHandlers) {
     handlers = handlers || {};
     const collectedStdOut: string[] = [];
     const collectedStdErr: string[] = [];
-    const stdoutHandler = handlers.stdout || (printLines.bind(null, collectedStdOut)) as IoConsumer;
+    opts.suppressOutput = opts.suppressOutput ?? false;
+    const stdoutHandler = handlers.stdout || (printLines.bind(null, collectedStdOut, opts.suppressOutput)) as IoConsumer;
     const stderrHandler = handlers.stderr || ((line: string) => {
       collectedStdErr.push(line);
-      log.error(line);
+      if (!opts.suppressOutput) {
+        log.error(line);
+      }
     });
     return new Promise((resolve, reject) => {
       try {
@@ -201,21 +206,24 @@ stdout:
     args: string[],
     opts: ExecOpts,
     handlers?: IoHandlers) {
-    return (opts._useExecFile)
+    return (opts?._useExecFile)
       ? doExecFile(cmd, args, opts, handlers)
       : doSpawn(cmd, args, opts, handlers);
   }
 
   function exec(
     cmd: string,
-    args: string[],
+    args?: string[],
     opts?: ExecOpts,
     handlers?: IoHandlers
   ): Promise<string> {
     args = args || [];
-    opts = Object.assign({}, defaultOptions, opts);
+    opts = Object.assign({}, makeDefaultOptions(), opts);
     opts.maxBuffer = Number.MAX_SAFE_INTEGER;
     cmd = quoteIfRequired(cmd);
+    if ((exec as any).alwaysSuppressOutput) {
+      opts.suppressOutput = true;
+    }
     if (debug) {
       debug("executing:")
       debug(`- cmd: ${ cmd }`);
