@@ -10,6 +10,11 @@
     readGitCommitDeltaCount = requireModule<ReadGitCommitDeltaCount>("read-git-commit-delta-count"),
     gulp = requireModule<GulpWithHelp>("gulp");
 
+  env.associate([
+    "SKIP_FETCH_ON_VERIFY",
+    "ENFORCE_VERIFICATION"
+  ], "verify-up-to-date");
+
   gulp.task("verify-up-to-date", async () => {
     const
       remoteInfos = (await readAllGitRemotes()) || [],
@@ -22,7 +27,7 @@
     if (!verifyBranch) {
       throw new Error(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
     }
-    if (remotes.length) {
+    if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
       const git = new Git();
       await git.fetch(["--all"]);
     }

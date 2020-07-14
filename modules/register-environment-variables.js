@@ -291,6 +291,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "SKIP_FETCH_ON_VERIFY",
+    help: "(boolean) skip the fetch on verification: useful from CI where you should already have recently fetched",
+    default: false
+  });
+
+  env.register({
     name: "GIT_OVERRIDE_REMOTE",
     help: "set this to override the GIT_REMOTE set by CI when, eg, you'd like to push to a different remote"
   });
