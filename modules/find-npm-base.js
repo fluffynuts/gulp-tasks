@@ -1,11 +1,11 @@
-const 
+const
   path = require("path"),
   fs = requireModule("fs");
 let cached;
 
 function findClosestPackageJsonFolder() {
   let current = __dirname;
-  while (!hasPackageJson(current)) {
+  while (current.indexOf("node_modules") > -1 && !hasPackageJson(current)) {
     const next = path.dirname(current);
     if (next === current) {
       throw new Error(`Can't find a package.json, traversing up from ${__dirname}`);
@@ -21,12 +21,12 @@ function hasPackageJson(folder) {
     return false;
   }
   try {
-    const 
+    const
       contents = require(test),
       repo = contents.repository || {},
       url = repo.url || "",
       isGulpTasks = url.match(/\/fluffynuts\/gulp-tasks$/);
-    return !isGulpTasks;  
+    return !isGulpTasks;
   } catch (ignore) {
     return false;
   }

@@ -40,7 +40,7 @@
       packageIndexFolder = findNpmBase(),
       packageIndexPath = path.join(packageIndexFolder, "package.json");
     try {
-      const contents =  readFileSync(packageIndexPath, { encoding: "utf8" });
+      const contents = readFileSync(packageIndexPath, { encoding: "utf8" });
       return JSON.parse(contents);
     } catch (e) {
       throw new Error(`Unable to read package.json at ${packageIndexPath}`);
