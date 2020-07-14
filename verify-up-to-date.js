@@ -1,6 +1,10 @@
 "use strict";
 (function () {
     const chalk = require("chalk"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), gulp = requireModule("gulp");
+    env.associate([
+        "SKIP_FETCH_ON_VERIFY",
+        "ENFORCE_VERIFICATION"
+    ], "verify-up-to-date");
     gulp.task("verify-up-to-date", async () => {
         const remoteInfos = (await readAllGitRemotes()) || [], remotes = remoteInfos.map(r => r.name), mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes), verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
         if (!mainBranch) {
@@ -9,7 +13,7 @@
         if (!verifyBranch) {
             throw new Error(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
         }
-        if (remotes.length) {
+        if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
             const git = new Git();
             await git.fetch(["--all"]);
         }
