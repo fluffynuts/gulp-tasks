@@ -1,6 +1,7 @@
 (function() {
   const
     chalk = require("chalk"),
+    log = requireModule<Log>("log"),
     env = requireModule<Env>("env"),
     Git = require("simple-git/promise"),
     readMainBranchName = requireModule<ReadMainBranchName>("read-main-branch-name"),
@@ -23,24 +24,29 @@
     }
     if (remotes.length) {
       const git = new Git();
-      await git.fetch([ "--all" ]);
+      await git.fetch(["--all"]);
     }
     const verifyResult = await readGitCommitDeltaCount(
       mainBranch || "master", verifyBranch);
     // TODO: get the delta count & chuck if behind
     const
       aheadS = verifyResult.ahead === 1 ? "" : "s",
-      behindS = verifyResult.behind === 1 ? "" : "s";
-    console.log(`${
-      chalk.yellow(verifyBranch)
-    } is ${
-      chalk.green(verifyResult.ahead)
-    } commit${aheadS} ahead and ${
-      chalk.red(verifyResult.behind)
-    } commit${behindS} behind ${
-      chalk.cyanBright(mainBranch)
-    }`);
-    return Promise.resolve();
+      behindS = verifyResult.behind === 1 ? "" : "s",
+      message = `${
+        chalk.yellow(verifyBranch)
+      } is ${
+        chalk.green(verifyResult.ahead)
+      } commit${ aheadS } ahead and ${
+        chalk.red(verifyResult.behind)
+      } commit${ behindS } behind ${
+        chalk.cyanBright(mainBranch)
+      }`;
+    log.info(message);
+
+    if (verifyResult.behind > 0 &&
+      env.resolveFlag("ENFORCE_VERIFICATION")) {
+      throw new Error(message);
+    }
   });
 
   async function resolveDefaultVerifyTarget(remotes?: string[]) {

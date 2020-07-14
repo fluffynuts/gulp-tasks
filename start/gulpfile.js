@@ -93,7 +93,7 @@ if (!fs.existsSync("package.json")) {
 }
 
 function requiredDeps() {
-  var starter = require(path.join(gulpTasksFolder, "start", "package.json"));
+  const starter = require(path.join(gulpTasksFolder, "start", "package.json"));
   return Object.keys(starter.devDependencies);
 }
 
@@ -102,8 +102,7 @@ function mustInstallDeps() {
     // deps should be properly handled by zarro package index and initial installation
     return false;
   }
-  var
-    package = require("./package.json"),
+  const package = require("./package.json"),
     devDeps = package.devDependencies || {},
     haveDeps = Object.keys(devDeps),
     needDeps = requiredDeps();
@@ -114,8 +113,8 @@ function mustInstallDeps() {
 }
 
 function initializeNpm() {
-  var spawn = requireModule("spawn");
-  var os = require("os");
+  const spawn = requireModule("spawn");
+  const os = require("os");
   return runNpmWith([ "init" ])
     .then(() => {
       if (os.platform() === "win32") {
@@ -131,9 +130,8 @@ function addMissingScript(package, name, script) {
 }
 
 function installGulpTaskDependencies() {
-  var
-    findFirstMissing = function () {
-      var args = Array.from(arguments);
+  const findFirstMissing = function () {
+      const args = Array.from(arguments);
       return args.reduce((acc, cur) => acc || (fs.existsSync(cur) ? acc : cur), undefined);
     },
     deps = requiredDeps(),
@@ -168,10 +166,10 @@ function testBin(cmds, pkg) {
 }
 
 function bootstrapGulp() {
-  var importNpmTasks = requireModule("import-npm-tasks");
+  const importNpmTasks = requireModule("import-npm-tasks");
   try {
     importNpmTasks();
-    var requireDir = require("require-dir");
+    const requireDir = require("require-dir");
     requireDir(gulpTasksFolder);
     [ "local-tasks", "override-tasks" ].forEach(function (dirname) {
       const fullPath = path.join(process.cwd(), dirname);
@@ -199,7 +197,7 @@ function bootstrapGulp() {
   }
 
   function probablyNotReportedByGulp(e) {
-    var message = (e || "").toString().toLowerCase();
+    const message = (e || "").toString().toLowerCase();
     return [ "cannot find module", "referenceerror", "syntaxerror" ].reduce(
       (acc, cur) => {
         return acc || message.indexOf(cur) > -1;
@@ -210,8 +208,8 @@ function bootstrapGulp() {
 }
 
 function runNpmWith(args) {
-  var spawn = requireModule("spawn");
-  var os = require("os");
+  const spawn = requireModule("spawn");
+  const os = require("os");
 
   testBin([ "run-p", "run-s" ], "npm-run-all");
   testBin("cross-env");

@@ -1,4 +1,4 @@
-var gutil = requireModule("gulp-util"),
+const gutil = requireModule("gulp-util"),
   DEBUG = 1,
   INFO = 2,
   NOTICE = 3,
@@ -10,7 +10,8 @@ var gutil = requireModule("gulp-util"),
     NOTICE,
     WARNING
   };
-var LogLevels = function() {};
+const LogLevels = function () {
+};
 LogLevels.prototype = {
   get Debug() {
     return DEBUG;
@@ -28,9 +29,9 @@ LogLevels.prototype = {
     return ERROR;
   }
 };
-var Logger = function() {
+const Logger = function () {
   this.LogLevels = new LogLevels();
-  var logLevel = (process.env.LOG_LEVEL || "").toUpperCase();
+  const logLevel = (process.env.LOG_LEVEL || "").toUpperCase();
   this.setThreshold(levels[logLevel] || INFO);
   this._timestamp = true;
 };
@@ -39,7 +40,7 @@ Logger.prototype = {
     return this._threshold;
   },
   setThreshold: function(value) {
-    var intValue = parseInt(value);
+    const intValue = parseInt(value);
     if (isNaN(intValue) || intValue < 1 || intValue > 5) {
       throw value +
         " is not a valid integer value. Try use one of (logger).LogLevels.{Debug|Info|Notice|Warning|Error}";
@@ -104,22 +105,22 @@ Logger.prototype = {
       .join(" ");
   },
   _print: function() {
-    var message = arguments[0];
-    var styles = [];
-    for (var i = 1; i < arguments.length; i++) {
+    const message = arguments[0];
+    const styles = [];
+    for (let i = 1; i < arguments.length; i++) {
       styles.push(arguments[i]); // because arguments is an object, not an array...
     }
-    var styleFunction = styles.reduce(
-      function(acc, cur) {
-        var fn = gutil.colors[cur];
+    const styleFunction = styles.reduce(
+      function (acc, cur) {
+        const fn = gutil.colors[cur];
         if (fn === undefined) {
           return acc;
         }
-        return function(s) {
+        return function (s) {
           return fn(acc(s));
         };
       },
-      function(s) {
+      function (s) {
         return s;
       }
     );
@@ -130,7 +131,7 @@ Logger.prototype = {
     }
   }
 };
-var logger = new Logger();
+const logger = new Logger();
 if (logger.threshold === DEBUG) {
   logger.debug(" -- testing logger outputs -- ");
   logger.debug("debug message");

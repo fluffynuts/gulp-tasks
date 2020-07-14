@@ -6,7 +6,7 @@ gulp.task(
   "dotnet-publish",
   "Performs `dotnet publish` on all non-test projects in the tree",
   () => {
-    var publishOpts = {
+    const publishOpts = {
       configuration: env.resolve("DOTNET_PUBLISH_BUILD_CONFIGURATION", "BUILD_CONFIGURATION"),
       runtime: env.resolve("DOTNET_PUBLISH_RUNTIMES"),
       output: env.resolve("OUTPUT")

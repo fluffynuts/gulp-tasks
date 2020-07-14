@@ -5,7 +5,7 @@ let cached;
 
 function findClosestPackageJsonFolder() {
   let current = __dirname;
-  while (current.indexOf("node_modules") > -1 && !hasPackageJson(current)) {
+  while (inNodeModulesFolder(current) || !hasPackageJson(current)) {
     const next = path.dirname(current);
     if (next === current) {
       throw new Error(`Can't find a package.json, traversing up from ${__dirname}`);
@@ -13,6 +13,10 @@ function findClosestPackageJsonFolder() {
     current = next;
   }
   return current;
+}
+
+function inNodeModulesFolder(folder) {
+  return !!folder.match(/node_modules/);
 }
 
 function hasPackageJson(folder) {

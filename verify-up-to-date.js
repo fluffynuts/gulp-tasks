@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const chalk = require("chalk"), env = requireModule("env"), Git = require("simple-git/promise"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), gulp = requireModule("gulp");
+    const chalk = require("chalk"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), gulp = requireModule("gulp");
     gulp.task("verify-up-to-date", async () => {
         const remoteInfos = (await readAllGitRemotes()) || [], remotes = remoteInfos.map(r => r.name), mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes), verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
         if (!mainBranch) {
@@ -15,9 +15,12 @@
         }
         const verifyResult = await readGitCommitDeltaCount(mainBranch || "master", verifyBranch);
         // TODO: get the delta count & chuck if behind
-        const aheadS = verifyResult.ahead === 1 ? "" : "s", behindS = verifyResult.behind === 1 ? "" : "s";
-        console.log(`${chalk.yellow(verifyBranch)} is ${chalk.green(verifyResult.ahead)} commit${aheadS} ahead and ${chalk.red(verifyResult.behind)} commit${behindS} behind ${chalk.cyanBright(mainBranch)}`);
-        return Promise.resolve();
+        const aheadS = verifyResult.ahead === 1 ? "" : "s", behindS = verifyResult.behind === 1 ? "" : "s", message = `${chalk.yellow(verifyBranch)} is ${chalk.green(verifyResult.ahead)} commit${aheadS} ahead and ${chalk.red(verifyResult.behind)} commit${behindS} behind ${chalk.cyanBright(mainBranch)}`;
+        log.info(message);
+        if (verifyResult.behind > 0 &&
+            env.resolveFlag("ENFORCE_VERIFICATION")) {
+            throw new Error(message);
+        }
     });
     async function resolveDefaultVerifyTarget(remotes) {
         remotes = remotes !== null && remotes !== void 0 ? remotes : [];
