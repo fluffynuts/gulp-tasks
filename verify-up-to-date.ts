@@ -8,14 +8,16 @@
     readAllGitRemotes = requireModule<ReadAllGitRemotes>("read-all-git-remotes"),
     readCurrentBranch = requireModule<ReadCurrentGitBranch>("read-current-git-branch"),
     readGitCommitDeltaCount = requireModule<ReadGitCommitDeltaCount>("read-git-commit-delta-count"),
-    gulp = requireModule<GulpWithHelp>("gulp");
+    readLastFetchTime = requireModule<ReadLastFetchTime>("read-last-fetch-time"),
+    gulp = requireModule<GulpWithHelp>("gulp"),
+    taskName = "verify-up-to-date";
 
   env.associate([
     "SKIP_FETCH_ON_VERIFY",
     "ENFORCE_VERIFICATION"
-  ], "verify-up-to-date");
+  ], taskName);
 
-  gulp.task("verify-up-to-date", async () => {
+  gulp.task(taskName, async () => {
     const
       remoteInfos = (await readAllGitRemotes()) || [],
       remotes = remoteInfos.map(r => r.name),
@@ -28,8 +30,21 @@
       throw new Error(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
     }
     if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
-      const git = new Git();
-      await git.fetch(["--all"]);
+      const
+        lastFetch = await readLastFetchTime(),
+        fetchRecentPeriod = env.resolveNumber("FETCH_RECENT_TIME") * 1000,
+        now = Date.now();
+      let recentEnough = false;
+      if (lastFetch) {
+        recentEnough = (now - fetchRecentPeriod) < lastFetch.getTime();
+      }
+      if (!recentEnough) {
+        log.info(`${taskName} :: fetching all remotes...`);
+        const git = new Git();
+        await git.fetch(["--all"]);
+      } else {
+        log.info(`${taskName} :: skipping fetch: was last done at ${lastFetch}`);
+      }
     }
     const verifyResult = await readGitCommitDeltaCount(
       mainBranch || "master", verifyBranch);
@@ -46,7 +61,7 @@
       } commit${ behindS } behind ${
         chalk.cyanBright(mainBranch)
       }`;
-    log.info(message);
+    log.info(`${taskName} :: ${message}`);
 
     if (verifyResult.behind > 0 &&
       env.resolveFlag("ENFORCE_VERIFICATION")) {

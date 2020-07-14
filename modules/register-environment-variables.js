@@ -297,6 +297,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "FETCH_RECENT_TIME",
+    help: "(number) when testing the last gi fetch time, consider the fetch fresh enough if it happend within this many seconds in the past",
+    default: 60 // default is to skip fetch if last fetch < 1 minute ago
+  });
+
+  env.register({
     name: "GIT_OVERRIDE_REMOTE",
     help: "set this to override the GIT_REMOTE set by CI when, eg, you'd like to push to a different remote"
   });
