@@ -1,8 +1,10 @@
 "use strict";
 (function () {
-    const exec = requireModule("exec"), env = requireModule("env");
+    const exec = requireModule("exec");
     module.exports = async function findGitCommitDeltaCount(main, branched) {
-        const raw = await exec("git", ["rev-list", " --left-right", "--count", `${main}...${branched}`]), lines = raw.trim().split("\n")
+        const raw = await exec("git", ["rev-list", " --left-right", "--count", `${main}...${branched}`], {
+            suppressOutput: true
+        }), lines = raw.trim().split("\n")
             .map(l => l.trim())
             .filter(l => !!l), matches = lines[0].match(/(\d*)\s*(\d*)/);
         if (matches === null) {

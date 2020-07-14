@@ -1,12 +1,15 @@
 (function() {
   const
-    exec = requireModule<Exec>("exec"),
-    env = requireModule<Env>("env");
+    exec = requireModule<Exec>("exec");
   module.exports = async function findGitCommitDeltaCount(
     main: string,
-    branched: string): Promise<GitCommitDeltaCount> {
+    branched: string
+  ): Promise<GitCommitDeltaCount> {
     const
-      raw = await exec("git", ["rev-list", " --left-right", "--count", `${main}...${branched}` ]),
+      raw = await exec("git",
+        ["rev-list", " --left-right", "--count", `${main}...${branched}` ], {
+          suppressOutput: true
+        }),
       lines = raw.trim().split("\n")
         .map(l => l.trim())
         .filter(l => !!l),

@@ -1,5 +1,3 @@
-import { ExecFileOptionsWithBufferEncoding } from "child_process";
-
 export type IoConsumer = (d: string) => void
 
 export interface IoHandlers {

@@ -8,7 +8,9 @@
       const
         git = new Git(at ?? "."),
         branchInfo = await git.branch();
-      return branchInfo.current === "" ? undefined : branchInfo.current;
+      return branchInfo.current === ""
+        ? undefined
+        : branchInfo.current; // also returns sha if detached!
     });
   }
 })();

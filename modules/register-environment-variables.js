@@ -275,6 +275,22 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "GIT_MAIN_BRANCH",
+    help: "The main branch (typically master) against which verification is done"
+  });
+
+  env.register({
+    name: "GIT_VERIFY_BRANCH",
+    help: "The fully-qualified branch name to use when verifying (defaults to checked out branch)"
+  });
+
+  env.register({
+    name: "ENFORCE_VERIFICATION",
+    help: "(boolean) when set to a truthy value, 'verify-up-to-date' will error if the current branch is behind the main one",
+    default: true
+  });
+
+  env.register({
     name: "GIT_OVERRIDE_REMOTE",
     help: "set this to override the GIT_REMOTE set by CI when, eg, you'd like to push to a different remote"
   });
