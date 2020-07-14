@@ -28,14 +28,17 @@
     const verifyResult = await readGitCommitDeltaCount(
       mainBranch || "master", verifyBranch);
     // TODO: get the delta count & chuck if behind
+    const
+      aheadS = verifyResult.ahead === 1 ? "" : "s",
+      behindS = verifyResult.behind === 1 ? "" : "s";
     console.log(`${
       chalk.yellow(verifyBranch)
     } is ${
-      verifyResult.ahead
-    } commits ahead and ${
-      verifyResult.behind
-    } commits behind ${
-      mainBranch
+      chalk.green(verifyResult.ahead)
+    } commit${aheadS} ahead and ${
+      chalk.red(verifyResult.behind)
+    } commit${behindS} behind ${
+      chalk.cyanBright(mainBranch)
     }`);
     return Promise.resolve();
   });
