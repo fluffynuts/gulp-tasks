@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const exec = requireModule("exec");
+    const os = require("os"), exec = requireModule("exec");
     module.exports = async function readMainBranchName() {
         const all = await listBranchesRaw("*"), headRef = all.map(b => {
             const match = b.match(/HEAD -> (.*)/);
@@ -19,7 +19,10 @@
         if (!spec) {
             spec = "*";
         }
-        const raw = await git("branch", "-a", "--list", spec);
+        const quotedSpec = os.platform() === "win32"
+            ? spec // cmd is too dumb to expand * itself and git on windows gets the surrounding '' too, breaking the required logic
+            : `'${spec}'`; // !win32 shells will not pass in the '', but, without it, attempt to expand the spec )':
+        const raw = await git("branch", "--no-pager", "-a", "--list", quotedSpec);
         return (raw || "").split("\n");
     }
     async function git(...args) {

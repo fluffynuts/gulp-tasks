@@ -1,5 +1,7 @@
 (function() {
-  const exec = requireModule<Exec>("exec");
+  const
+    os = require("os"),
+    exec = requireModule<Exec>("exec");
 
   module.exports = async function readMainBranchName(): Promise<string | undefined> {
     const
@@ -23,7 +25,11 @@
     if (!spec) {
       spec = "*";
     }
-    const raw = await git("branch", "-a", "--list", spec);
+    const quotedSpec = os.platform() === "win32"
+      ? spec // cmd is too dumb to expand * itself and git on windows gets the surrounding '' too, breaking the required logic
+      : `'${ spec }'` // !win32 shells will not pass in the '', but, without it, attempt to expand the spec )':
+
+    const raw = await git("--no-pager", "branch", "-a", "--list", quotedSpec);
     return (
       raw || ""
     ).split("\n");
