@@ -16,7 +16,7 @@ export interface ExecError extends Error {
   }
 }
 
-(function() {
+(function () {
 // MUST use for running batch files
 // you can use this for other commands but spawn is better
 // as it handles IO better
@@ -39,11 +39,11 @@ export interface ExecError extends Error {
     cmd: string,
     args: string[],
     opts: ExecOpts,
-    handlers?: IoHandlers) {
+    handlers?: IoHandlers): Promise<string> {
 
     return new Promise((resolve, reject) => {
       try {
-        child_process.execFile(cmd, args, opts, function(error: Error, stdout: Buffer, stderr: Buffer) {
+        child_process.execFile(cmd, args, opts, function (error: Error, stdout: Buffer, stderr: Buffer) {
           const stdErrString = (stderr || "").toString();
           const stdOutString = (stdout || "").toString();
           if (handlers?.stdout && stdOutString) {
@@ -59,7 +59,7 @@ export interface ExecError extends Error {
               stdout: stdout
             });
           }
-          resolve(stdout);
+          resolve(stdout.toString());
         });
       } catch (e) {
         console.error(`EXEC ERROR: ${ e } / ${ cmd } ${ args }`);
@@ -82,7 +82,7 @@ export interface ExecError extends Error {
 
   function printLines(collector: string[], suppress: boolean, data: string) {
     const lines = trim(data).split("\n");
-    lines.forEach(function(line) {
+    lines.forEach(function (line) {
       line = trim(line);
       collector.push(line);
       if (suppress) {
@@ -113,11 +113,11 @@ export interface ExecError extends Error {
     }
   }
 
-  function doSpawn(
+  function doWindowsStart(
     cmd: string,
     args: string[],
     opts: ExecOpts,
-    handlers?: IoHandlers) {
+    handlers?: IoHandlers): Promise<string> {
     handlers = handlers || {};
     const collectedStdOut: string[] = [];
     const collectedStdErr: string[] = [];
@@ -143,7 +143,7 @@ export interface ExecError extends Error {
             stderrHandler(trim(data.toString()));
           });
         }
-        proc.on("close", function(exitCode: number) {
+        proc.on("close", function (exitCode: number) {
           log.showTimeStamps();
           if (exitCode) {
             const e = new Error(`
@@ -166,7 +166,7 @@ stdout:
             resolve(collectedStdOut.join("\n"));
           }
         });
-        proc.on("error", function(err: Error) {
+        proc.on("error", function (err: Error) {
           log.showTimeStamps();
           log.error("failed to start process");
           log.error(err);
@@ -203,10 +203,74 @@ stdout:
     cmd: string,
     args: string[],
     opts: ExecOpts,
-    handlers?: IoHandlers) {
+    handlers?: IoHandlers): Promise<string> {
     return (opts?._useExecFile)
       ? doExecFile(cmd, args, opts, handlers)
-      : doSpawn(cmd, args, opts, handlers);
+      : doWindowsStart(cmd, args, opts, handlers);
+  }
+
+  function noop() {
+    // intentionally blank
+  }
+
+  function makeSafe(consumer: IoConsumer) {
+    return (data: string) => {
+      try {
+        consumer(data);
+      } catch (e) {
+        // suppress
+      }
+    };
+  }
+
+  async function doSpawn(
+    cmd: string,
+    args: string[],
+    opts: ExecOpts,
+    handlers?: IoHandlers): Promise<string> {
+    const
+      stderr: string[] = [],
+      stdout: string[] = [],
+      merged: string[] = [],
+      callerStdErr = handlers?.stderr ?? noop,
+      callerStdOut = handlers?.stdout ?? noop,
+      safeCallerStdErr = makeSafe(callerStdErr),
+      safeCallerStdOut = makeSafe(callerStdOut),
+      stdErrPrinter = opts?.suppressOutput ? noop : console.error.bind(console),
+      stdOutPrinter = opts?.suppressOutput ? noop : console.log.bind(console);
+    const myHandlers: IoHandlers = {
+      stderr: data => {
+        stderr.push(data);
+        merged.push(data);
+        stdErrPrinter(data);
+        safeCallerStdErr(data);
+      },
+      stdout: data => {
+        stdout.push(data)
+        merged.push(data);
+        stdOutPrinter(data);
+        safeCallerStdOut(data);
+      }
+    }
+    const spawnOptions = {
+      ...opts,
+      ...myHandlers
+    };
+    try {
+      await spawn(
+        cmd,
+        args,
+        spawnOptions
+      )
+      return opts?.mergeIo
+        ? merged.join("\n")
+        : stdout.join("\n");
+    } catch (errorResult) {
+      if (errorResult.error) {
+        throw errorResult.error;
+      }
+      throw errorResult;
+    }
   }
 
   function exec(
@@ -231,7 +295,7 @@ stdout:
     }
     return os.platform() === "win32"
       ? doExec(cmd, args, opts, handlers || {})
-      : spawn(cmd, args, Object.assign({}, opts, handlers));
+      : doSpawn(cmd, args, Object.assign({}, opts), handlers);
   }
 
   module.exports = exec;

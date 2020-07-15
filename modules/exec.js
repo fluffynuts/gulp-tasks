@@ -30,7 +30,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                             stdout: stdout
                         });
                     }
-                    resolve(stdout);
+                    resolve(stdout.toString());
                 });
             }
             catch (e) {
@@ -78,7 +78,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             return child_process.spawn(cmd, args, opts);
         }
     }
-    function doSpawn(cmd, args, opts, handlers) {
+    function doWindowsStart(cmd, args, opts, handlers) {
         var _a;
         handlers = handlers || {};
         const collectedStdOut = [];
@@ -151,7 +151,50 @@ stdout:
     function doExec(cmd, args, opts, handlers) {
         return (opts === null || opts === void 0 ? void 0 : opts._useExecFile)
             ? doExecFile(cmd, args, opts, handlers)
-            : doSpawn(cmd, args, opts, handlers);
+            : doWindowsStart(cmd, args, opts, handlers);
+    }
+    function noop() {
+        // intentionally blank
+    }
+    function makeSafe(consumer) {
+        return (data) => {
+            try {
+                consumer(data);
+            }
+            catch (e) {
+                // suppress
+            }
+        };
+    }
+    async function doSpawn(cmd, args, opts, handlers) {
+        var _a, _b;
+        const stderr = [], stdout = [], merged = [], callerStdErr = (_a = handlers === null || handlers === void 0 ? void 0 : handlers.stderr) !== null && _a !== void 0 ? _a : noop, callerStdOut = (_b = handlers === null || handlers === void 0 ? void 0 : handlers.stdout) !== null && _b !== void 0 ? _b : noop, safeCallerStdErr = makeSafe(callerStdErr), safeCallerStdOut = makeSafe(callerStdOut), stdErrPrinter = (opts === null || opts === void 0 ? void 0 : opts.suppressOutput) ? noop : console.error.bind(console), stdOutPrinter = (opts === null || opts === void 0 ? void 0 : opts.suppressOutput) ? noop : console.log.bind(console);
+        const myHandlers = {
+            stderr: data => {
+                stderr.push(data);
+                merged.push(data);
+                stdErrPrinter(data);
+                safeCallerStdErr(data);
+            },
+            stdout: data => {
+                stdout.push(data);
+                merged.push(data);
+                stdOutPrinter(data);
+                safeCallerStdOut(data);
+            }
+        };
+        const spawnOptions = Object.assign(Object.assign({}, opts), myHandlers);
+        try {
+            await spawn(cmd, args, spawnOptions);
+            return (opts === null || opts === void 0 ? void 0 : opts.mergeIo) ? merged.join("\n")
+                : stdout.join("\n");
+        }
+        catch (errorResult) {
+            if (errorResult.error) {
+                throw errorResult.error;
+            }
+            throw errorResult;
+        }
     }
     function exec(cmd, args, opts, handlers) {
         args = args || [];
@@ -170,7 +213,7 @@ stdout:
         }
         return os.platform() === "win32"
             ? doExec(cmd, args, opts, handlers || {})
-            : spawn(cmd, args, Object.assign({}, opts, handlers));
+            : doSpawn(cmd, args, Object.assign({}, opts), handlers);
     }
     module.exports = exec;
 })();
