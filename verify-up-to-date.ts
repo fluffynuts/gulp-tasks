@@ -1,3 +1,5 @@
+import { main } from "ts-node/dist/bin";
+
 (function() {
   const
     chalk = require("chalk"),
@@ -74,6 +76,9 @@
     const
       mainBranchName = await readMainBranchName(),
       remote = remotes[0];
+    if (mainBranchName?.startsWith(`${remote}/`)) {
+      return mainBranchName;
+    }
     return remote
       ? `${ remote }/${ mainBranchName }`
       : mainBranchName

@@ -1,6 +1,10 @@
 (function() {
   const
     os = require("os"),
+    chalk = require("chalk"),
+    Git = require("simple-git/promise"),
+    readGitRemote = requireModule<ReadGitRemote>("read-git-remote"),
+    env = requireModule<Env>("env"),
     exec = requireModule<Exec>("exec");
 
   module.exports = async function readMainBranchName(): Promise<string | undefined> {
@@ -11,14 +15,44 @@
         return match
           ? match[1]
           : ""
-      }).filter(b => !!b)[0],
-      currentlyCheckedOut = (all.find(l => l.startsWith("* ")) || "")
-        .replace(/^\*\s*/, ""); // should get something like "origin/master"
+      }).filter(b => !!b)[0];
     // we don't want "origin" (or whatever the upstream is called)
-    if (!headRef) {
-      return currentlyCheckedOut;
+    if (!headRef || env.resolveFlag("FORCE_ASSUME_MAIN_BRANCH")) {
+      // take a guess
+      const possibles = [
+          "master",
+          "main",
+          "default"
+        ],
+        probableRemote = await readGitRemote(),
+        git = new Git(),
+        branchesResult = await git.branch(["-a"]),
+        allBranches = new Set(branchesResult.all);
+      for (const branch of possibles) {
+        const test = `remotes/${ probableRemote }/${ branch }`
+        if (allBranches.has(test)) {
+          const assumed = `${ probableRemote }/${ branch }`;
+          console.warn(
+            chalk.yellowBright(
+              warn(
+                `Assuming main branch is: '${ assumed }'`)
+            )
+          );
+          return assumed;
+        }
+      }
+      console.warn(
+        chalk.yellowBright(
+          warn(`Assuming main branch is 'master'`)
+        )
+      )
+      return "master";
     }
     return headRef.split("/").slice(1).join("/");
+  }
+
+  function warn(baseMessage: string) {
+    return `${ baseMessage }; override this with the GIT_MAIN_BRANCH environment variable`;
   }
 
   async function listBranchesRaw(spec?: string): Promise<string[]> {

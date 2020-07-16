@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const chalk = require("chalk"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), taskName = "verify-up-to-date";
     env.associate([
@@ -40,6 +41,9 @@
     async function resolveDefaultVerifyTarget(remotes) {
         remotes = remotes !== null && remotes !== void 0 ? remotes : [];
         const mainBranchName = await readMainBranchName(), remote = remotes[0];
+        if (mainBranchName === null || mainBranchName === void 0 ? void 0 : mainBranchName.startsWith(`${remote}/`)) {
+            return mainBranchName;
+        }
         return remote
             ? `${remote}/${mainBranchName}`
             : mainBranchName;

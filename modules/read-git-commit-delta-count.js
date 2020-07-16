@@ -1,8 +1,10 @@
 "use strict";
 (function () {
-    const exec = requireModule("exec");
+    const path = require("path"), debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")), exec = requireModule("exec");
     module.exports = async function findGitCommitDeltaCount(main, branched) {
-        const raw = await exec("git", ["rev-list", " --left-right", "--count", `${main}...${branched}`], {
+        const diffLine = `${main}...${branched}`;
+        debug(`performing commit diff: ${diffLine}`);
+        const raw = await exec("git", ["rev-list", " --left-right", "--count", diffLine], {
             suppressOutput: true
         }), lines = raw.trim().split("\n")
             .map(l => l.trim())

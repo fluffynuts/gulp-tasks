@@ -1,13 +1,17 @@
 (function() {
   const
+    path = require("path"),
+    debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")),
     exec = requireModule<Exec>("exec");
   module.exports = async function findGitCommitDeltaCount(
     main: string,
     branched: string
   ): Promise<GitCommitDeltaCount> {
+    const diffLine = `${main}...${branched}`;
+    debug(`performing commit diff: ${diffLine}`);
     const
       raw = await exec("git",
-        ["rev-list", " --left-right", "--count", `${main}...${branched}` ], {
+        ["rev-list", " --left-right", "--count", diffLine ], {
           suppressOutput: true
         }),
       lines = raw.trim().split("\n")
