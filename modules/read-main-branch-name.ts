@@ -17,7 +17,7 @@
           : ""
       }).filter(b => !!b)[0];
     // we don't want "origin" (or whatever the upstream is called)
-    if (!headRef || env.resolveFlag("FORCE_ASSUME_MAIN_BRANCH")) {
+    if (!headRef) {
       // take a guess
       const possibles = [
           "master",
