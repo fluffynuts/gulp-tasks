@@ -30,7 +30,7 @@ function cleanFoldersFrom(toolsFolder) {
 function downloadOrUpdateNuget(targetFolder) {
   const nugetPath = path.join(targetFolder, "nuget.exe");
   const nuget = resolveNuget(nugetPath, false);
-  if (nuget) {
+  if (nuget && !nuget.match(/dotnet/i)) {
     if (!process.env.SKIP_NUGET_UPDATES) {
       gutil.log("nuget.exe already exists... attempting self-update");
       console.log(`NUGET: (${nuget})`);
