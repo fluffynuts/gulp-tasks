@@ -1,9 +1,9 @@
 const
-  nuget = require("./nuget");
-var updating = null;
+  exec = requireModule("exec");
+let updating = null;
 module.exports = function (nugetPath) {
   if (updating) {
     return updating;
   }
-  return updating = nuget(["update", "-self"]);
+  return exec(nugetPath, [ "update", "-self" ]);
 }
