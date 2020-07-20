@@ -3,7 +3,6 @@ var
   path = require("path"),
   gutil = requireModule('gulp-util'),
   es = require('event-stream'),
-  q = require('q'),
   spawn = require('./spawn'),
   log = require('./log'),
   resolveNuget = require('./resolve-nuget'),
@@ -57,7 +56,7 @@ function determineRestoreCommandFor(nugetPath, stream) {
 
 function runNuget(restoreCommand, solutions, stream) {
   debug(`restoreCmd: ${restoreCommand}`);
-  var deferred = q.defer();
+  var deferred = Promise.resolve();
   var final = solutions.reduce(function (promise, item) {
     log.info('Restoring packages for: ' + item);
     var pathParts = item.split(/[\\|\/]/g);
@@ -80,14 +79,12 @@ function runNuget(restoreCommand, solutions, stream) {
         throw err;
       });
     });
-  }, deferred.promise);
+  }, deferred);
   final.then(function () {
     end(stream);
   }).catch(function (err) {
     fail(stream, err);
   });
-  deferred.resolve();
-  return deferred;
 }
 
 function restoreNugetPackagesWith(stream, solutionFiles, options) {
@@ -100,7 +97,9 @@ function restoreNugetPackagesWith(stream, solutionFiles, options) {
   var nuget = options.nuget || nugetExe;
   var nugetCmd = determineRestoreCommandFor(nuget, stream);
   if (nugetCmd) {
-    return runNuget(nugetCmd, solutions, stream);
+    runNuget(nugetCmd, solutions, stream);
+  } else {
+    fail(stream, "Can't determine nuget command");
   }
 }
 

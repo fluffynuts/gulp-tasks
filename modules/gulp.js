@@ -51,7 +51,7 @@ if (gulpVersion.major === 3) {
     };
   gulp.task = newTask.bind(gulp);
   gulp.task("help", () => {
-    const chalk = require("chalk"),
+    const chalk = require("ansi-colors"),
       green = chalk.greenBright.bind(chalk),
       yellow = chalk.yellowBright.bind(chalk),
       cyan = chalk.cyanBright.bind(chalk);

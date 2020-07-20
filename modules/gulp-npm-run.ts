@@ -7,7 +7,7 @@
     debug = require("debug")("gulp-npm-run"),
     exec = require("./exec") as Exec,
     path = require("path"),
-    chalk = require("chalk"),
+    chalk = require("ansi-colors"),
     findNpmBase = require("./find-npm-base");
 
   function gulpNpmRun(gulp: GulpWithHelp) {

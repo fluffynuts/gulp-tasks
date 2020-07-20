@@ -2,7 +2,6 @@
 var gutil = requireModule('gulp-util');
 var es = require('event-stream');
 var fs = require('fs');
-var q = require('q');
 var log = require('./log');
 
 var PLUGIN_NAME = 'gulp-purge';
@@ -13,8 +12,6 @@ var DEBUG = false;
 // (SILENTLY!) because nunit-agent was still locking some of the
 // files. This tells you what actually happens and has a dryRun
 // feature for testing your input pipes
-
-var CWD = process.cwd();
 
 function purge(options) {
     options = options || { }

@@ -1,8 +1,6 @@
-import { main } from "ts-node/dist/bin";
-
 (function() {
   const
-    chalk = require("chalk"),
+    chalk = require("ansi-colors"),
     log = requireModule<Log>("log"),
     env = requireModule<Env>("env"),
     Git = require("simple-git/promise"),

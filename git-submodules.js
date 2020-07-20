@@ -1,45 +1,43 @@
-var spawn = requireModule('spawn'),
-  gulp = requireModule('gulp'),
-  log = requireModule('log'),
-  fs = require('fs'),
-  q = require('q'),
-  readFile = q.denodeify(fs.readFile),
-  subModulesFile = '.gitmodules';
+const spawn = requireModule("spawn"),
+  gulp = requireModule("gulp"),
+  log = requireModule("log"),
+  fs = requireModule("fs"),
+  subModulesFile = ".gitmodules";
 
 gulp.task('git-submodules', 'Updates (with --init) all submodules in tree', function () {
   return spawn('git', ['submodule', 'update', '--init', '--recursive']);
 });
 
 gulp.task('git-submodules-as-externals', function () {
-  var deferred = q.defer();
+  return new Promise((resolve, reject) => {
   if (!fs.existsSync(subModulesFile)) {
     log.notice('no submodules file found');
-    deferred.resolve();
+    return resolve();
   } else {
     log.notice('performing submodule init/update...');
     spawn('git', ['submodule', 'update', '--init', '--recursive']).then(function () {
       log.info('getting list of local submodules...');
-      return readFile(subModulesFile);
+      return fs.readFile(subModulesFile);
     }).then(function (buffer) {
       log.info('grokking paths of local submodules...');
-      var fileContents = buffer.toString();
-      var lines = fileContents.split('\n');
-      var submodulePaths = lines.reduce(function (acc, cur) {
-        var parts = cur.split(' = ').map(function (item) {
+      const fileContents = buffer.toString();
+      const lines = fileContents.split("\n");
+      const submodulePaths = lines.reduce(function (acc, cur) {
+        const parts = cur.split(" = ").map(function (item) {
           return item.trim();
         });
-        if (parts.length > 1 && parts[0] === 'path') {
+        if (parts.length > 1 && parts[0] === "path") {
           acc.push(parts[1]);
         }
         return acc;
       }, []);
       return submodulePaths;
     }).then(function (modulePaths) {
-      var mkdir = function (path) {
-        var parts = path.split('/');
-        var current = '';
+      const mkdir = function (path) {
+        const parts = path.split("/");
+        let current = "";
         parts.forEach(function (part) {
-          current += current ? '/' : '';
+          current += current ? "/" : "";
           current += part;
           if (!fs.existsSync(current)) {
             fs.mkdirSync(current);
@@ -52,22 +50,22 @@ gulp.task('git-submodules-as-externals', function () {
       return modulePaths;
     }).then(function (modulePaths) {
       log.info('making sure local submodules are up to date...');
-      var innerDeferred = q.defer();
-      var spawnOptions = {
-        stdio: [process.stdin, process.stdout, process.stderr, 'pipe']
+      const innerDeferred = q.defer();
+      const spawnOptions = {
+        stdio: [ process.stdin, process.stdout, process.stderr, "pipe" ]
       };
-      var finalPromise = modulePaths.reduce(function (acc, cur) {
-        var workingFolder = [process.cwd(), cur].join('/');
-        log.info('working with submodule at: ' + cur);
+      const finalPromise = modulePaths.reduce(function (acc, cur) {
+        const workingFolder = [ process.cwd(), cur ].join("/");
+        log.info("working with submodule at: " + cur);
         spawnOptions.cwd = workingFolder;
         return acc.then(function () {
-          log.debug(' - fetch changes');
-          return spawn('git', ['fetch'], spawnOptions).then(function () {
-            log.debug(' - switch to master');
-            return spawn('git', ['checkout', 'master'], spawnOptions);
+          log.debug(" - fetch changes");
+          return spawn("git", [ "fetch" ], spawnOptions).then(function () {
+            log.debug(" - switch to master");
+            return spawn("git", [ "checkout", "master" ], spawnOptions);
           }).then(function () {
-            log.debug(' - fast-forward to HEAD');
-            return spawn('git', ['rebase'], spawnOptions);
+            log.debug(" - fast-forward to HEAD");
+            return spawn("git", [ "rebase" ], spawnOptions);
           });
         });
       }, innerDeferred.promise);
@@ -75,11 +73,11 @@ gulp.task('git-submodules-as-externals', function () {
       return finalPromise;
     }).then(function () {
       log.info('git submodule magick complete');
-      deferred.resolve();
+      resolve();
     }).catch(function (err) {
-      deferred.reject(err);
+      reject(err);
     });
   }
-  return deferred.promise;
+  });
 });
 

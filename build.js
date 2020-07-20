@@ -1,4 +1,4 @@
-const chalk = require("chalk"),
+const chalk = require("ansi-colors"),
   os = require("os"),
   env = requireModule("env"),
   gulp = requireModule("gulp"),

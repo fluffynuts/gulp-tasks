@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const spawn = requireModule("spawn"), gulp = requireModule("gulp"), env = requireModule("env"), chalk = require("chalk"), resolveMasks = requireModule("resolve-masks"), debug = require("debug")("update-self"), es = require("event-stream");
+const spawn = requireModule("spawn"), gulp = requireModule("gulp"), env = requireModule("env"), chalk = require("ansi-colors"), resolveMasks = requireModule("resolve-masks"), debug = require("debug")("update-self"), es = require("event-stream");
 env.associate([
     env.DRY_RUN,
     env.INCLUDE_PACKAGE_JSON,

@@ -9,7 +9,7 @@ const
   fs = require("fs"),
   promisifyStream = requireModule("promisify"),
   { test } = require("gulp-dotnet-cli"),
-  nunit = require("gulp-nunit-runner"),
+  nunit = require("./ext/gulp-nunit-runner"),
   testUtilFinder = requireModule("testutil-finder"),
   env = requireModule("env"),
   resolveTestMasks = requireModule("resolve-test-masks"),

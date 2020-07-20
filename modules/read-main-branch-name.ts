@@ -1,7 +1,7 @@
 (function() {
   const
     os = require("os"),
-    chalk = require("chalk"),
+    chalk = require("ansi-colors"),
     Git = require("simple-git/promise"),
     readGitRemote = requireModule<ReadGitRemote>("read-git-remote"),
     env = requireModule<Env>("env"),

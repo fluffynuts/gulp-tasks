@@ -5,7 +5,7 @@ const
   spawn = requireModule<Spawn>("spawn"),
   gulp = requireModule<GulpWithHelp>("gulp"),
   env = requireModule<Env>("env"),
-  chalk = require("chalk"),
+  chalk = require("ansi-colors"),
   resolveMasks = requireModule<ResolveMasks>("resolve-masks"),
   debug = require("debug")("update-self"),
   es = require("event-stream");

@@ -1,7 +1,7 @@
 "use strict";
 const
   env = requireModule("env"),
-  chalk = require("chalk"),
+  chalk = require("ansi-colors"),
   noUnicode = env.flag("NO_UNICODE"),
   noColor = env.flag("NO_COLOR"),
   prefixSize = noUnicode ? 6 : 2,

@@ -1,7 +1,7 @@
 const
   padRight = require("./pad-right"),
   log = requireModule("log"),
-  chalk = require("chalk");
+  chalk = require("ansi-colors");
 
 function output(logLines) {
   const longest = logLines

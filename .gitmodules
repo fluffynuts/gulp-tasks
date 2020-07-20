@@ -1,0 +1,3 @@
+[submodule "ext/gulp-nunit-runner"]
+	path = ext/gulp-nunit-runner
+	url = https://github.com/fluffynuts/gulp-nunit-runner
