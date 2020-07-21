@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const chalk = require("ansi-colors"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), taskName = "verify-up-to-date";
+    const chalk = require("ansi-colors"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), failAfter = requireModule("fail-after"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), taskName = "verify-up-to-date";
     env.associate([
         "SKIP_FETCH_ON_VERIFY",
         "ENFORCE_VERIFICATION"
@@ -21,8 +21,24 @@
             }
             if (!recentEnough) {
                 log.info(`${taskName} :: fetching all remotes...`);
-                const git = new Git();
-                await git.fetch(["--all"]);
+                const git = new Git(), timeout = env.resolveNumber("GIT_FETCH_TIMEOUT");
+                try {
+                    const fail = failAfter(timeout);
+                    await Promise.race([
+                        git.fetch(["--all"]),
+                        fail.promise
+                    ]);
+                    fail.cancel();
+                }
+                catch (e) {
+                    const msg = e.message || e;
+                    if (msg === "operation timed out") {
+                        log.error(chalk.redBright(`fetch operation timed out:
+ - check that the current account can fetch from all remotes
+ - optionally disable fetch with SKIP_FETCH_ON_VERIFY=1
+ - optionally increase GIT_FETCH_TIMEOUT from current value: ${timeout}`));
+                    }
+                }
             }
             else {
                 log.info(`${taskName} :: skipping fetch: was last done at ${lastFetch}`);

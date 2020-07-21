@@ -4,6 +4,7 @@
     log = requireModule<Log>("log"),
     env = requireModule<Env>("env"),
     Git = require("simple-git/promise"),
+    failAfter = requireModule<FailAfter>("fail-after"),
     readMainBranchName = requireModule<ReadMainBranchName>("read-main-branch-name"),
     readAllGitRemotes = requireModule<ReadAllGitRemotes>("read-all-git-remotes"),
     readCurrentBranch = requireModule<ReadCurrentGitBranch>("read-current-git-branch"),
@@ -39,11 +40,28 @@
         recentEnough = (now - fetchRecentPeriod) < lastFetch.getTime();
       }
       if (!recentEnough) {
-        log.info(`${taskName} :: fetching all remotes...`);
-        const git = new Git();
-        await git.fetch(["--all"]);
+        log.info(`${ taskName } :: fetching all remotes...`);
+        const
+          git = new Git(),
+          timeout = env.resolveNumber("GIT_FETCH_TIMEOUT");
+        try {
+          const fail = failAfter(timeout);
+          await Promise.race([
+            git.fetch(["--all"]),
+            fail.promise
+          ]);
+          fail.cancel();
+        } catch (e) {
+          const msg = e.message || e;
+          if (msg === "operation timed out") {
+            log.error(chalk.redBright(`fetch operation timed out:
+ - check that the current account can fetch from all remotes
+ - optionally disable fetch with SKIP_FETCH_ON_VERIFY=1
+ - optionally increase GIT_FETCH_TIMEOUT from current value: ${timeout}`))
+          }
+        }
       } else {
-        log.info(`${taskName} :: skipping fetch: was last done at ${lastFetch}`);
+        log.info(`${ taskName } :: skipping fetch: was last done at ${ lastFetch }`);
       }
     }
     const verifyResult = await readGitCommitDeltaCount(
@@ -61,7 +79,7 @@
       } commit${ behindS } behind ${
         chalk.cyanBright(mainBranch)
       }`;
-    log.info(`${taskName} :: ${message}`);
+    log.info(`${ taskName } :: ${ message }`);
 
     if (verifyResult.behind > 0 &&
       env.resolveFlag("ENFORCE_VERIFICATION")) {
@@ -74,7 +92,7 @@
     const
       mainBranchName = await readMainBranchName(),
       remote = remotes[0];
-    if (mainBranchName?.startsWith(`${remote}/`)) {
+    if (mainBranchName?.startsWith(`${ remote }/`)) {
       return mainBranchName;
     }
     return remote

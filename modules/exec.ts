@@ -13,15 +13,17 @@ export interface ExecError extends Error {
     opts?: ExecOpts;
     stdout: string[];
     stderr: string[];
+    timedOut: boolean;
   }
 }
 
-(function () {
+(function() {
 // MUST use for running batch files
 // you can use this for other commands but spawn is better
 // as it handles IO better
   const
     quoteIfRequired = require("./quote-if-required"),
+    failAfter = requireModule<FailAfter>("fail-after"),
     os = require("os"),
     spawn = require("./spawn"),
     debug = require("debug")("exec"),
@@ -43,7 +45,7 @@ export interface ExecError extends Error {
 
     return new Promise((resolve, reject) => {
       try {
-        child_process.execFile(cmd, args, opts, function (error: Error, stdout: Buffer, stderr: Buffer) {
+        child_process.execFile(cmd, args, opts, function(error: Error, stdout: Buffer, stderr: Buffer) {
           const stdErrString = (stderr || "").toString();
           const stdOutString = (stdout || "").toString();
           if (handlers?.stdout && stdOutString) {
@@ -82,7 +84,7 @@ export interface ExecError extends Error {
 
   function printLines(collector: string[], suppress: boolean, data: string) {
     const lines = trim(data).split("\n");
-    lines.forEach(function (line) {
+    lines.forEach(function(line) {
       line = trim(line);
       collector.push(line);
       if (suppress) {
@@ -143,7 +145,7 @@ export interface ExecError extends Error {
             stderrHandler(trim(data.toString()));
           });
         }
-        proc.on("close", function (exitCode: number) {
+        proc.on("close", function(exitCode: number) {
           log.showTimeStamps();
           if (exitCode) {
             const e = new Error(`
@@ -159,21 +161,21 @@ stdout:
             ) as ExecError;
             reject(
               attachExecInfo(
-                e, exitCode, cmd, args, opts, collectedStdOut, collectedStdErr
+                e, exitCode, cmd, args, false, opts, collectedStdOut, collectedStdErr
               )
             );
           } else {
             resolve(collectedStdOut.join("\n"));
           }
         });
-        proc.on("error", function (err: Error) {
+        proc.on("error", function(err: Error) {
           log.showTimeStamps();
           log.error("failed to start process");
           log.error(err);
-          reject(attachExecInfo(err, -1, cmd, args, opts));
+          reject(attachExecInfo(err, -1, cmd, args, false, opts));
         });
       } catch (e) {
-        reject(attachExecInfo(e, -1, cmd, args, opts));
+        reject(attachExecInfo(e, -1, cmd, args, false, opts));
       }
     });
   }
@@ -183,9 +185,10 @@ stdout:
     exitCode: number,
     cmd: string,
     args: string[],
+    timedOut: boolean,
     opts?: ExecOpts,
     collectedStdOut?: string[],
-    collectedStdErr?: string[]
+    collectedStdErr?: string[],
   ): ExecError {
     const err = e as ExecError;
     err.info = {
@@ -194,7 +197,8 @@ stdout:
       args,
       opts,
       stdout: collectedStdOut || [],
-      stderr: collectedStdErr || []
+      stderr: collectedStdErr || [],
+      timedOut
     }
     return err;
   }
@@ -273,7 +277,7 @@ stdout:
     }
   }
 
-  function exec(
+  async function exec(
     cmd: string,
     args?: string[],
     opts?: ExecOpts,
@@ -293,10 +297,38 @@ stdout:
       debug(`- opts: ${ JSON.stringify(opts) }`);
       debug(`- handlers: ${ JSON.stringify(handlers) }`);
     }
-    return os.platform() === "win32"
+
+    let timeout = 0;
+    if (opts?.timeout && opts.timeout > 0) {
+      // extend the provided timeout -- node will stop the child process
+      //  and we need to race a failing promise there first
+      timeout = opts.timeout;
+      opts.timeout += 50;
+    }
+    // noinspection ES6MissingAwait
+    const promise = os.platform() === "win32"
       ? doExec(cmd, args, opts, handlers || {})
       : doSpawn(cmd, args, Object.assign({}, opts), handlers);
+
+    if (!timeout) {
+      return promise;
+    }
+
+    try {
+      const fail = failAfter(timeout);
+      const result = await Promise.race([
+        promise,
+        fail.promise
+      ]) as string;
+      fail.cancel();
+      return result;
+    } catch (e) {
+      const err = new Error("timed out");
+      attachExecInfo(err, 1, cmd, args, true, opts);
+      throw err;
+    }
   }
+
 
   module.exports = exec;
 })();

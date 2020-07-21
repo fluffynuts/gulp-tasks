@@ -63,7 +63,6 @@
       ? spec // cmd is too dumb to expand * itself and git on windows gets the surrounding '' too, breaking the required logic
       : `'${ spec }'` // !win32 shells will not pass in the '', but, without it, attempt to expand the spec )':
 
-    debugger;
     const raw = await git("--no-pager", "branch", "-a", "--list", quotedSpec);
     return (
       raw || ""
@@ -71,7 +70,7 @@
   }
 
   async function git(...args: string[]) {
-    return exec("git", args, { suppressOutput: true, mergeIo: true });
+    return exec("git", args, { suppressOutput: true, mergeIo: true, timeout: 5000 });
   }
 
 })();

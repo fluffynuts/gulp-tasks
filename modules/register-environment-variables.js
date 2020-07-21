@@ -297,6 +297,18 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "GIT_FETCH_TIMEOUT",
+    help: "(number) the max time, in milliseconds, to wait for git fetch",
+    default: 30000
+  });
+
+  env.register({
+    name: "GIT_VERIFY_TIMEOUT",
+    help: "(number) the max time, in milliseconds, to wait for verification sub-processes",
+    default: 5000
+  });
+
+  env.register({
     name: "FETCH_RECENT_TIME",
     help: "(number) when testing the last gi fetch time, consider the fetch fresh enough if it happend within this many seconds in the past",
     default: 60 // default is to skip fetch if last fetch < 1 minute ago

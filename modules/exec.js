@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     // MUST use for running batch files
     // you can use this for other commands but spawn is better
     // as it handles IO better
-    const quoteIfRequired = require("./quote-if-required"), os = require("os"), spawn = require("./spawn"), debug = require("debug")("exec"), log = require("./log"), child_process = require("child_process");
+    const quoteIfRequired = require("./quote-if-required"), failAfter = requireModule("fail-after"), os = require("os"), spawn = require("./spawn"), debug = require("debug")("exec"), log = require("./log"), child_process = require("child_process");
     function makeDefaultOptions() {
         return {
             cwd: process.cwd(),
@@ -118,7 +118,7 @@ stderr:
 stdout:
   ${collectedStdOut.join("\n  ")}
 `.trim());
-                        reject(attachExecInfo(e, exitCode, cmd, args, opts, collectedStdOut, collectedStdErr));
+                        reject(attachExecInfo(e, exitCode, cmd, args, false, opts, collectedStdOut, collectedStdErr));
                     }
                     else {
                         resolve(collectedStdOut.join("\n"));
@@ -128,15 +128,15 @@ stdout:
                     log.showTimeStamps();
                     log.error("failed to start process");
                     log.error(err);
-                    reject(attachExecInfo(err, -1, cmd, args, opts));
+                    reject(attachExecInfo(err, -1, cmd, args, false, opts));
                 });
             }
             catch (e) {
-                reject(attachExecInfo(e, -1, cmd, args, opts));
+                reject(attachExecInfo(e, -1, cmd, args, false, opts));
             }
         });
     }
-    function attachExecInfo(e, exitCode, cmd, args, opts, collectedStdOut, collectedStdErr) {
+    function attachExecInfo(e, exitCode, cmd, args, timedOut, opts, collectedStdOut, collectedStdErr) {
         const err = e;
         err.info = {
             exitCode,
@@ -144,7 +144,8 @@ stdout:
             args,
             opts,
             stdout: collectedStdOut || [],
-            stderr: collectedStdErr || []
+            stderr: collectedStdErr || [],
+            timedOut
         };
         return err;
     }
@@ -196,7 +197,7 @@ stdout:
             throw errorResult;
         }
     }
-    function exec(cmd, args, opts, handlers) {
+    async function exec(cmd, args, opts, handlers) {
         args = args || [];
         opts = Object.assign({}, makeDefaultOptions(), opts);
         opts.maxBuffer = Number.MAX_SAFE_INTEGER;
@@ -211,9 +212,34 @@ stdout:
             debug(`- opts: ${JSON.stringify(opts)}`);
             debug(`- handlers: ${JSON.stringify(handlers)}`);
         }
-        return os.platform() === "win32"
+        let timeout = 0;
+        if ((opts === null || opts === void 0 ? void 0 : opts.timeout) && opts.timeout > 0) {
+            // extend the provided timeout -- node will stop the child process
+            //  and we need to race a failing promise there first
+            timeout = opts.timeout;
+            opts.timeout += 50;
+        }
+        // noinspection ES6MissingAwait
+        const promise = os.platform() === "win32"
             ? doExec(cmd, args, opts, handlers || {})
             : doSpawn(cmd, args, Object.assign({}, opts), handlers);
+        if (!timeout) {
+            return promise;
+        }
+        try {
+            const fail = failAfter(timeout);
+            const result = await Promise.race([
+                promise,
+                fail.promise
+            ]);
+            fail.cancel();
+            return result;
+        }
+        catch (e) {
+            const err = new Error("timed out");
+            attachExecInfo(err, 1, cmd, args, true, opts);
+            throw err;
+        }
     }
     module.exports = exec;
 })();
