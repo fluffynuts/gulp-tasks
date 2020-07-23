@@ -1,5 +1,6 @@
 (function() {
   const
+    os = require("os"),
     chalk = require("ansi-colors"),
     log = requireModule<Log>("log"),
     env = requireModule<Env>("env"),
@@ -19,6 +20,16 @@
   ], taskName);
 
   gulp.task(taskName, async () => {
+    // git on OSX is still inserting a pager somewhere, breaking this, so temporarily
+    // disable this test
+    if (os.platform() === "darwin") {
+      console.warn(
+        chalk.redBright(
+          `up-to-date verification is temporarily disabled on OSX whilst I figure out an issue! Sorry!`
+        )
+      );
+      return Promise.resolve();
+    }
     const
       remoteInfos = (await readAllGitRemotes()) || [],
       remotes = remoteInfos.map(r => r.name),
