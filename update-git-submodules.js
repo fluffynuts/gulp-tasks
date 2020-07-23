@@ -8,6 +8,10 @@ gulp.task(
   async () => {
     const git = new Git(".");
     await status.run(
+      "Ensure submodules are initialized...",
+      async () => await git.subModule(["update", "--init"])
+    );
+    await status.run(
       "Check out master on all submodules...",
       async () => await git.subModule(["foreach", "git", "checkout", "master"])
     );
