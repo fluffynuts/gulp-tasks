@@ -172,16 +172,18 @@ stdout:
         const stderr = [], stdout = [], merged = [], callerStdErr = (_a = handlers === null || handlers === void 0 ? void 0 : handlers.stderr) !== null && _a !== void 0 ? _a : noop, callerStdOut = (_b = handlers === null || handlers === void 0 ? void 0 : handlers.stdout) !== null && _b !== void 0 ? _b : noop, safeCallerStdErr = makeSafe(callerStdErr), safeCallerStdOut = makeSafe(callerStdOut), stdErrPrinter = (opts === null || opts === void 0 ? void 0 : opts.suppressOutput) ? noop : console.error.bind(console), stdOutPrinter = (opts === null || opts === void 0 ? void 0 : opts.suppressOutput) ? noop : console.log.bind(console);
         const myHandlers = {
             stderr: data => {
-                stderr.push(data);
-                merged.push(data);
-                stdErrPrinter(data);
-                safeCallerStdErr(data);
+                const dataStr = data.toString();
+                stderr.push(dataStr);
+                merged.push(dataStr);
+                stdErrPrinter(dataStr);
+                safeCallerStdErr(dataStr);
             },
             stdout: data => {
-                stdout.push(data);
-                merged.push(data);
-                stdOutPrinter(data);
-                safeCallerStdOut(data);
+                const dataStr = data.toString();
+                stdout.push(dataStr);
+                merged.push(dataStr);
+                stdOutPrinter(dataStr);
+                safeCallerStdOut(dataStr);
             }
         };
         const spawnOptions = Object.assign(Object.assign({}, opts), myHandlers);
@@ -190,11 +192,15 @@ stdout:
             return (opts === null || opts === void 0 ? void 0 : opts.mergeIo) ? merged.join("\n")
                 : stdout.join("\n");
         }
-        catch (errorResult) {
-            if (errorResult.error) {
-                throw errorResult.error;
+        catch (e) {
+            attachExecInfo(e, e.exitCode, cmd, args, false, opts);
+            if (e.stderr) {
+                e.info.stderr = e.stderr;
             }
-            throw errorResult;
+            if (e.stdout) {
+                e.info.stdout = e.stdout;
+            }
+            throw e;
         }
     }
     async function exec(cmd, args, opts, handlers) {

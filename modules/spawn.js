@@ -1,5 +1,6 @@
 // use for spawning actual processes.
 // You must use exec if you want to run batch files
+
 const tryLoadDebug = function () {
     try {
       return require("debug")("spawn");
@@ -13,7 +14,7 @@ const tryLoadDebug = function () {
   child_process = require("child_process");
 
 const defaultOptions = {
-  stdio: [ process.stdin, process.stdout, process.stderr ],
+  stdio: [process.stdin, process.stdout, process.stderr],
   cwd: process.cwd(),
   shell: true
 };
@@ -44,38 +45,57 @@ function spawn(executable, args, opts) {
 
   executable = quoteIfRequired(executable);
 
-  debug(`spawning: ${executable} ${args.map(a => '"' + a + '"').join(" ")}`);
+  debug(`spawning: ${ executable } ${ args.map(a => '"' + a + '"').join(" ") }`);
   debug({ opts });
 
   return new Promise((resolve, reject) => {
     try {
       const child = child_process.spawn(executable, args, opts);
-      child.on("error", function(err) {
-        debug(`child error: ${err}`);
-        result.error = err;
-        reject(`"${[executable].concat(args).join(" ")}" failed with "${err}"`);
+      const stdout = [];
+      const stderr = [];
+      child.on("error", function (err) {
+        debug(`child error: ${ err }`);
+        const e = new Error(
+          `"${ [executable].concat(args).join(" ") }" failed with "${ err }"`
+        );
+        e.exitCode = -1;
+        e.stderr = stderr;
+        e.stdout = stdout;
+        reject(e);
       });
-      child.on("close", function(code) {
-        debug(`child exits: ${code}`);
+      child.on("close", function (code) {
+        debug(`child exits: ${ code }`);
         result.exitCode = code;
         if (code === 0) {
           resolve(result);
         } else {
-          reject(
-            `"${[executable]
+          const err = new Error(
+            `"${ [executable]
               .concat(args)
-              .join(" ")}" failed with exit code ${code}`
+              .join(" ") }" failed with exit code ${ code }`
           );
+          err.exitCode = code;
+          err.stdout = stdout;
+          err.stderr = stderr;
+          return reject(err);
         }
       });
       if (stdOutWriter) {
-        child.stdout.on("data", stdOutWriter);
+        child.stdout.on("data", data => {
+          const str = data.toString();
+          stdout.push(str);
+          stdOutWriter(str);
+        });
       }
       if (stdErrWriter) {
-        child.stderr.on("data", stdErrWriter);
+        child.stderr.on("data", data => {
+          const str = data.toString();
+          stderr.push(str);
+          stdErrWriter(str);
+        });
       }
     } catch (e) {
-      reject(`Unable to spawn process: ${e}`);
+      reject(`Unable to spawn process: ${ e }`);
     }
   });
 }

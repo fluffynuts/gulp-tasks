@@ -244,16 +244,18 @@ stdout:
       stdOutPrinter = opts?.suppressOutput ? noop : console.log.bind(console);
     const myHandlers: IoHandlers = {
       stderr: data => {
-        stderr.push(data);
-        merged.push(data);
-        stdErrPrinter(data);
-        safeCallerStdErr(data);
+        const dataStr = data.toString();
+        stderr.push(dataStr);
+        merged.push(dataStr);
+        stdErrPrinter(dataStr);
+        safeCallerStdErr(dataStr);
       },
       stdout: data => {
-        stdout.push(data)
-        merged.push(data);
-        stdOutPrinter(data);
-        safeCallerStdOut(data);
+        const dataStr = data.toString();
+        stdout.push(dataStr)
+        merged.push(dataStr);
+        stdOutPrinter(dataStr);
+        safeCallerStdOut(dataStr);
       }
     }
     const spawnOptions = {
@@ -269,11 +271,15 @@ stdout:
       return opts?.mergeIo
         ? merged.join("\n")
         : stdout.join("\n");
-    } catch (errorResult) {
-      if (errorResult.error) {
-        throw errorResult.error;
+    } catch (e) {
+      attachExecInfo(e, e.exitCode, cmd, args, false, opts);
+      if (e.stderr) {
+        e.info.stderr = e.stderr;
       }
-      throw errorResult;
+      if (e.stdout) {
+        e.info.stdout = e.stdout;
+      }
+      throw e;
     }
   }
 
