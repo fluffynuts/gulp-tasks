@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version");
     async function alterPackageJsonVersion(inputOpts) {
+        if (env.resolveFlag(env.INITIAL_RELEASE)) {
+            return;
+        }
         return new Promise(async (resolve, reject) => {
             const opts = fillInFromEnvironment(inputOpts), st = await stat(opts.packageJsonPath);
             if (!st) {

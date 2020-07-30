@@ -208,6 +208,7 @@ stdout:
     args: string[],
     opts: ExecOpts,
     handlers?: IoHandlers): Promise<string> {
+    debugger;
     return (opts?._useExecFile)
       ? doExecFile(cmd, args, opts, handlers)
       : doWindowsStart(cmd, args, opts, handlers);
