@@ -8,7 +8,8 @@ env.associate([
   env.DRY_RUN,
   env.PACKAGE_JSON,
   env.VERSION_INCREMENT_STRATEGY,
-  env.VERSION_INCREMENT_ZERO
+  env.VERSION_INCREMENT_ZERO,
+  env.INITIAL_RELEASE
 ], taskName);
 
 gulp.task(taskName, async () => {

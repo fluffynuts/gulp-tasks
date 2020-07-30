@@ -344,6 +344,18 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "NO_UNICODE",
+    help: "Prevent unicode output for status lines",
+    default: false
+  });
+
+  env.register({
+    name: "NO_COLOR",
+    help: "Prevent color output for status lines",
+    default: false
+  });
+
+  env.register({
     name: "OUTPUT",
     help: "Override output for whatever task you're running"
   });
@@ -409,12 +421,24 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "UPDATE_SUBMODULES_TO_LATEST",
+    help: "Flag: whether or not update-git-modules should update submodules to the latest version on their master branch",
+    default: true
+  });
+
+  env.register({
     name: "VERSION_INCREMENT_STRATEGY",
     help: [
       "Selects which part of a version is incremented when attempting to increment version numbers",
       "- select from major, minor, patch"
     ].join("\n"),
     default: "patch"
+  });
+
+  env.register({
+    name: "INITIAL_RELEASE",
+    help: "skip version incrementing for this initial release",
+    default: false
   });
 
   env.register({

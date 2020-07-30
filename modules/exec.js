@@ -150,6 +150,7 @@ stdout:
         return err;
     }
     function doExec(cmd, args, opts, handlers) {
+        debugger;
         return (opts === null || opts === void 0 ? void 0 : opts._useExecFile)
             ? doExecFile(cmd, args, opts, handlers)
             : doWindowsStart(cmd, args, opts, handlers);
