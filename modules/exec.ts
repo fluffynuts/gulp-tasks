@@ -330,6 +330,11 @@ stdout:
       fail.cancel();
       return result;
     } catch (e) {
+      const execError = e as ExecError;
+      if (execError.info) {
+        // info was attached elsewhere
+        throw execError
+      }
       const err = new Error("timed out");
       attachExecInfo(err, 1, cmd, args, true, opts);
       throw err;
