@@ -7,7 +7,9 @@ describe('teamcity', function() {
 
     it('should generate TeamCity service messages', function() {
 
-			const log = teamcity(fs.readFileSync(testFile, "utf8"));
+			const log = teamcity(fs.readFileSync(testFile, "utf8")).map(
+				line => line.replace(/\|r/g, "").replace(/\|n/g, "")
+			);
 
 			expect(log[0]).toEqual('##teamcity[testSuiteStarted name=\'mock-assembly.dll\']');
             expect(log[1]).toEqual('##teamcity[testSuiteStarted name=\'NUnit\']');
@@ -15,7 +17,7 @@ describe('teamcity', function() {
                     expect(log[3]).toEqual('##teamcity[testSuiteStarted name=\'Assemblies\']');
                         expect(log[4]).toEqual('##teamcity[testSuiteStarted name=\'MockTestFixture\']');
                             expect(log[5]).toEqual('##teamcity[testStarted name=\'NUnit.Tests.Assemblies.MockTestFixture.FailingTest\']');
-                                expect(log[6]).toEqual('##teamcity[testFailed name=\'NUnit.Tests.Assemblies.MockTestFixture.FailingTest\' message=\'Intentional failure\' details=\'at NUnit.Tests.Assemblies.MockTestFixture.FailingTest()|r|n\']');
+                                expect(log[6]).toEqual('##teamcity[testFailed name=\'NUnit.Tests.Assemblies.MockTestFixture.FailingTest\' message=\'Intentional failure\' details=\'at NUnit.Tests.Assemblies.MockTestFixture.FailingTest()\']');
                             expect(log[7]).toEqual('##teamcity[testFinished name=\'NUnit.Tests.Assemblies.MockTestFixture.FailingTest\' duration=\'16\']');
                             expect(log[8]).toEqual('##teamcity[testStarted name=\'NUnit.Tests.Assemblies.MockTestFixture.InconclusiveTest\']');
                                 expect(log[9]).toEqual('##teamcity[testFailed name=\'NUnit.Tests.Assemblies.MockTestFixture.InconclusiveTest\' message=\'No valid data\']');
@@ -28,7 +30,7 @@ describe('teamcity', function() {
                             expect(log[16]).toEqual('##teamcity[testFinished name=\'NUnit.Tests.Assemblies.MockTestFixture.MockTest3\' duration=\'16\']');
                             expect(log[17]).toEqual('##teamcity[testIgnored name=\'NUnit.Tests.Assemblies.MockTestFixture.MockTest4\' message=\'ignoring this test method for now\']');
                             expect(log[18]).toEqual('##teamcity[testStarted name=\'NUnit.Tests.Assemblies.MockTestFixture.TestWithException\']');
-                                expect(log[19]).toEqual('##teamcity[testFailed name=\'NUnit.Tests.Assemblies.MockTestFixture.TestWithException\' message=\'System.ApplicationException : Intentional Exception\' details=\'at NUnit.Tests.Assemblies.MockTestFixture.MethodThrowsException()|r|nat NUnit.Tests.Assemblies.MockTestFixture.TestWithException()|r|n\']');
+                                expect(log[19]).toEqual('##teamcity[testFailed name=\'NUnit.Tests.Assemblies.MockTestFixture.TestWithException\' message=\'System.ApplicationException : Intentional Exception\' details=\'at NUnit.Tests.Assemblies.MockTestFixture.MethodThrowsException()at NUnit.Tests.Assemblies.MockTestFixture.TestWithException()\']');
                             expect(log[20]).toEqual('##teamcity[testFinished name=\'NUnit.Tests.Assemblies.MockTestFixture.TestWithException\' duration=\'0\']');
                             expect(log[21]).toEqual('##teamcity[testStarted name=\'NUnit.Tests.Assemblies.MockTestFixture.TestWithManyProperties\']');
                             expect(log[22]).toEqual('##teamcity[testFinished name=\'NUnit.Tests.Assemblies.MockTestFixture.TestWithManyProperties\' duration=\'0\']');
