@@ -1,8 +1,8 @@
-var gulpVersion = requireModule("gulp-version");
+const gulpVersion = requireModule("gulp-version");
 if (gulpVersion.major === 3) {
   module.exports = require("run-sequence");
 } else {
-  var setTaskName = requireModule("set-task-name");
+  const setTaskName = requireModule("set-task-name");
   // it's shim time, baby!
   const gulp = requireModule("gulp");
   module.exports = function() {

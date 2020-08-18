@@ -1,8 +1,8 @@
-const chalk = require("ansi-colors"),
+const
+  chalk = require("ansi-colors"),
   os = require("os"),
   env = requireModule("env"),
   gulp = requireModule("gulp"),
-  gulpDebugGenerator = require("gulp-debug"),
   debug = require("debug")("build"),
   promisifyStream = requireModule("promisify"),
   dotnetCli = require("gulp-dotnet-cli"),
@@ -15,13 +15,6 @@ const chalk = require("ansi-colors"),
   resolveMasks = requireModule("resolve-masks"),
   logConfig = requireModule("log-config"),
   msbuild = require("gulp-msbuild");
-
-function gulpDebug(title) {
-    return gulpDebugGenerator({
-            title,
-            logger: debug
-    });
-}
 
 gulp.task("prebuild", ["nuget-restore"]);
 

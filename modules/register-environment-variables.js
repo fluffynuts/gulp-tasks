@@ -385,14 +385,26 @@ module.exports = function _env(env) {
   });
 
   env.register({
-    name: "PACK_INCLUDE",
+    name: "PACK_INCLUDE_CSPROJ",
     help: "Mask to apply for inclusions to 'dotnet pack'",
     default: ""
   });
 
   env.register({
-    name: "PACK_EXCLUDE",
+    name: "PACK_EXCLUDE_CSPROJ",
     help: "Mask to apply for exclusions to 'dotnet pack'",
+    default: ""
+  });
+
+  env.register({
+    name: "PACK_INCLUDE_NUSPEC",
+    help: "Mask to apply for inclusions to 'pack' target for nuspec files",
+    default: "**/*.nuspec"
+  });
+
+  env.register({
+    name: "PACK_EXCLUDE_NUSPEC",
+    help: "Mask to apply for exclusions to 'pack' target for nuspec files",
     default: ""
   });
 

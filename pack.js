@@ -19,8 +19,10 @@ env.associate(
   [
     "PACKAGE_TARGET_FOLDER",
     "DOTNET_CORE",
-    "PACK_INCLUDE",
-    "PACK_EXCLUDE",
+    "PACK_INCLUDE_CSPROJ",
+    "PACK_EXCLUDE_CSPROJ",
+    "PACK_INCLUDE_NUSPEC",
+    "PACK_EXCLUDE_NUSPEC",
     "PACK_INCREMENT_VERSION"
   ],
   ["pack"]
@@ -44,8 +46,13 @@ gulp.task(
 );
 
 function packWithNuget(target, incrementVersion) {
+  const nuspecs = resolveMasks(
+    "PACK_INCLUDE_NUSPEC",
+    "PACK_EXCLUDE_NUSPEC",
+    p => (p || "").match(/\.nuspec$/) ? p : `${p}.nuspec`
+  );
   let stream = gulp
-    .src(["**/*.nuspec", `!${getToolsFolder()}/**/*`])
+    .src(nuspecs, `!${getToolsFolder()}/**/*`)
     .pipe(throwIfNoFiles("No nuspec files found"));
   if (incrementVersion) {
     stream = stream
@@ -58,7 +65,7 @@ function packWithNuget(target, incrementVersion) {
 }
 
 function packWithDotnetCore(target, incrementVersion) {
-  const projects = resolveMasks("PACK_INCLUDE", "PACK_EXCLUDE", p => {
+  const projects = resolveMasks("PACK_INCLUDE_CSPROJ", "PACK_EXCLUDE_CSPROJ", p => {
     return (p || "").match(/\.csproj$/) ? p : `${p}.csproj`;
   });
   const configuration = env.resolve("PACK_CONFIGURATION");
