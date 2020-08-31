@@ -14,7 +14,15 @@ function isDotnetCore(binaryPath) {
   return !!executable.match(/^dotnet(:?\.exe)?$/i);
 }
 
-async function nugetPush(packageFile, sourceName) {
+async function nugetPush(
+  packageFile,
+  sourceName,
+  options) {
+  options = options || {};
+  options.suppressDuplicateError = options.suppressDuplicateError === undefined
+    ? env.resolveFlag("NUGET_IGNORE_DUPLICATE_PACKAGES")
+    : options.suppressDuplicateError;
+
   const
     apiKey = env.resolve("NUGET_API_KEY"),
     nuget = await findLocalNuget(),
@@ -39,7 +47,20 @@ async function nugetPush(packageFile, sourceName) {
     return;
   }
   console.log(`pushing package ${packageFile}`);
-  return spawn(nuget, args);
+  try {
+    return await spawn(nuget, args);
+  } catch (e) {
+    if (e.info && Array.isArray(e.info.stderr)) {
+      const
+        errors = e.stderr.join("\n").trim(),
+        isDuplicatePackageError = errors.match(/: 409 /);
+      if (isDuplicatePackageError && options.suppressDuplicateError) {
+        console.warn(`ignoring duplicate package error: ${errors}`);
+        return e.info;
+      }
+      throw e;
+    }
+  }
 }
 
 module.exports = nugetPush;

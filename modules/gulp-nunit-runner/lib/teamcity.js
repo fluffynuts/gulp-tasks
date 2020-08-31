@@ -1,16 +1,16 @@
 "use strict";
 
-var path = require('path'),
-	_ = require('lodash'),
-	sax = require('sax');
+const
+	path = require("path"),
+	sax = require("sax");
 
 module.exports = function (results) {
 
-	var getSuiteName,
-		parser = sax.parser(true),
+	let getSuiteName;
+	const parser = sax.parser(true),
 		log = [],
-		ancestors = [],
-		message, stackTrace;
+		ancestors = [];
+	let message, stackTrace;
 
 	getSuiteName = function (node) {
 		return node.attributes.type === 'Assembly' ?
@@ -45,7 +45,8 @@ module.exports = function (results) {
 			.replace(/\[/g, '|[')
 			.replace(/\]/g, '|]');
 
-		switch (_.last(ancestors).name) {
+		const last = ancestors[ancestors.length - 1] || {};
+		switch (last.name) {
 			case 'message':
 				message += data;
 				break;
@@ -71,8 +72,8 @@ module.exports = function (results) {
 							(message ? ' message=\'' + message + '\'' : '') +
 							(stackTrace ? ' details=\'' + stackTrace + '\'' : '') + ']');
 					}
-					var duration = node.attributes.time ? ' duration=\'' + parseInt(
-						node.attributes.time.replace(/[\.\:]/g, '')) + '\'' : '';
+					const duration = node.attributes.time ? " duration='" + parseInt(
+						node.attributes.time.replace(/[\.\:]/g, "")) + "'" : "";
 					log.push('##teamcity[testFinished name=\'' + node.attributes.name + '\'' + duration + ']');
 				}
 				break;

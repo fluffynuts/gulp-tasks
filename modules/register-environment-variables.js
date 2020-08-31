@@ -385,6 +385,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "NUGET_IGNORE_DUPLICATE_PACKAGES",
+    help: "Ignore errors produced by attempting to push duplicate packages",
+    default: true
+  });
+
+  env.register({
     name: "PACK_INCLUDE_CSPROJ",
     help: "Mask to apply for inclusions to 'dotnet pack'",
     default: ""
