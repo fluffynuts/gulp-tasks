@@ -12,8 +12,8 @@ import { tryReadVersionFrom } from "./version-reading-shared";
 
     try {
       const
-        propertyGroups = doc.Project.PropertyGroup;
-      return tryReadVersionFrom(propertyGroups, "PackageVersion");
+        propertyGroups = doc.Project.PropertyGroup
+      return tryReadVersionFrom(propertyGroups, "Version");
     } catch (e) {
       throw new Error(
         `Unable to read any xml node Project/PropertyGroup/PackageVersion in file ${ pathToCsProj }`
