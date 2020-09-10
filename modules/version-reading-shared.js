@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.tryReadVersionFrom = void 0;
 function readTextFrom(node) {
     return node
         ? node[0]
