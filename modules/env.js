@@ -80,7 +80,6 @@ function register(config) {
       pendingDefaultOverrides[name];
     delete pendingDefaultOverrides[name];
   }
-  const registered = registeredEnvironmentVariables[name];
   debug({
     label: `register env var: ${name}`,
     config: registeredEnvironmentVariables[name]
