@@ -16,7 +16,8 @@
 
   env.associate([
     "SKIP_FETCH_ON_VERIFY",
-    "ENFORCE_VERIFICATION"
+    "ENFORCE_VERIFICATION",
+    "INTERACTIVE"
   ], taskName);
 
   gulp.task(taskName, async () => {
@@ -92,9 +93,14 @@
       }`;
     log.info(`${ taskName } :: ${ message }`);
 
-    if (verifyResult.behind > 0 &&
-      env.resolveFlag("ENFORCE_VERIFICATION")) {
-      throw new Error(message);
+    if (verifyResult.behind > 0) {
+      if (env.resolveFlag("ENFORCE_VERIFICATION")) {
+        throw new Error(message);
+      }
+      if (env.resolveFlag("INTERACTIVE")) {
+        console.error(`interactive mode for verify-up-to-date is not yet implemented`);
+        // TODO: ask if the user would like to merge in master & proceed if ok
+      }
     }
   });
 

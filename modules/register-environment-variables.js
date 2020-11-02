@@ -291,6 +291,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "INTERACTIVE",
+    help: "(boolean) flag to enable interactive processing, where available",
+    default: false
+  });
+
+  env.register({
     name: "SKIP_FETCH_ON_VERIFY",
     help: "(boolean) skip the fetch on verification: useful from CI where you should already have recently fetched",
     default: false
@@ -490,6 +496,12 @@ module.exports = function _env(env) {
       "Enable beta flag for operation"
     ],
     default: "false"
+  });
+
+  env.register({
+    name: "NPM_PUBLISH_ACCESS",
+    help: "Access level to use for package publish",
+    default: "public"
   });
 
   debug("-- env registration complete --");
