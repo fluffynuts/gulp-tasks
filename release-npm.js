@@ -27,7 +27,7 @@
                 gutil.log(gutil.colors.yellow(`would publish ${version}`));
             }
             else {
-                const args = ["publish"];
+                const access = env.resolve("NPM_PUBLISH_ACCESS"), args = ["publish", "--access", access];
                 if (isBeta) {
                     args.push("--tag", "beta");
                 }

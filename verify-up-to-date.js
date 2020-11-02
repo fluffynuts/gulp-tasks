@@ -3,7 +3,8 @@
     const os = require("os"), chalk = require("ansi-colors"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), failAfter = requireModule("fail-after"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), taskName = "verify-up-to-date";
     env.associate([
         "SKIP_FETCH_ON_VERIFY",
-        "ENFORCE_VERIFICATION"
+        "ENFORCE_VERIFICATION",
+        "INTERACTIVE"
     ], taskName);
     gulp.task(taskName, async () => {
         // git on OSX is still inserting a pager somewhere, breaking this, so temporarily
@@ -54,9 +55,14 @@
         // TODO: get the delta count & chuck if behind
         const aheadS = verifyResult.ahead === 1 ? "" : "s", behindS = verifyResult.behind === 1 ? "" : "s", message = `${chalk.yellow(verifyBranch)} is ${chalk.green(verifyResult.ahead)} commit${aheadS} ahead and ${chalk.red(verifyResult.behind)} commit${behindS} behind ${chalk.cyanBright(mainBranch)}`;
         log.info(`${taskName} :: ${message}`);
-        if (verifyResult.behind > 0 &&
-            env.resolveFlag("ENFORCE_VERIFICATION")) {
-            throw new Error(message);
+        if (verifyResult.behind > 0) {
+            if (env.resolveFlag("ENFORCE_VERIFICATION")) {
+                throw new Error(message);
+            }
+            if (env.resolveFlag("INTERACTIVE")) {
+                console.error(`interactive mode for verify-up-to-date is not yet implemented`);
+                // TODO: ask if the user would like to merge in master & proceed if ok
+            }
         }
     });
     async function resolveDefaultVerifyTarget(remotes) {
