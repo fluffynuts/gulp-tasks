@@ -378,7 +378,7 @@ function onCoverageComplete(stream) {
 function findCaseInsensitiveUniqueEnvironmentVariables() {
   // naive: last wins
   return Object.keys(process.env).reduce(
-    (acc, cur) => {sub
+    (acc, cur) => {
       const existing = Object.keys(acc).find(k => k.toLowerCase() === cur);
       if (existing) {
         acc[existing] = process.env[cur];
