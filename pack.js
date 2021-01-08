@@ -3,13 +3,13 @@ const getToolsFolder = requireModule("get-tools-folder"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
   dotnetCli = require("gulp-dotnet-cli"),
   dotnetPack = dotnetCli.pack,
-  incrementPackageVersion = requireModule(
+  { incrementPackageVersion } = requireModule(
     "gulp-increment-nuget-package-version"
   ),
   resolveMasks = requireModule("resolve-masks"),
   env = requireModule("env"),
   fs = requireModule("fs"),
-  rewriteFile = requireModule("rewrite-file"),
+  { rewriteFile } = requireModule("rewrite-file"),
   del = require("del"),
   debug = require("debug")("pack"),
   gulp = requireModule("gulp"),
@@ -45,6 +45,12 @@ gulp.task(
   }
 );
 
+function removeBadEntities(buffer) {
+  const
+    s = buffer.toString().replace(/&#xD;/g, "");
+  return Buffer.from(s);
+}
+
 function packWithNuget(target, incrementVersion) {
   const nuspecs = resolveMasks(
     "PACK_INCLUDE_NUSPEC",
@@ -57,7 +63,7 @@ function packWithNuget(target, incrementVersion) {
   if (incrementVersion) {
     stream = stream
       .pipe(incrementPackageVersion())
-      .pipe(rewriteFile());
+      .pipe(rewriteFile(removeBadEntities));
   }
   return stream
     .pipe(pack())
@@ -81,7 +87,9 @@ function packWithDotnetCore(target, incrementVersion) {
       )
     );
   if (incrementVersion) {
-    stream = stream.pipe(incrementPackageVersion()).pipe(rewriteFile());
+    stream = stream
+      .pipe(incrementPackageVersion())
+      .pipe(rewriteFile(removeBadEntities));
   }
   return stream.pipe(
     dotnetPack({
