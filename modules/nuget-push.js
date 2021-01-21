@@ -58,8 +58,8 @@ async function nugetPush(
         console.warn(`ignoring duplicate package error: ${errors}`);
         return e.info;
       }
-      throw e;
     }
+    throw e;
   }
 }
 
