@@ -9,6 +9,9 @@ async function gitPush(
   quiet,
   where
 ) {
+  if (dryRun === undefined) {
+    dryRun = {};
+  }
   if (typeof dryRun === "object") {
     quiet = dryRun.quiet || false;
     where = dryRun.where || ".";

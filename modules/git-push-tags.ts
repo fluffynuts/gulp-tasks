@@ -5,6 +5,9 @@
     resolveGitRemote = requireModule<ResolveGitRemote>("resolve-git-remote");
 
   async function gitPushTags(dryRun?: boolean | GitPushOptions, where?: string): Promise<void> {
+    if (dryRun === undefined) {
+      dryRun = {};
+    }
     let quiet = false;
     if (typeof dryRun === "object") {
       where = dryRun.where || ".";
