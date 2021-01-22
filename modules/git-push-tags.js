@@ -2,6 +2,9 @@
 (function () {
     const Git = require("simple-git/promise"), gutil = requireModule("gulp-util"), resolveGitRemote = requireModule("resolve-git-remote");
     async function gitPushTags(dryRun, where) {
+        if (dryRun === undefined) {
+            dryRun = {};
+        }
         let quiet = false;
         if (typeof dryRun === "object") {
             where = dryRun.where || ".";
