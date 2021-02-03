@@ -146,25 +146,6 @@ function installGulpTaskDependencies() {
   return runNpmWith([ "install", "--save-dev" ].concat(deps));
 }
 
-function testBin(cmds, pkg) {
-  if (!Array.isArray(cmds)) {
-    cmds = [ cmds ];
-  }
-  cmds.forEach(cmd => {
-    const
-      expected = path.join("node_modules", ".bin", "cmd"),
-      modPath = path.join("node_modules", pkg || cmds[0]);
-    if (!fs.existsSync(expected)) {
-      if (fs.existsSync(modPath)) {
-        try {
-        } catch (e) {
-          fs.renameSync(modPath, `${modPath}.b0rked.${new Date().getTime()}`);
-        }
-      }
-    }
-  });
-}
-
 function bootstrapGulp() {
   const importNpmTasks = requireModule("import-npm-tasks");
   try {
@@ -210,10 +191,6 @@ function bootstrapGulp() {
 function runNpmWith(args) {
   const spawn = requireModule("spawn");
   const os = require("os");
-
-  testBin([ "run-p", "run-s" ], "npm-run-all");
-  testBin("cross-env");
-  testBin("gulp");
 
   return os.platform() === "win32"
     ? spawn("cmd", [ "/c", "npm" ].concat(args))
