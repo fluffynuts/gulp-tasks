@@ -26,10 +26,9 @@
     if (os.platform() === "darwin") {
       console.warn(
         chalk.redBright(
-          `up-to-date verification is temporarily disabled on OSX whilst I figure out an issue! Sorry!`
+          `up-to-date verification is experimental on OSX! Please report errors to davydm@gmail.com`
         )
       );
-      return Promise.resolve();
     }
     const
       remoteInfos = (await readAllGitRemotes()) || [],
