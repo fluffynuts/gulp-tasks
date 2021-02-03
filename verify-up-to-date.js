@@ -10,8 +10,7 @@
         // git on OSX is still inserting a pager somewhere, breaking this, so temporarily
         // disable this test
         if (os.platform() === "darwin") {
-            console.warn(chalk.redBright(`up-to-date verification is temporarily disabled on OSX whilst I figure out an issue! Sorry!`));
-            return Promise.resolve();
+            console.warn(chalk.redBright(`up-to-date verification is experimental on OSX! Please report errors to davydm@gmail.com`));
         }
         const remoteInfos = (await readAllGitRemotes()) || [], remotes = remoteInfos.map(r => r.name), mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes), verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
         if (!mainBranch) {
