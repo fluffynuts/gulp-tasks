@@ -2,7 +2,16 @@ const gulp = requireModule("gulp"),
   msbuild = require("gulp-msbuild"),
   env = requireModule("env");
 
-const myVars = ["BUILD_TOOLSVERSION", "BUILD_CONFIGURATION", "BUILD_VERBOSITY"];
+const myVars = [
+  "BUILD_TOOLSVERSION",
+  "BUILD_CONFIGURATION",
+  "BUILD_VERBOSITY",
+  "BUILD_MAX_CPU_COUNT",
+  "BUILD_ERROR_ON_FAIL",
+  "BUILD_PLATFORM",
+  "BUILD_ARCHITECTURE",
+  "BUILD_MSBUILD_NODE_REUSE"
+];
 env.associate(myVars, "clean");
 
 gulp.task(
@@ -15,7 +24,13 @@ gulp.task(
         targets: ["Clean"],
         configuration: env.resolve("BUILD_CONFIGURATION"),
         stdout: true,
-        verbosity: env.resolve("BUILD_VERBOSITY")
+        logCommand: true,
+        errorOnFail: env.resolveFlag("BUILD_ERROR_ON_FAIL"),
+        solutionPlatfor: env.resolve("BUILD_PLATFORM"),
+        architecture: env.resolve("BUILD_ARCHITECTURE"),
+        verbosity: env.resolve("BUILD_VERBOSITY"),
+        nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
+        maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT")
       })
     );
   }
