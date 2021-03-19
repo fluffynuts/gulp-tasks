@@ -15,7 +15,7 @@
             gutil.log.warn(gutil.colors.red("depreciation warning: options for git-push-tags should be sent via an object"));
         }
         where = where || ".";
-        const git = new Git(where), more = where ? ` (${where})` : "";
+        const git = new Git(where), more = where && where !== "." ? ` (${where})` : "";
         if (dryRun) {
             if (!quiet) {
                 gutil.log(gutil.colors.green(`dry run: should push tags now${more}...`));

@@ -23,7 +23,7 @@
     where = where || ".";
     const
       git = new Git(where),
-      more = where ? ` (${ where })` : ""
+      more = where && where !== "." ? ` (${ where })` : ""
     if (dryRun) {
       if (!quiet) {
         gutil.log(gutil.colors.green(`dry run: should push tags now${ more }...`));
