@@ -8,7 +8,16 @@ const
   gutil = requireModule("gulp-util"),
   spawnNuget = requireModule("spawn-nuget"),
   debug = require("debug")("gulp-nuget-pack"),
+  env = requireModule("env"),
   es = require("event-stream");
+
+env.associate([
+  "PACK_BASE_PATH",
+  "PACK_VERSION",
+  "PACK_INCLUDE_EMPTY_DIRECTORIES",
+  "PACK_INCLUDE_SYMBOLS",
+  "PACK_LEGACY_SYMBOLS"
+], "pack");
 
 async function grokNuspec(xmlString) {
   const pkg = await parseXml(xmlString),
@@ -42,6 +51,11 @@ function resolveRelativeBasePathOn(options, nuspecPath) {
   }
 }
 
+/**
+ * @param {PackOptions} options
+ * @param {string[]} args
+ * @returns void
+ */
 function addOptionalParameters(options, args) {
   if (options.basePath) {
     gutil.log(`packaging with base path: ${options.basePath}`);
@@ -54,15 +68,33 @@ function addOptionalParameters(options, args) {
     gutil.log(`Overriding package version with: ${options.version}`);
     args.splice(args.length, 0, "-version", options.version);
   }
+  if (options.symbols) {
+    args.splice(args.length, 0, "-Symbols");
+    if (!options.legacySymbols) {
+      args.splice(args.length, 0, "-SymbolPackageFormat", "snupkg");
+    }
+  }
 }
 
+/**
+ * @param {PackOptions} options
+ * @returns {ReadableStream}
+ */
 function gulpNugetPack(options) {
   options = Object.assign({}, options);
-  options.basePath = process.env.PACK_BASE_PATH || options.basePath;
-  options.excludeEmptyDirectories = process.env.PACK_INCLUDE_EMPTY_DIRECTORIES
-    ? false
-    : options.excludeEmptyDirectories === undefined;
-  options.version = options.version || process.env.PACK_VERSION;
+  options.basePath = env.resolve("PACK_BASE_PATH") || options.basePath;
+  if (options.excludeEmptyDirectories === undefined) {
+    options.excludeEmptyDirectories = resolve("PACK_INCLUDE_EMPTY_DIRECTORIES");
+  }
+  if (options.version === undefined) {
+    options.version = env.resolve("PACK_VERSION");
+  }
+  if (options.symbols === undefined) {
+    options.symbols = env.resolve("PACK_INCLUDE_SYMBOLS");
+  }
+  if (options.legacySymbols === undefined) {
+    options.legacySymbols = env.resolve("PACK_LEGACY_SYMBOLS");
+  }
 
   const
     tracked = temp.track(),
@@ -72,43 +104,43 @@ function gulpNugetPack(options) {
   return es.through(
     function write(file) {
       promise = promise.then(async () => {
-            options = await resolveAll(options);
-            resolveRelativeBasePathOn(options, file.path);
-            const { packageName, packageVersion } = await grokNuspec(
-                file.contents.toString()
-              ),
-              version = options.version || packageVersion,
-              expectedFileName = path.join(
-                workDir,
-                `${packageName}.${version}.nupkg`
-              ),
-              args = ["pack", file.path, "-OutputDirectory", workDir];
+        options = await resolveAll(options);
+        resolveRelativeBasePathOn(options, file.path);
+        const { packageName, packageVersion } = await grokNuspec(
+          file.contents.toString()
+          ),
+          version = options.version || packageVersion,
+          expectedFileName = path.join(
+            workDir,
+            `${packageName}.${version}.nupkg`
+          ),
+          args = [ "pack", file.path, "-OutputDirectory", workDir ];
 
-            await fs.ensureDirectoryExists(workDir);
-            addOptionalParameters(options, args);
+        await fs.ensureDirectoryExists(workDir);
+        addOptionalParameters(options, args);
 
-            await spawnNuget(args, {
-              stdout: () => {
-                /* suppress stdout: it's confusing anyway because it mentions temp files */
-              }
-            });
+        await spawnNuget(args, {
+          stdout: () => {
+            /* suppress stdout: it's confusing anyway because it mentions temp files */
+          }
+        });
 
-            const outputExists = await fs.exists(expectedFileName);
-            if (!outputExists) {
-              const err = `file not found: ${expectedFileName}`;
-              this.emit("error", err);
-              throw err;
-            } else {
-              logBuilt(expectedFileName);
-              this.emit(
-                "data",
-                new Vinyl({
-                  path: path.basename(expectedFileName),
-                  contents: await fs.readFile(expectedFileName)
-                })
-              );
-            }
-        })
+        const outputExists = await fs.exists(expectedFileName);
+        if (!outputExists) {
+          const err = `file not found: ${expectedFileName}`;
+          this.emit("error", err);
+          throw err;
+        } else {
+          logBuilt(expectedFileName);
+          this.emit(
+            "data",
+            new Vinyl({
+              path: path.basename(expectedFileName),
+              contents: await fs.readFile(expectedFileName)
+            })
+          );
+        }
+      });
     },
     async function end() {
       let errored = false;
@@ -131,4 +163,6 @@ function logBuilt(packagePath) {
   );
 }
 
-module.exports = gulpNugetPack;
+module.exports = {
+  pack: gulpNugetPack
+};

@@ -439,6 +439,34 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "PACK_BASE_PATH",
+    help: "Base path to pack nuget packages from"
+  });
+
+  env.register({
+    name: "PACK_INCLUDE_EMPTY_DIRECTORIES",
+    help: "Flag: include empty directories in the output nupkg",
+    default: false
+  });
+
+  env.register({
+    name: "PACK_VERSION",
+    help: "Override versioning in nuspec"
+  });
+
+  env.register({
+    name: "PACK_INCLUDE_SYMBOLS",
+    help: "Include symbols in the output (default is .snupkg)",
+    default: true
+  });
+
+  env.register({
+    name: "PACK_LEGACY_SYMBOLS",
+    help: "When including symbols, use legacy output",
+    default: false
+  })
+
+  env.register({
     name: "PACKAGE_JSON",
     help: "Path to package.json to be used for subsequent processing",
     default: "package.json"

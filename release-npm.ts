@@ -33,7 +33,12 @@
         // -> means this is an unknown (new) branch: we should push -u
         if (gitInfo.remotes.length) {
           try {
-            await git.pull(gitInfo.primaryRemote, branchInfo.current, { "--rebase": true });
+            await git.pull(
+              gitInfo.primaryRemote,
+              branchInfo.current, {
+                "--rebase": true,
+                "--autostash": true
+              });
           } catch (e) {
             const isNewBranch = (e.message || "").indexOf("couldn't find remote ref HEAD") > -1;
             if (!isNewBranch) {

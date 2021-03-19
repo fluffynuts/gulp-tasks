@@ -13,7 +13,7 @@ const getToolsFolder = requireModule("get-tools-folder"),
   del = require("del"),
   debug = require("debug")("pack"),
   gulp = requireModule("gulp"),
-  pack = requireModule("gulp-nuget-pack");
+  { pack } = requireModule("gulp-nuget-pack");
 
 env.associate(
   [
