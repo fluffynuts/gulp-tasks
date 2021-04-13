@@ -213,18 +213,6 @@ module.exports = function _env(env) {
     help: "Exclusion masks to add to the defaults"
   });
 
-  env.register({
-    name: "COVERAGE_INCLUDE_ASSEMBLIES",
-    help: ".NET assemblies to include in coverage testing",
-    default: defaultTestInclude
-  });
-
-  env.register({
-    name: "COVERAGE_EXCLUDE_ASSEMBLIES",
-    help: ".NET assemblies to exclude in coverage testing",
-    default: ""
-  });
-
   const defaultReportsPath = path.join("buildreports", "coverage.xml");
   env.register({
     name: "COVERAGE_XML",
