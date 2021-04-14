@@ -84,7 +84,7 @@ function gulpNugetPack(options) {
   options = Object.assign({}, options);
   options.basePath = env.resolve("PACK_BASE_PATH") || options.basePath;
   if (options.excludeEmptyDirectories === undefined) {
-    options.excludeEmptyDirectories = resolve("PACK_INCLUDE_EMPTY_DIRECTORIES");
+    options.excludeEmptyDirectories = env.resolve("PACK_INCLUDE_EMPTY_DIRECTORIES");
   }
   if (options.version === undefined) {
     options.version = env.resolve("PACK_VERSION");
