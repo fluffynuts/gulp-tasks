@@ -1,5 +1,5 @@
 "use strict";
-var
+const
   log = require("./log"),
   fs = require("fs"),
   path = require("path"),
@@ -8,6 +8,7 @@ var
   whichLib = require("which"),
   programFilesFolder = process.env["ProgramFiles(x86)"] || process.env["ProgramFiles"],
   getToolsFolder = require("./get-tools-folder"),
+  { ZarroError } = requireModule("zarro-error"),
   localAppDataFolder = process.env["LOCALAPPDATA"];
 
 function which(command) {
@@ -77,14 +78,14 @@ function compareVersionArrays(x, y) {
 }
 
 function findWrapper(func, name) {
-  var found = func();
+  const found = func();
   if (!found) {
     debug(`Can't find any installed ${name}`);
   }
   return found;
 }
 
-var findInstalledNUnit3 = function () {
+function findInstalledNUnit3() {
   if (!programFilesFolder) {
     return null;
   }
@@ -106,7 +107,7 @@ function tryToFindNUnit(options) {
 }
 
 function latestNUnit(options) {
-  var result = tryToFindNUnit(options);
+  const result = tryToFindNUnit(options);
   debug(`Using nunit runner: ${result || "NOT FOUND"}`);
   return result;
 }
@@ -120,8 +121,8 @@ function nunit2Finder(searchBin, options) {
 
 function searchForNunit(options) {
   options = options || {};
-  var isX86 = (options.x86 || ((options.platform || options.architecture) === "x86"));
-  var runner = isX86 ? "/bin/nunit-console-x86.exe" : "/bin/nunit-console.exe";
+  const isX86 = (options.x86 || ((options.platform || options.architecture) === "x86"));
+  const runner = isX86 ? "/bin/nunit-console-x86.exe" : "/bin/nunit-console.exe";
   return findWrapper(function () {
     return findInstalledNUnit3() || nunit2Finder(runner, options);
   }, "nunit-console runner");
@@ -144,16 +145,16 @@ function locateDotCover(options) {
 }
 
 function latestDotCover(options) {
-  var result = locateDotCover(options);
+  const result = locateDotCover(options);
   debug(`Using dotCover: ${result || "NOT FOUND"}`);
   return result;
 }
 
 function initialToolSearch(toolExe, environmentVariable) {
-  var fromEnvironment = process.env[environmentVariable];
+  const fromEnvironment = process.env[environmentVariable];
   if (fromEnvironment) {
     if (!fs.existsSync(fromEnvironment)) {
-      throw new Error(`${fromEnvironment} specified in environment variable ${environmentVariable} not found`);
+      throw new ZarroError(`${fromEnvironment} specified in environment variable ${environmentVariable} not found`);
     }
     return fromEnvironment;
   }
@@ -161,7 +162,7 @@ function initialToolSearch(toolExe, environmentVariable) {
 }
 
 function latestOpenCover() {
-  var result = initialToolSearch("OpenCover.Console.exe", "OPENCOVER");
+  const result = initialToolSearch("OpenCover.Console.exe", "OPENCOVER");
   debug(`Using opencover: ${result || "NOT FOUND"}`);
   return result;
 }

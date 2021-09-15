@@ -16,21 +16,14 @@ const
 	srcFile = "package.json",
 	srcPath = path.join(path.dirname(__dirname), srcFile),
 	targetPath = path.join(__dirname, "start", srcFile),
-	checkExists = function (p) {
-		if (fs.existsSync(p)) {
-			return true;
-		}
-		throw new Error(`Unable to find expected file at ${p}`);
-	},
-	filesExist = checkExists(srcPath) && checkExists(targetPath),
 	readJson = function (p) {
 		return JSON.parse(fs.readFileSync(p, ioOpts.encoding));
 	},
 	srcConfig = readJson(srcPath),
 	targetConfig = readJson(targetPath),
 	updateKeys = function (src, target) {
-		var updated = 0;
-		Object.keys(src).forEach(k => {
+    let updated = 0;
+    Object.keys(src).forEach(k => {
 			if (!target[k] || target[k] === src[k]) {
 				return;
 			}
@@ -59,8 +52,8 @@ const
 			return { success: false, error: e };
 		}
 	},
-	status = updated 
-						? rewrite(updated, targetPath, targetConfig) 
+	status = updated
+						? rewrite(updated, targetPath, targetConfig)
 						: { success: true, error: "No dependencies to update" },
 	logged = log(
 					status.success

@@ -1,4 +1,5 @@
 const
+  { ZarroError } = requireModule("zarro-error"),
   Git = require("simple-git/promise"),
   env = requireModule("env"),
   gutil = requireModule("gulp-util");
@@ -18,7 +19,7 @@ async function gitTag(tag, comment, where) {
     );
   }
   if (!(tag || "").trim()) {
-    throw new Error("No tag supplied!");
+    throw new ZarroError("No tag supplied!");
   }
   const more = where === "." ? "" : ` ${where}`
   comment = comment || `:bookmark: tagging${more} at ${tag}`;

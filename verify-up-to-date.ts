@@ -12,6 +12,7 @@
     readGitCommitDeltaCount = requireModule<ReadGitCommitDeltaCount>("read-git-commit-delta-count"),
     readLastFetchTime = requireModule<ReadLastFetchTime>("read-last-fetch-time"),
     gulp = requireModule<GulpWithHelp>("gulp"),
+    { ZarroError } = requireModule("zarro-error"),
     taskName = "verify-up-to-date";
 
   env.associate([
@@ -36,10 +37,10 @@
       mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes),
       verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
     if (!mainBranch) {
-      throw new Error(`Can't determine main branch (try setting env: GIT_MAIN_BRANCH)`);
+      throw new ZarroError(`Can't determine main branch (try setting env: GIT_MAIN_BRANCH)`);
     }
     if (!verifyBranch) {
-      throw new Error(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
+      throw new ZarroError(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
     }
     if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
       const
@@ -94,7 +95,7 @@
 
     if (verifyResult.behind > 0) {
       if (env.resolveFlag("ENFORCE_VERIFICATION")) {
-        throw new Error(message);
+        throw new ZarroError(message);
       }
       if (env.resolveFlag("INTERACTIVE")) {
         console.error(`interactive mode for verify-up-to-date is not yet implemented`);

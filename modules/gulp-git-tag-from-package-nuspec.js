@@ -5,11 +5,13 @@ const
   es = require("event-stream"),
   gitTag = requireModule("git-tag"),
   gitPushTags = requireModule("git-push-tags"),
-  gitPush = requireModule("git-push");
+  gitPush = requireModule("git-push"),
+  { ZarroError } = requireModule("zarro-error"),
   defaultOptions = {
     push: true,
     dryRun: false
   };
+
 module.exports = function gitTagFromPackageNuspec(options) {
   options = Object.assign({}, defaultOptions, options);
   const nuspecs = [];
@@ -20,10 +22,10 @@ module.exports = function gitTagFromPackageNuspec(options) {
     },
     async function end() {
       if (nuspecs.length == 0) {
-        throw new Error("no nuspecs found to tag from?");
+        throw new ZarroError("no nuspecs found to tag from?");
       }
       if (nuspecs.length > 1) {
-        throw new Error(
+        throw new ZarroError(
           `too many nuspecs! specify the one to use for creating a versioned tag!\n${nuspecs.join(
             "\n- "
           )}`

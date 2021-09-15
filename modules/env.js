@@ -9,6 +9,7 @@ if (!Array.prototype.flatMap) {
   }
 }
 const
+  { ZarroError } = requireModule("zarro-error"),
   chalk = require("ansi-colors"),
   debug = require("debug")("env"),
   registeredEnvironmentVariables = {},
@@ -51,7 +52,7 @@ function fallback(name, defaultValue) {
 function register(config) {
   let { name, help, tasks, overriddenBy, when } = config;
   if (toExport[name] !== undefined) {
-    throw new Error(`env var already registered: ${name}`);
+    throw new ZarroError(`env var already registered: ${name}`);
   }
   toExport[name] = name;
   // 'default' seems like a more natural name, but we can't use it for a var name...
@@ -328,7 +329,7 @@ function resolveNumber(name) {
   const value = resolveInternal(name),
     asNumber = parseInt(value, 10);
   if (isNaN(asNumber)) {
-    throw new Error(`${value} is not a valid numeric value for ${name}`);
+    throw new ZarroError(`${value} is not a valid numeric value for ${name}`);
   }
   logResolved(name, asNumber);
   return asNumber;
@@ -347,7 +348,7 @@ function resolveFlag(name) {
     logResolved(name, false);
     return false;
   }
-  throw new Error(`environmental flag not set and no default: ${name}`);
+  throw new ZarroError(`environmental flag not set and no default: ${name}`);
 }
 
 function explode(str, delimiter) {

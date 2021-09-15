@@ -1,4 +1,5 @@
 const
+  { ZarroError } = requireModule("zarro-error"),
   HttpDownloader = require("./http-downloader"),
   nugetUpdateSelf = require("./nuget-update-self"),
   logger = require("./log"),
@@ -75,7 +76,7 @@ function retry(fn, attempt, maxAttempts, wait) {
   }
   return fn().catch(e => {
     if (attempt >= maxAttempts) {
-      throw new Error(`${e} (giving up after ${attempt} attempts)`);
+      throw new ZarroError(`${e} (giving up after ${attempt} attempts)`);
     } else {
       return new Promise((resolve, reject) => {
         setTimeout(() => {

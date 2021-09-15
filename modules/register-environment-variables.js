@@ -3,7 +3,9 @@
 // for vars you're looking for (:
 // dev note: when updating here, don't forget to add to types.d.ts/global/Env
 
-const debug = require("debug")("env"),
+const
+  debug = require("debug")("env"),
+  { ZarroError } = requireModule("zarro-error"),
   os = require("os"),
   path = require("path"),
   getToolsFolder = requireModule("get-tools-folder");
@@ -68,7 +70,7 @@ module.exports = function _env(env) {
     const existingNumber = parseInt(existing, 10);
     const overrideNumber = parseInt(override, 10);
     if (isNaN(existingNumber) || isNaN(overrideNumber)) {
-      throw new Error(
+      throw new ZarroError(
         `Can't determine if override '${override}' should take precedence over '${existing}'`
       );
     }

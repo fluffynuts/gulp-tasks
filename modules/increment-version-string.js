@@ -1,7 +1,9 @@
+const { ZarroError } = requireModule("zarro-error");
+
 function testNaN(version) {
   Object.keys(version).forEach(k => {
     if (isNaN(version[k])) {
-      throw new Error(`${k} is not an integer`);
+      throw new ZarroError(`${k} is not an integer`);
     }
   });
 }

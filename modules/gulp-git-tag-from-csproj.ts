@@ -10,6 +10,7 @@ import { Stream } from "stream";
     gitTag = requireModule<GitTag>("git-tag"),
     gitPushTags = requireModule<GitPushTags>("git-push-tags"),
     gitPush = requireModule<GitPush>("git-push"),
+    { ZarroError } = requireModule("zarro-error"),
     defaultOptions = {
       push: true,
       dryRun: false
@@ -25,10 +26,10 @@ import { Stream } from "stream";
       },
       async function end(this: Stream) {
         if (csprojFiles.length == 0) {
-          throw new Error("no csproj files found to tag from?");
+          throw new ZarroError("no csproj files found to tag from?");
         }
         if (csprojFiles.length > 1) {
-          throw new Error(
+          throw new ZarroError(
             `too many csproj files! specify the one to use for creating a versioned tag!\n${ csprojFiles.join(
               "\n- "
             ) }`
@@ -63,7 +64,7 @@ import { Stream } from "stream";
       (g: any) => !!g.PackageVersion
     )[0];
     if (!packageVersionPropGroup || (packageVersionPropGroup.PackageVersion[0] || "").trim() === "") {
-      throw new Error(`No valid PackageVersion node found in any PropertyGroup within ${ fileName }`);
+      throw new ZarroError(`No valid PackageVersion node found in any PropertyGroup within ${ fileName }`);
     }
     return packageVersionPropGroup.PackageVersion[0].trim();
   }

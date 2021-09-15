@@ -5,9 +5,10 @@ const
   nugetRestore = requireModule("./gulp-nuget-restore"),
   promisify = requireModule("promisify"),
   resolveMasks = requireModule("resolve-masks"),
+  { ZarroError } = requireModule("zarro-error"),
   findLocalNuget = requireModule("find-local-nuget");
 
-const myTasks = ["nuget-restore"],
+const myTasks = [ "nuget-restore" ],
   myVars = [
     "DOTNET_CORE",
     "BUILD_INCLUDE",
@@ -19,7 +20,7 @@ env.associate(myVars, myTasks);
 gulp.task(
   "nuget-restore",
   "Restores all nuget packages in all solutions",
-  ["install-tools"],
+  [ "install-tools" ],
   async () => {
     const
       allDNC = env.resolveFlag("DOTNET_CORE"),
@@ -47,11 +48,10 @@ gulp.task(
           )
       ).then(() => {
         debug("nuget restore complete!");
-      })
-        .catch(e => {
-          console.error("nugetRestore errs:", e);
-          throw new Error(e);
-        });
+      }).catch(e => {
+        console.error("nugetRestore errs:", e);
+        throw new ZarroError(e);
+      });
     });
   }
 );

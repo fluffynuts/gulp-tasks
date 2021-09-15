@@ -1,5 +1,7 @@
 (function () {
-  const es = require("event-stream"),
+  const
+    es = require("event-stream"),
+    { ZarroError } = requireModule("zarro-error"),
     fs = requireModule<FileSystemUtils>("fs");
 
   function rewriteFile(transform?: ((s: Buffer) => Buffer)) {
@@ -7,11 +9,11 @@
       function write(this: any, file: any) {
         const fileName = file.history[0];
         if (!fileName || !fs.existsSync(fileName)) {
-          throw new Error(`Cannot rewrite ${fileName || "(no file name)"}`);
+          throw new ZarroError(`Cannot rewrite ${fileName || "(no file name)"}`);
         }
         let contents = file._contents;
         if (!contents) {
-          throw new Error(`Cannot read contents of ${fileName}`);
+          throw new ZarroError(`Cannot read contents of ${fileName}`);
         }
         if (transform) {
           contents = transform(contents);

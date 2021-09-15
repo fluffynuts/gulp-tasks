@@ -1,7 +1,9 @@
 const
-    debug = require("debug")("promisify-stream"),
-    stream = require("stream"),
-    promisifyFunction = require("./promisify-function");
+  debug = require("debug")("promisify-stream"),
+  stream = require("stream"),
+  { ZarroError } = requireModule("zarro-error"),
+  promisifyFunction = require("./promisify-function");
+
 function isStream(o) {
   return o instanceof stream.Stream;
 }
@@ -19,28 +21,32 @@ function looksLikePromise(o) {
 }
 
 function isFunction(o) {
-  return typeof(o) === "function";
+  return typeof (o) === "function";
 }
 
 function passThrough(p) {
   return p;
 }
 
-function noop() { }
+function noop() {
+}
 
 function promisifyStream(s) {
   return new Promise((resolve, reject) => {
     var i = 1;
+
     function runResolve() {
       debug("promisified stream ends successfully - resolving promise");
       reject = noop;
       resolve.apply(null, Array.from(arguments));
     }
+
     function runReject() {
       debug("promisified stream errors - rejecting promise");
       resolve = noop;
       reject.apply(null, Array.from(arguments));
     }
+
     s.on("error", runReject);
     s.on("end", runResolve);
     s.on("finish", runResolve);
@@ -55,13 +61,13 @@ const strategies = [
   [ looksLikeStream, promisifyStream ]
 ];
 
-module.exports = function(item) {
+module.exports = function (item) {
   const args = Array.from(arguments);
   const strategy = strategies.reduce((acc, cur) => {
     return acc || (cur[0](item) ? cur[1] : null);
   }, null);
   if (!strategy) {
-    throw new Error(`Unable to promisify ${item}: dunno what to do with it, squire!`);
+    throw new ZarroError(`Unable to promisify ${item}: dunno what to do with it, squire!`);
   }
   return strategy.apply(null, args);
 };

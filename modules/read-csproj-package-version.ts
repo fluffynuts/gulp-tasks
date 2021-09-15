@@ -2,6 +2,7 @@ import { tryReadVersionFrom } from "./version-reading-shared";
 
 (function() {
   const
+    { ZarroError } = requireModule("zarro-error"),
     parseXml = requireModule<ParseXml>("parse-xml"),
     readTextFile = requireModule<ReadTextFile>("read-text-file");
 
@@ -15,7 +16,7 @@ import { tryReadVersionFrom } from "./version-reading-shared";
         propertyGroups = doc.Project.PropertyGroup;
       return tryReadVersionFrom(propertyGroups, "PackageVersion");
     } catch (e) {
-      throw new Error(
+      throw new ZarroError(
         `Unable to read any xml node Project/PropertyGroup/PackageVersion in file ${ pathToCsProj }`
       );
     }

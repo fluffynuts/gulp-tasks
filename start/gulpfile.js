@@ -14,9 +14,9 @@ const
 
 function tryFindGulpTasks() {
   const attempts = [
-      path.join(__dirname, "gulp-tasks"),
-      path.join(__dirname, "..", "..", "gulp-tasks")
-    ];
+    path.join(__dirname, "gulp-tasks"),
+    path.join(__dirname, "..", "..", "gulp-tasks")
+  ];
   for (let attempt of attempts) {
     try {
       const st = fs.statSync(attempt);
@@ -118,9 +118,9 @@ function initializeNpm() {
   return runNpmWith([ "init" ])
     .then(() => {
       if (os.platform() === "win32") {
-        spawn("cmd", [ "/c", "node", process.argv[1] ])
+        spawn("cmd", [ "/c", "node", process.argv[1] ]);
       } else {
-        spawn("node", [ process.argv[1] ])
+        spawn("node", [ process.argv[1] ]);
       }
     });
 }
@@ -172,13 +172,19 @@ function bootstrapGulp() {
   }
 
   function shouldDump(e) {
-    return process.env.ALWAYS_DUMP_GULP_ERRORS ||
+    return isZarroError(e) ||
+      process.env.ALWAYS_DUMP_GULP_ERRORS ||
       process.env.DEBUG === "*" ||
       probablyNotReportedByGulp(e);
   }
 
+  function isZarroError(e) {
+    return e && e.constructor.name === "ZarroError";
+  }
+
   function probablyNotReportedByGulp(e) {
-    const message = (e || "").toString().toLowerCase();
+    const
+      message = (e || "").toString().toLowerCase();
     return [ "cannot find module", "referenceerror", "syntaxerror" ].reduce(
       (acc, cur) => {
         return acc || message.indexOf(cur) > -1;

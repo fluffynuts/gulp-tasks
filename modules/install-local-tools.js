@@ -8,6 +8,7 @@ const resolveNuget = require("./resolve-nuget"),
   getToolsFolder = require("./get-tools-folder"),
   nuget = require("./nuget"),
   ensureFolderExists = require("./ensure-folder-exists"),
+  { ZarroError } = requireModule("zarro-error"),
   del = require("del");
 
 function cleanFoldersFrom(toolsFolder) {
@@ -72,7 +73,7 @@ let
 module.exports = {
   install: (requiredTools, overrideToolsFolder) => {
     if (!requiredTools) {
-      throw new Error("No required tools set");
+      throw new ZarroError("No required tools set");
     }
     if (!Array.isArray(requiredTools)) {
       requiredTools = [requiredTools];

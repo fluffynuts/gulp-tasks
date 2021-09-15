@@ -1,4 +1,5 @@
 const
+  { ZarroError } = requireModule("zarro-error"),
   promisify = require("./promisify-function"),
   path = require("path"),
   fs = require("fs");
@@ -62,7 +63,7 @@ const exported = {
       if (pathExists) {
         const st = await stat(test);
         if (!st.isDirectory()) {
-          throw new Error(`${test} exists but is not a directory`);
+          throw new ZarroError(`${test} exists but is not a directory`);
         }
         continue;
       }

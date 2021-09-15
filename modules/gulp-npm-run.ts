@@ -8,6 +8,7 @@
     exec = require("./exec") as Exec,
     path = require("path"),
     chalk = require("ansi-colors"),
+    { ZarroError } = requireModule("zarro-error"),
     findNpmBase = require("./find-npm-base");
 
   function gulpNpmRun(gulp: GulpWithHelp) {
@@ -43,7 +44,7 @@
       const contents = readFileSync(packageIndexPath, { encoding: "utf8" });
       return JSON.parse(contents);
     } catch (e) {
-      throw new Error(`Unable to read package.json at ${packageIndexPath}`);
+      throw new ZarroError(`Unable to read package.json at ${packageIndexPath}`);
     }
   }
 

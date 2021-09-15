@@ -12,6 +12,7 @@ const
   findNpmBase = require("./find-npm-base"),
   quoteIfRequired = require("./quote-if-required"),
   dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet",
+  { ZarroError } = requireModule("zarro-error"),
   nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
 
 env.associate("USE_SYSTEM_NUGET", [ "install-default-tools", "nuget-restore" ]);
@@ -91,9 +92,9 @@ function resolveNuget(
     return undefined;
   }
   if (nugetPath) {
-    throw `configured restore tool: "${nugetPath}" not found`;
+    throw new ZarroError(`configured restore tool: "${nugetPath}" not found`);
   }
-  throw `${config.localNuget} not found! Suggestion: add "get-local-nuget" to your pipeline`;
+  throw new ZarroError(`${config.localNuget} not found! Suggestion: add "get-local-nuget" to your pipeline`);
 }
 
 function findDotNetIfRequired() {
@@ -115,7 +116,7 @@ function resolveMonoScriptIfRequiredFor(nugetPath) {
   }
   const mono = which.sync("mono", { nothrow: true });
   if (!mono) {
-    throw new Error("MONO is required to run nuget restore on this platform");
+    throw new ZarroError("MONO is required to run nuget restore on this platform");
   }
   const baseFolder = findNpmBase();
   const script = `#!/bin/sh

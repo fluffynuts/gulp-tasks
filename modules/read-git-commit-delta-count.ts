@@ -3,7 +3,9 @@
     path = require("path"),
     env = requireModule<Env>("env"),
     debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")),
+    { ZarroError } = requireModule("zarro-error"),
     exec = requireModule<Exec>("exec");
+
   module.exports = async function findGitCommitDeltaCount(
     main: string,
     branched: string
@@ -21,7 +23,7 @@
         .filter(l => !!l),
       matches = lines[0].match(/(\d*)\s*(\d*)/);
     if (matches === null) {
-      throw new Error(`failed to read git rev-list at ${process.cwd()}`);
+      throw new ZarroError(`failed to read git rev-list at ${process.cwd()}`);
     }
     return {
       behind: parseInt(matches[1], 10),

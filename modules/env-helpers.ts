@@ -1,4 +1,6 @@
 (function() {
+  const { ZarroError } = requireModule("zarro-error");
+
   function env(name: string, fallback?: string): string {
     const value = process.env[name];
     if (value !== undefined) {
@@ -8,7 +10,7 @@
     if (argCount > 1) {
       return fallback as string;
     }
-    throw new Error(
+    throw new ZarroError(
       `environment variable '${ name }' is not defined and no fallback provided`
     );
   }
@@ -21,7 +23,7 @@
     if (!isNaN(parsed)) {
       return parsed;
     }
-    throw new Error(
+    throw new ZarroError(
       `environment variable '${ name }' is invalid: expected numeric value but found '${ value }'`
     );
   }
@@ -51,8 +53,8 @@
     if (falsey.indexOf(value?.toString()) > -1) {
       return false;
     }
-    throw new Error(
-      `environment variable '${name}' is invalid: could not parse '${value}' as a boolen value`
+    throw new ZarroError(
+      `environment variable '${name}' is invalid: could not parse '${value}' as a boolean value`
     );
   }
 

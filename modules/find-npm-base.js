@@ -1,4 +1,5 @@
 const
+  { ZarroError } = require("zarro-error"),
   path = require("path"),
   fs = requireModule("fs");
 let cached;
@@ -8,7 +9,7 @@ function findClosestPackageJsonFolder() {
   while (inNodeModulesFolder(current) || !hasPackageJson(current)) {
     const next = path.dirname(current);
     if (next === current) {
-      throw new Error(`Can't find a package.json, traversing up from ${__dirname}`);
+      throw new ZarroError(`Can't find a package.json, traversing up from ${__dirname}`);
     }
     current = next;
   }
