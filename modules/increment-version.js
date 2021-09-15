@@ -1,4 +1,5 @@
 "use strict";
+const { ZarroError } = requireModule("zarro-error");
 function zeroFrom(parts, startIndex) {
     for (let i = startIndex; i < parts.length; i++) {
         parts[i] = 0;
@@ -6,7 +7,7 @@ function zeroFrom(parts, startIndex) {
 }
 function incrementAt(parts, index, incrementBy) {
     if (parts[index] === undefined) {
-        throw new Error(`version '${parts.join(".")}' has no value at position ${index}`);
+        throw new ZarroError(`version '${parts.join(".")}' has no value at position ${index}`);
     }
     parts[index] += incrementBy;
 }
@@ -19,7 +20,7 @@ module.exports = function incrementVersion(version, strategy, zeroLowerOrder, in
     const parts = version.split(".").map(i => parseInt(i));
     let toIncrement = incrementLookup[(strategy || "").toLowerCase()];
     if (toIncrement === undefined) {
-        throw new Error(`Unknown version increment strategy: ${strategy}\n try one of 'major', 'minor' or 'patch'`);
+        throw new ZarroError(`Unknown version increment strategy: ${strategy}\n try one of 'major', 'minor' or 'patch'`);
     }
     incrementAt(parts, toIncrement, incrementBy);
     if (zeroLowerOrder) {

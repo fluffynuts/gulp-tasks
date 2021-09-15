@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const PLUGIN_NAME = __filename.replace(/\.js$/, ""), gutil = requireModule("gulp-util"), loadXmlFile = requireModule("load-xml-file"), es = require("event-stream"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), defaultOptions = {
+    const PLUGIN_NAME = __filename.replace(/\.js$/, ""), gutil = requireModule("gulp-util"), loadXmlFile = requireModule("load-xml-file"), es = require("event-stream"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), { ZarroError } = requireModule("zarro-error"), defaultOptions = {
         push: true,
         dryRun: false
     };
@@ -13,10 +13,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
             this.emit("data", file);
         }, async function end() {
             if (csprojFiles.length == 0) {
-                throw new Error("no csproj files found to tag from?");
+                throw new ZarroError("no csproj files found to tag from?");
             }
             if (csprojFiles.length > 1) {
-                throw new Error(`too many csproj files! specify the one to use for creating a versioned tag!\n${csprojFiles.join("\n- ")}`);
+                throw new ZarroError(`too many csproj files! specify the one to use for creating a versioned tag!\n${csprojFiles.join("\n- ")}`);
             }
             const xml = await loadXmlFile(csprojFiles[0]), version = findPackageVersion(xml, csprojFiles[0]);
             if (opts.dryRun) {
@@ -43,7 +43,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     function findPackageVersion(xml, fileName) {
         const packageVersionPropGroup = xml.Project.PropertyGroup.filter((g) => !!g.PackageVersion)[0];
         if (!packageVersionPropGroup || (packageVersionPropGroup.PackageVersion[0] || "").trim() === "") {
-            throw new Error(`No valid PackageVersion node found in any PropertyGroup within ${fileName}`);
+            throw new ZarroError(`No valid PackageVersion node found in any PropertyGroup within ${fileName}`);
         }
         return packageVersionPropGroup.PackageVersion[0].trim();
     }

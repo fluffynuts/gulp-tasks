@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const gutil = requireModule("gulp-util"), debug = require("debug")("gulp-increment-nuget-package-version"), editXml = require("gulp-edit-xml"), incrementVersion = require("./increment-version-string"), xmlOpts = {
+    const gutil = requireModule("gulp-util"), debug = require("debug")("gulp-increment-nuget-package-version"), editXml = require("gulp-edit-xml"), incrementVersion = require("./increment-version-string"), { ZarroError } = requireModule("zarro-error"), xmlOpts = {
         builderOptions: {
             renderOpts: {
                 pretty: true
@@ -22,7 +22,7 @@
         let packageName = "(unknown)";
         if (!packageIdPropGroup) {
             if (!file) {
-                throw new Error([
+                throw new ZarroError([
                     `the installed version of gulp-edit-xml does not pass in the file being operated on.`,
                     `either:`,
                     `- update to the latest version`,
@@ -78,7 +78,7 @@
             else if (xml.Project) {
                 return incrementPackageVersionInCsProj(xml, file);
             }
-            throw new Error(`Don't know how to increment package version in document:\n\n${JSON.stringify(xml)}`);
+            throw new ZarroError(`Don't know how to increment package version in document:\n\n${JSON.stringify(xml)}`);
         }, xmlOpts);
     }
     module.exports = {

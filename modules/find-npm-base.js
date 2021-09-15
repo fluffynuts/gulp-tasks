@@ -1,5 +1,5 @@
 const
-  { ZarroError } = require("zarro-error"),
+  { ZarroError } = requireModule("zarro-error"),
   path = require("path"),
   fs = requireModule("fs");
 let cached;
