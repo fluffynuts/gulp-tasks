@@ -2,13 +2,11 @@ const
   fs = require("fs"),
   debug = require("debug")("ensure-folder-exists")
 
-module.exports = function ensureFolderExists(folder) {
+function ensureFolderExists(folder) {
   debug(`Ensuring existence of tools folder "${folder}"`);
   return new Promise((resolve, reject) => {
     try {
-      if (!fs.existsSync(folder)) {
-        fs.mkdirSync(folder);
-      }
+      ensureFolderExistsSync(folder);
       debug(`${folder} exists!`);
       resolve();
     } catch (e) {
@@ -19,3 +17,12 @@ module.exports = function ensureFolderExists(folder) {
   });
 }
 
+function ensureFolderExistsSync(folder) {
+  if (!fs.existsSync(folder)) {
+    fs.mkdirSync(folder);
+  }
+}
+
+ensureFolderExists.sync = ensureFolderExistsSync;
+
+module.exports = ensureFolderExists;

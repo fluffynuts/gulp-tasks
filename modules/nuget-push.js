@@ -17,7 +17,8 @@ function isDotnetCore(binaryPath) {
 async function nugetPush(
   packageFile,
   sourceName,
-  options) {
+  options
+) {
   options = options || {};
   options.suppressDuplicateError = options.suppressDuplicateError === undefined
     ? env.resolveFlag("NUGET_IGNORE_DUPLICATE_PACKAGES")

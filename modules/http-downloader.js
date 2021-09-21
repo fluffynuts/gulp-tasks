@@ -1,7 +1,7 @@
-var
+const
   fs = require('fs'),
   path = require("path"),
-  ensureFolderExists = require("./ensure-folder-exists"),
+  ensureFolderExists = require("./ensure-folder-exists").sync,
   request = require('request'),
   debug = require('debug')('http-downloader');
 
