@@ -49,8 +49,10 @@
             await git.add(":/");
             await git.commit(`:bookmark: bump package version to ${version}`);
             await gitTag({ tag });
-            await gitPush(dryRun);
-            await gitPushTags(dryRun);
+            await Promise.all([
+                gitPush(dryRun),
+                gitPushTags(dryRun)
+            ]);
         }
     });
 })();
