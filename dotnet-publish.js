@@ -1,4 +1,5 @@
-const { publish } = require("gulp-dotnet-cli"),
+const
+  { publish } = require("gulp-dotnet-cli"),
   env = requireModule("env"),
   gulp = requireModule("gulp");
 
@@ -9,7 +10,7 @@ gulp.task(
     const publishOpts = {
       configuration: env.resolve("DOTNET_PUBLISH_BUILD_CONFIGURATION", "BUILD_CONFIGURATION"),
       runtime: env.resolve("DOTNET_PUBLISH_RUNTIMES"),
-      output: env.resolve("OUTPUT")
+      output: env.resolve("OUTPUT"),
     };
 
     const testInclusionsInverted = env.resolveArray("TEST_INCLUDE")
