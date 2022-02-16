@@ -14,7 +14,7 @@ gulp.task(
     };
 
     const testInclusionsInverted = env.resolveArray("TEST_INCLUDE")
-    .map(p => `!${p}.csproj`)
+      .map(p => `!${p}.csproj`);
     return gulp
       .src(["**/*.csproj"].concat(testInclusionsInverted))
       .pipe(
