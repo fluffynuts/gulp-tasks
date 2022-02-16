@@ -26,7 +26,7 @@ gulp.task(
         stdout: true,
         logCommand: true,
         errorOnFail: env.resolveFlag("BUILD_FAIL_ON_ERROR"),
-        solutionPlatfor: env.resolve("BUILD_PLATFORM"),
+        solutionPlatform: env.resolve("BUILD_PLATFORM"),
         architecture: env.resolve("BUILD_ARCHITECTURE"),
         verbosity: env.resolve("BUILD_VERBOSITY"),
         nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
