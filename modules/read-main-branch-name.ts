@@ -2,9 +2,8 @@
   const
     os = require("os"),
     chalk = require("ansi-colors"),
-    Git = require("simple-git/promise"),
+    gitFactory = require("simple-git"),
     readGitRemote = requireModule<ReadGitRemote>("read-git-remote"),
-    env = requireModule<Env>("env"),
     exec = requireModule<Exec>("exec");
 
   module.exports = async function readMainBranchName(): Promise<string | undefined> {
@@ -25,7 +24,7 @@
           "default"
         ],
         probableRemote = await readGitRemote(),
-        git = new Git(),
+        git = gitFactory(),
         branchesResult = await git.branch(["-a"]),
         allBranches = new Set(branchesResult.all);
       for (const branch of possibles) {

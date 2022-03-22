@@ -1,6 +1,6 @@
 (function() {
   const
-    Git = require("simple-git/promise"),
+    gitFactory = require("simple-git"),
     spawn = requireModule<Spawn>("spawn"),
     gulp = requireModule<GulpWithHelp>("gulp"),
     gutil = requireModule<GulpUtil>("gulp-util"),
@@ -20,7 +20,7 @@
 
     const
       dryRun = env.resolveFlag("DRY_RUN"),
-      git = new Git(),
+      git = gitFactory(),
       version = await readPackageVersion(),
       isBeta = env.resolveFlag("BETA"),
       tag = `v${ version }`,

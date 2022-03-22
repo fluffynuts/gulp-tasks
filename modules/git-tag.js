@@ -1,6 +1,6 @@
 const
   { ZarroError } = requireModule("zarro-error"),
-  Git = require("simple-git/promise"),
+  gitFactory = require("simple-git"),
   env = requireModule("env"),
   gutil = requireModule("gulp-util");
 
@@ -27,7 +27,7 @@ async function gitTag(tag, comment, where) {
   if (dryRun) {
     gutil.log(gutil.colors.green(`dry run: would tag${more} at ${tag} with comment: ${comment}`));
   } else {
-    const git = new Git(where);
+    const git = gitFactory(where);
     gutil.log(gutil.colors.cyan(`Tagging${more} at: "${tag}"`));
     await git.addAnnotatedTag(tag, comment);
   }

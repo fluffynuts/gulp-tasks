@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const os = require("os"), chalk = require("ansi-colors"), log = requireModule("log"), env = requireModule("env"), Git = require("simple-git/promise"), failAfter = requireModule("fail-after"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), { ZarroError } = requireModule("zarro-error"), taskName = "verify-up-to-date";
+    const os = require("os"), chalk = require("ansi-colors"), log = requireModule("log"), env = requireModule("env"), gitFactory = require("simple-git"), failAfter = requireModule("fail-after"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), { ZarroError } = requireModule("zarro-error"), taskName = "verify-up-to-date";
     env.associate([
         "SKIP_FETCH_ON_VERIFY",
         "ENFORCE_VERIFICATION",
@@ -27,7 +27,7 @@
             }
             if (!recentEnough) {
                 log.info(`${taskName} :: fetching all remotes...`);
-                const git = new Git(), timeout = env.resolveNumber("GIT_FETCH_TIMEOUT");
+                const git = gitFactory(), timeout = env.resolveNumber("GIT_FETCH_TIMEOUT");
                 try {
                     const fail = failAfter(timeout);
                     await Promise.race([

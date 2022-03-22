@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const os = require("os"), chalk = require("ansi-colors"), Git = require("simple-git/promise"), readGitRemote = requireModule("read-git-remote"), env = requireModule("env"), exec = requireModule("exec");
+    const os = require("os"), chalk = require("ansi-colors"), gitFactory = require("simple-git"), readGitRemote = requireModule("read-git-remote"), exec = requireModule("exec");
     module.exports = async function readMainBranchName() {
         const all = await listBranchesRaw("*"), headRef = all.map(b => {
             const match = b.match(/HEAD -> (.*)/);
@@ -15,7 +15,7 @@
                 "master",
                 "main",
                 "default"
-            ], probableRemote = await readGitRemote(), git = new Git(), branchesResult = await git.branch(["-a"]), allBranches = new Set(branchesResult.all);
+            ], probableRemote = await readGitRemote(), git = gitFactory(), branchesResult = await git.branch(["-a"]), allBranches = new Set(branchesResult.all);
             for (const branch of possibles) {
                 const test = `remotes/${probableRemote}/${branch}`;
                 if (allBranches.has(test)) {

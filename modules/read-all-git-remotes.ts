@@ -2,14 +2,14 @@ import { RemoteWithRefs } from "simple-git";
 
 (function() {
   const
-    Git = require("simple-git/promise"),
+    gitFactory = require("simple-git"),
     safeGit = requireModule<SafeGit>("safe-git");
   module.exports = async function readAllRemotes(at?: string): Promise<GitRemote[]> {
     return safeGit(async () => {
       // technically, a remote can have different urls for fetch and push,
       // but that's an edge-case which just complicates things
       const
-        git = new Git(at ?? "."),
+        git = gitFactory(at ?? "."),
         result = await git.getRemotes(true);
       return result.map((r: RemoteWithRefs) => {
         const

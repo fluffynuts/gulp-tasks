@@ -1,6 +1,6 @@
 (function() {
   const
-    Git = require("simple-git/promise"),
+    gitFactory = require("simple-git"),
     gutil = requireModule<GulpUtil>("gulp-util"),
     resolveGitRemote = requireModule<ResolveGitRemote>("resolve-git-remote");
 
@@ -22,7 +22,7 @@
     }
     where = where || ".";
     const
-      git = new Git(where),
+      git = gitFactory(where),
       more = where && where !== "." ? ` (${ where })` : ""
     if (dryRun) {
       if (!quiet) {

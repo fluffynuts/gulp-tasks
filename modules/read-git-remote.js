@@ -1,8 +1,8 @@
 "use strict";
 (function () {
-    const safeGit = requireModule("safe-git"), Git = require("simple-git/promise");
+    const safeGit = requireModule("safe-git"), gitFactory = require("simple-git");
     module.exports = async function readGitRemote(at) {
-        const git = new Git(at || ".");
+        const git = gitFactory(at || ".");
         git._silentLogging = true;
         const all = await safeGit(() => git.getRemotes(true), []), first = all[0];
         if (first === undefined) {

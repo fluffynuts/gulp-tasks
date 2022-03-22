@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const Git = require("simple-git/promise"), safeGit = requireModule("safe-git");
+    const gitFactory = require("simple-git"), safeGit = requireModule("safe-git");
     module.exports = async function readAllRemotes(at) {
         return safeGit(async () => {
             // technically, a remote can have different urls for fetch and push,
             // but that's an edge-case which just complicates things
-            const git = new Git(at !== null && at !== void 0 ? at : "."), result = await git.getRemotes(true);
+            const git = gitFactory(at !== null && at !== void 0 ? at : "."), result = await git.getRemotes(true);
             return result.map((r) => {
                 const url = r.refs.fetch || r.refs.push, usage = resolveUsage(!!r.refs.fetch, !!r.refs.push), name = r.name;
                 return {

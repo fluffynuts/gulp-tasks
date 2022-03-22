@@ -1,12 +1,12 @@
 (function() {
   const
     safeGit = requireModule<SafeGit>("safe-git"),
-    Git = require("simple-git/promise");
+    gitFactory = require("simple-git");
 
   module.exports = async function readCurrentBranch(at?: string): Promise<string | undefined> {
     return safeGit(async () => {
       const
-        git = new Git(at ?? "."),
+        git = gitFactory(at ?? "."),
         branchInfo = await git.branch();
       return branchInfo.current === ""
         ? undefined
