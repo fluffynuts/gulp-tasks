@@ -1,4 +1,4 @@
-import { RemoteWithRefs } from "simple-git/typings/response";
+import { RemoteWithRefs } from "simple-git";
 
 (function() {
   const
