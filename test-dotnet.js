@@ -179,7 +179,7 @@ async function testAsDotnetCore(configuration, testProjects) {
           verbosity: env.resolve("BUILD_VERBOSITY"),
           configuration,
           noBuild: true,
-          logger: `console;${env.resolve("TEST_VERBOSITY")}`
+          logger: `console;verbosity=${env.resolve("TEST_VERBOSITY")}`
         })
       )
     );
