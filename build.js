@@ -48,19 +48,19 @@ gulp.task(
 gulp.task("quick-build", "Quick build without pre-cursors", tryBuild);
 
 async function tryBuild() {
-  let attempts = env.resolveNumber("BUILD_RETRIES") + 1;
-  if (attempts < 0) {
-    attempts = 1;
+  let totalAttempts = env.resolveNumber("BUILD_RETRIES") + 1;
+  if (totalAttempts < 0) {
+    totalAttempts = 1;
   }
-  const originalAttempts = attempts;
+  const totalRetries = totalAttempts - 1;
 
-  while (attempts-- > 0) {
+  while (totalAttempts-- > 0) {
     try {
       await build();
     } catch (e) {
-      if (attempts > 0) {
+      if (totalAttempts > 0) {
         console.error(chalk.red(`Build fails: ${e}`));
-        console.log(`Retrying (${originalAttempts - attempts} / ${originalAttempts})`);
+        console.log(chalk.green(`Retrying (${totalRetries - totalAttempts} / ${totalRetries })`));
       } else {
         throw e;
       }
