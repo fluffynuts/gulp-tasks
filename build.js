@@ -48,11 +48,14 @@ gulp.task(
 gulp.task("quick-build", "Quick build without pre-cursors", tryBuild);
 
 async function tryBuild() {
-  let totalAttempts = env.resolveNumber("BUILD_RETRIES") + 1;
+  const totalRetries = env.resolveNumber("BUILD_RETRIES");
+
+  // always attempt at least once
+  let totalAttempts = totalRetries + 1;
   if (totalAttempts < 0) {
     totalAttempts = 1;
   }
-  const totalRetries = totalAttempts - 1;
+
   let retryCount = 0;
 
   while (totalAttempts-- > 0) {
@@ -60,8 +63,8 @@ async function tryBuild() {
       await build();
     } catch (e) {
       if (totalAttempts > 0) {
-        console.error(chalk.red(`Build fails: ${e}`));
-        console.log(chalk.green(`Retrying (${++retryCount} / ${totalRetries })`));
+        console.error(chalk.red(`Build fails: ${ e }`));
+        console.log(chalk.green(`Retrying (${ ++retryCount } / ${ totalRetries })`));
       } else {
         if (totalRetries < 1) {
           console.log(chalk.magentaBright(`Build fails! If the error looks transient, I suggest setting the environment variable 'BUILD_RETRIES' to some number > 0 🔨.`));
@@ -139,11 +142,18 @@ function buildAsStream(solutions) {
     nologo: false,
     logCommand: true,
     nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
-    maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT")
+    maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT"),
   };
 
   if (env.resolveFlag("BUILD_SHOW_INFO")) {
-    logConfig(config, {
+    const
+      buildRetries = env.resolveNumber("BUILD_RETRIES"),
+      retryMessage = buildRetries > 0 ? `yes (${buildRetries})` : `no`;
+
+    logConfig({
+      ...config,
+      buildRetries: retryMessage
+    }, {
       toolsVersion: "Tools version",
       targets: "Build targets",
       configuration: "Build configuration",
@@ -154,6 +164,7 @@ function buildAsStream(solutions) {
       architecture: "Build architecture",
       nodeReuse: "Re-use MSBUILD nodes",
       maxcpucount: "Max CPUs to use for build",
+      buildRetries: "Retry builds"
     });
   }
   return solutions
