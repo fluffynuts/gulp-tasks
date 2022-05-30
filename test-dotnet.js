@@ -176,9 +176,10 @@ async function testAsDotnetCore(configuration, testProjects) {
     return promisifyStream(
       gulp.src(testProjects).pipe(
         test({
-          verbosity: env.resolve("TEST_VERBOSITY"),
+          verbosity: env.resolve("BUILD_VERBOSITY"),
           configuration,
-          noBuild: true
+          noBuild: true,
+          logger: `console;${env.resolve("TEST_VERBOSITY")}`
         })
       )
     );
