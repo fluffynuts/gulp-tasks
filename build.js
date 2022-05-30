@@ -53,6 +53,7 @@ async function tryBuild() {
     totalAttempts = 1;
   }
   const totalRetries = totalAttempts - 1;
+  let retryCount = 0;
 
   while (totalAttempts-- > 0) {
     try {
@@ -60,8 +61,11 @@ async function tryBuild() {
     } catch (e) {
       if (totalAttempts > 0) {
         console.error(chalk.red(`Build fails: ${e}`));
-        console.log(chalk.green(`Retrying (${totalRetries - totalAttempts} / ${totalRetries })`));
+        console.log(chalk.green(`Retrying (${++retryCount} / ${totalRetries })`));
       } else {
+        if (totalRetries < 1) {
+          console.log(chalk.magentaBright(`Build fails! If the error looks transient, I suggest setting the environment variable 'BUILD_RETRIES' to some number > 0 🔨.`));
+        }
         throw e;
       }
     }
