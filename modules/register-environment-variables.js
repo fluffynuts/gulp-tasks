@@ -522,5 +522,11 @@ module.exports = function _env(env) {
     default: "public"
   });
 
+  env.register({
+    name: "BUILD_RETRIES",
+    help: "Retry the build again up to this many times on failure (work around transient errors on build host)",
+    default: "1"
+  });
+
   debug("-- env registration complete --");
 };

@@ -33,7 +33,8 @@ const myTasks = ["build"],
     "BUILD_EXCLUDE",
     "BUILD_ADDITIONAL_EXCLUDE",
     "BUILD_SHOW_INFO",
-    "BUILD_FAIL_ON_ERROR"
+    "BUILD_FAIL_ON_ERROR",
+    "BUILD_RETRIES"
   ];
 env.associate(myVars, myTasks);
 
@@ -41,20 +42,41 @@ gulp.task(
   "build",
   "Builds Visual Studio solutions in tree",
   ["prebuild"],
-  build
+  tryBuild
 );
 
-gulp.task("quick-build", "Quick build without pre-cursors", build);
+gulp.task("quick-build", "Quick build without pre-cursors", tryBuild);
+
+async function tryBuild() {
+  let attempts = env.resolveNumber("BUILD_RETRIES") + 1;
+  if (attempts < 0) {
+    attempts = 1;
+  }
+  const originalAttempts = attempts;
+
+  while (attempts-- > 0) {
+    try {
+      await build();
+    } catch (e) {
+      if (attempts > 0) {
+        console.error(chalk.red(`Build fails: ${e}`));
+        console.log(`Retrying (${originalAttempts - attempts} / ${originalAttempts})`);
+      } else {
+        throw e;
+      }
+    }
+  }
+}
 
 async function build() {
-  const slnMasks = resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
+  const slnMasks = resolveMasks("BUILD_INCLUDE", ["BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
   debug({
     slnMasks,
     cwd: process.cwd()
   });
   const solutions = gulp
     .src(slnMasks, { allowEmpty: true })
-    .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
+    .pipe(throwIfNoFiles(`No solutions found matching masks: ${ slnMasks }}`));
 
   // TODO: find a reliable, quick way to determine if the projects to be compiled
   //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
