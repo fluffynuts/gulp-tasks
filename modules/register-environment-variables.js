@@ -187,7 +187,7 @@ module.exports = function _env(env) {
   env.register({
     name: "BUILD_TARGETS",
     help: "Targets to invoke msbuild with",
-    default: "Clean,Build"
+    default: "Build"
   });
 
   env.register({

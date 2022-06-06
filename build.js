@@ -14,9 +14,10 @@ const
   log = requireModule("log"),
   resolveMasks = requireModule("resolve-masks"),
   logConfig = requireModule("log-config"),
+  tryDo = requireModule("try-do"),
   msbuild = require("gulp-msbuild");
 
-gulp.task("prebuild", ["nuget-restore"]);
+gulp.task("prebuild", ["nuget-restore", "clean"]);
 
 const myTasks = ["build"],
   myVars = [
@@ -48,31 +49,12 @@ gulp.task(
 gulp.task("quick-build", "Quick build without pre-cursors", tryBuild);
 
 async function tryBuild() {
-  const totalRetries = env.resolveNumber("BUILD_RETRIES");
-
-  // always attempt at least once
-  let totalAttempts = totalRetries + 1;
-  if (totalAttempts < 0) {
-    totalAttempts = 1;
-  }
-
-  let retryCount = 0;
-
-  while (totalAttempts-- > 0) {
-    try {
-      await build();
-    } catch (e) {
-      if (totalAttempts > 0) {
-        console.error(chalk.red(`Build fails: ${ e }`));
-        console.log(chalk.green(`Retrying (${ ++retryCount } / ${ totalRetries })`));
-      } else {
-        if (totalRetries < 1) {
-          console.log(chalk.magentaBright(`Build fails! If the error looks transient, I suggest setting the environment variable 'BUILD_RETRIES' to some number > 0 🔨.`));
-        }
-        throw e;
-      }
-    }
-  }
+  return tryDo(
+    build,
+    env.resolveNumber("BUILD_RETRIES"),
+    e => console.error(chalk.red(`Build fails: ${e}`)),
+    () => console.log(chalk.magentaBright(`Build fails! If the error looks transient, I suggest setting the environment variable 'BUILD_RETRIES' to some number > 0 🔨.`))
+  );
 }
 
 async function build() {
@@ -103,11 +85,6 @@ function buildForNetCore(solutions) {
   }
   return promisifyStream(
     solutions
-      .pipe(
-        dotnetClean({
-          configuration
-        })
-      )
       .pipe(
         dotnetBuild({
           verbosity: env.resolve("BUILD_VERBOSITY"),
