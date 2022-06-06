@@ -17,9 +17,9 @@ const
   tryDo = requireModule("try-do"),
   msbuild = require("gulp-msbuild");
 
-gulp.task("prebuild", ["nuget-restore", "clean"]);
+gulp.task("prebuild", gulp.series("nuget-restore", "clean"));
 
-const myTasks = ["build"],
+const myTasks = [ "build" ],
   myVars = [
     "BUILD_CONFIGURATION",
     "BUILD_PLATFORM",
@@ -42,7 +42,7 @@ env.associate(myVars, myTasks);
 gulp.task(
   "build",
   "Builds Visual Studio solutions in tree",
-  ["prebuild"],
+  [ "prebuild" ],
   tryBuild
 );
 
@@ -51,28 +51,31 @@ gulp.task("quick-build", "Quick build without pre-cursors", tryBuild);
 async function tryBuild() {
   return tryDo(
     build,
-    env.resolveNumber("BUILD_RETRIES"),
+    "BUILD_RETRIES",
     e => console.error(chalk.red(`Build fails: ${e}`)),
     () => console.log(chalk.magentaBright(`Build fails! If the error looks transient, I suggest setting the environment variable 'BUILD_RETRIES' to some number > 0 🔨.`))
   );
 }
 
 async function build() {
-  const slnMasks = resolveMasks("BUILD_INCLUDE", ["BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
+  const slnMasks = resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE" ]);
   debug({
     slnMasks,
     cwd: process.cwd()
   });
   const solutions = gulp
     .src(slnMasks, { allowEmpty: true })
-    .pipe(throwIfNoFiles(`No solutions found matching masks: ${ slnMasks }}`));
+    .pipe(throwIfNoFiles(`No solutions found matching masks: ${slnMasks}}`));
 
   // TODO: find a reliable, quick way to determine if the projects to be compiled
   //       are all dotnet core -- trawling *.csproj is slow and has caused hangups
   //       here, so for now, DNC build must be requested via env DONET_CORE
-  return env.resolveFlag("DOTNET_CORE")
-    ? buildForNetCore(solutions)
-    : buildForNETFramework(solutions);
+  const useDotNetCore = env.resolveFlag("DOTNET_CORE");
+  if (useDotNetCore) {
+    await buildForNetCore(solutions);
+  } else {
+    await buildForNETFramework(solutions);
+  }
 }
 
 function buildForNetCore(solutions) {
@@ -81,7 +84,7 @@ function buildForNetCore(solutions) {
     configuration = env.resolve("BUILD_CONFIGURATION"),
     msbuildArgs = [];
   if (!env.resolveFlag("BUILD_MSBUILD_NODE_REUSE")) {
-    msbuildArgs.push("/nodeReuse:false")
+    msbuildArgs.push("/nodeReuse:false");
   }
   return promisifyStream(
     solutions

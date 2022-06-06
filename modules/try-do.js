@@ -14,6 +14,7 @@
         while (totalAttempts-- > 0) {
             try {
                 await logic();
+                return;
             }
             catch (e) {
                 if (totalAttempts > 0) {

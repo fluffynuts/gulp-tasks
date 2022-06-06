@@ -522,10 +522,28 @@ module.exports = function _env(env) {
     default: "public"
   });
 
+  function retryMessage(label) {
+    return `Retry ${label} again up to this many times on failure (work around transient errors on build host)`
+  }
+
+  env.register({
+    name: "MAX_RETRIES",
+    help: retryMessage("all retryable operations"),
+    default: "0"
+  });
+
   env.register({
     name: "BUILD_RETRIES",
-    help: "Retry the build again up to this many times on failure (work around transient errors on build host)",
-    default: "0"
+    help: retryMessage("the build"),
+    default: "0",
+    overriddenBy: "MAX_RETRIES"
+  });
+
+  env.register({
+    name: "RESTORE_RETRIES",
+    help: retryMessage("nuget package restore"),
+    default: "0",
+    overriddenBy: "MAX_RETRIES"
   });
 
   debug("-- env registration complete --");
