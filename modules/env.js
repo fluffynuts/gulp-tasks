@@ -274,7 +274,7 @@ function resolveInternal(name, ignoreDefault) {
     return initialValue;
   }
   if (target.when === undefined) {
-    if (overrideValues.length > 0) {
+    if (overrideValues.length > 1) {
       console.warn(
         `multiple override values found for '${name}' and no strategy for discriminating set; selecting the first`
       );
