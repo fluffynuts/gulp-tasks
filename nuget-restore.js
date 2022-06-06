@@ -28,7 +28,7 @@ gulp.task(
 );
 
 async function tryRestore() {
-  tryDo(
+  await tryDo(
     restore,
     "RESTORE_RETRIES",
     e => console.error(chalk.red(`Clean fails: ${e}`))
