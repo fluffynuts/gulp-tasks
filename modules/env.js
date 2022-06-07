@@ -164,7 +164,19 @@ function trim(str) {
 }
 
 function printHelp() {
-  printHelpFor(listVars());
+  const filter = (process.env.HELP_ENV_FILTER || "")
+    .toLowerCase()
+    .split(" ")
+    .filter(s => !!s);
+  printHelpFor(
+    listVars()
+      .filter(
+        k => !filter || filter.reduce(
+          (acc, cur) => acc && k.toLowerCase().indexOf(cur) > -1,
+          true
+        )
+      )
+  );
 }
 
 function printHelpFor(vars) {
