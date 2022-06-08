@@ -31,7 +31,7 @@
           } else {
             console.log(chalk.red(`Error: ${ e.message || e.toString() }`));
           }
-          console.log(chalk.green(`Retrying (${ ++retryCount } / ${ retries })`));
+          console.log(chalk.green(`Retrying (${ ++retryCount } / ${ requestedRetries })`));
         } else {
           if (retries < 1) {
             if (onFinalFailure) {
