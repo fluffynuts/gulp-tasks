@@ -1,4 +1,5 @@
-const resolveNuget = require("./resolve-nuget"),
+const
+  resolveNuget = require("./resolve-nuget"),
   downloadNuget = require("./download-nuget"),
   nugetUpdateSelf = require("./nuget-update-self"),
   debug = require("debug")("install-local-tools"),

@@ -13,8 +13,7 @@
         let retryCount = 0;
         while (totalAttempts-- > 0) {
             try {
-                await logic();
-                return;
+                return await logic();
             }
             catch (e) {
                 if (totalAttempts > 0) {
@@ -47,6 +46,7 @@
                 }
             }
         }
+        throw new Error("Should have either completed or thrown by now");
     }
     module.exports = tryDo;
 })();

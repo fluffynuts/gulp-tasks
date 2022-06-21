@@ -6,7 +6,6 @@ const
   nugetRestore = requireModule("./gulp-nuget-restore"),
   promisify = requireModule("promisify"),
   resolveMasks = requireModule("resolve-masks"),
-  { ZarroError } = requireModule("zarro-error"),
   tryDo = requireModule("try-do"),
   findLocalNuget = requireModule("find-local-nuget");
 

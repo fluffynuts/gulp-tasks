@@ -1,14 +1,18 @@
 (function() {
   const
-    resolveNuget = require("./resolve-nuget"),
-    findLocalNuget = require("./find-local-nuget"),
-    exec = require("./exec");
+    resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
+    findLocalNuget = requireModule<FindLocalNuget>("find-local-nuget"),
+    tryDo = requireModule<TryDo<string>>("try-do"),
+    exec = requireModule<Exec>("exec");
 
   module.exports = async function(args: string[], execOpts: ExecOpts) {
     const
-      resolvedNuget = await resolveNuget(null, false),
+      resolvedNuget = resolveNuget(undefined, false),
       nugetPath = resolvedNuget || await findLocalNuget(),
       argsCopy = args.slice();
-    return exec(nugetPath, argsCopy, execOpts);
+    return await tryDo(
+      () => exec(nugetPath, argsCopy, execOpts),
+      "RESTORE_RETRIES"
+    )
   }
 })();

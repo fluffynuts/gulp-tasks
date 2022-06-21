@@ -3,12 +3,12 @@
     env = requireModule<Env>("env"),
     chalk = require("ansi-colors");
 
-  async function tryDo(
-    logic: AsyncVoidVoid,
+  async function tryDo<T>(
+    logic: AsyncVoidFunc<T>,
     retries: number | string,
     onTransientError: ErrorReporter,
     onFinalFailure: VoidVoid
-  ): Promise<void> {
+  ): Promise<T> {
     // always attempt at least once
     const requestedRetries = typeof retries === "string"
       ? env.resolveNumber(retries)
@@ -22,8 +22,7 @@
 
     while (totalAttempts-- > 0) {
       try {
-        await logic();
-        return;
+        return await logic();
       } catch (e) {
         if (totalAttempts > 0) {
           if (onTransientError) {
@@ -51,6 +50,7 @@
         }
       }
     }
+    throw new Error("Should have either completed or thrown by now");
   }
 
   module.exports = tryDo;
