@@ -49,7 +49,7 @@ function clean() {
 async function cleanWithDotnet() {
   const
     configuration = env.resolve("BUILD_CONFIGURATION"),
-    slnMasks = resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
+    slnMasks = resolveBuildSolutionMasks();
   debug({
     slnMasks,
     cwd: process.cwd()
@@ -66,9 +66,15 @@ async function cleanWithDotnet() {
   );
 }
 
+function resolveBuildSolutionMasks() {
+  return resolveMasks("BUILD_INCLUDE", [ "BUILD_EXCLUDE", "BUILD_ADDITIONAL_EXCLUDE"]);
+}
+
 function cleanWithMsBuild() {
+  const
+    slnMasks = resolveBuildSolutionMasks();
   return promisifyStream(
-    gulp.src("**/*.sln")
+    gulp.src(slnMasks)
       .pipe(
         msbuild({
           toolsVersion: env.resolve("BUILD_TOOLSVERSION"),
