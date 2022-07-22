@@ -14,6 +14,13 @@ module.exports = function _env(env) {
   debug("-- start env var registration --");
 
   env.register({
+    name: "BUILD_TOOLS_FOLDER",
+    help:
+      "Location for downloading locally-used build tools (eg nuget, nunit, opencover, report generator)",
+    default: "build-tools"
+  });
+
+  env.register({
     name: "USE_SYSTEM_NUGET",
     default: "false",
     help: "Whether or not to use nuget.exe if found in the path"
@@ -237,13 +244,6 @@ module.exports = function _env(env) {
     default: defaultCoverageReportingExclusions,
     help:
       "Mask to apply for coverage exclusions (see ReportGenerator documentation for '-assemblyfilters')"
-  });
-
-  env.register({
-    name: "BUILD_TOOLS_FOLDER",
-    help:
-      "Location for downloading locally-used build tools (eg nuget, nunit, opencover, report generator)",
-    default: "build-tools"
   });
 
   env.register({

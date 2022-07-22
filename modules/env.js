@@ -257,7 +257,9 @@ function resolveFirst(names, ignoreDefault) {
     .reduce((acc, cur) =>
       acc === undefined
         ? resolveInternal(cur, ignoreDefault)
-        : acc, undefined);
+        : acc,
+      undefined
+    );
 }
 
 function resolveInternal(name, ignoreDefault) {
@@ -331,7 +333,8 @@ function quoteString(val) {
 }
 
 function resolveArray(name, delimiter) {
-  const value = resolveInternal(name) || "",
+  const
+    value = resolveInternal(name) || "",
     valueArray = Array.isArray(value) ? value : explode(value, delimiter);
   logResolved(name, valueArray);
   return valueArray;
