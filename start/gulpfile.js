@@ -11,6 +11,7 @@
 const
   path = require("path"),
   fs = require("fs");
+  debug = require("debug")("__entry__");
 
 function tryFindGulpTasks() {
   const attempts = [
@@ -93,8 +94,23 @@ if (!fs.existsSync("package.json")) {
 }
 
 function requiredDeps() {
-  const starter = require(path.join(gulpTasksFolder, "start", "package.json"));
+  const starter = readJsonFile(path.join(gulpTasksFolder, "start", "_package.json"));
   return Object.keys(starter.devDependencies);
+}
+
+function readJsonFile(at) {
+  let data = "";
+  try {
+    data = fs.readFileSync(at, { encoding: "utf-8"}).toString();
+  } catch (e) {
+    console.error(`Can't read file at ${at}: ${e}`);
+    throw e;
+  }
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.error(`Can't parse ${at} as json: ${e}`);
+  }
 }
 
 function mustInstallDeps() {
@@ -102,13 +118,16 @@ function mustInstallDeps() {
     // deps should be properly handled by zarro package index and initial installation
     return false;
   }
-  const package = require("./package.json"),
+  debug(`checking if should install deps; pwd: ${process.cwd()}`);
+  const package = loadPackageJson(),
     devDeps = package.devDependencies || {},
     haveDeps = Object.keys(devDeps),
-    needDeps = requiredDeps();
-  const result = needDeps.reduce((acc, cur) => {
-    return acc || haveDeps.indexOf(cur) == -1;
-  }, false);
+    needDeps = requiredDeps(),
+    missing = needDeps.filter(d => haveDeps.indexOf(d) === -1);
+  const result = missing.length;
+  if (result) {
+    console.warn(`installing missing deps: ${missing.join(",")}`);
+  }
   return result;
 }
 
@@ -125,17 +144,28 @@ function initializeNpm() {
     });
 }
 
+function loadPackageJson() {
+  debug(`attempting to load package.json in ${process.cwd()}`);
+  try {
+    return readJsonFile("package.json");
+  } catch (e) {
+    console.error(`failed to load package.json: ${e}`);
+    throw e;
+  }
+}
+
 function addMissingScript(package, name, script) {
   package.scripts[name] = package.scripts[name] || script;
 }
 
 function installGulpTaskDependencies() {
+  debug(`install gulp task deps, cwd: ${process.cwd()}`);
   const findFirstMissing = function () {
       const args = Array.from(arguments);
       return args.reduce((acc, cur) => acc || (fs.existsSync(cur) ? acc : cur), undefined);
     },
     deps = requiredDeps(),
-    package = require("./package.json"),
+    package = loadPackageJson(),
     buildTools = findFirstMissing("tools", "build-tools", ".tools", ".build-tools"),
     prepend = `cross-env BUILD_TOOLS_FOLDER=${buildTools}`;
 

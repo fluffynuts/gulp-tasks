@@ -4,7 +4,6 @@
     quoteIfRequired = require("./quote-if-required"),
     splitPath = require("./split-path"),
     env = require("./env"),
-    exec = require("./exec"),
     findLocalNuget = require("./find-local-nuget");
 
   function isDotnetCore(binaryPath: string) {
@@ -54,14 +53,15 @@
     console.log(`pushing package ${ packageFile }`);
     try {
       return await spawn(nuget, args);
-    } catch (e) {
-      if (e.info && Array.isArray(e.info.stderr)) {
+    } catch (ex) {
+      const e = ex as SpawnError;
+      if (Array.isArray(e.stderr)) {
         const
           errors = e.stderr.join("\n").trim(),
           isDuplicatePackageError = errors.match(/: 409 /);
         if (isDuplicatePackageError && options.suppressDuplicateError) {
           console.warn(`ignoring duplicate package error: ${ errors }`);
-          return e.info;
+          return e;
         }
       }
       throw e;

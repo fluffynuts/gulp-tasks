@@ -190,10 +190,12 @@ stdout:
         const spawnOptions = Object.assign(Object.assign({}, opts), myHandlers);
         try {
             await spawn(cmd, args, spawnOptions);
-            return (opts === null || opts === void 0 ? void 0 : opts.mergeIo) ? merged.join("\n")
+            return (opts === null || opts === void 0 ? void 0 : opts.mergeIo)
+                ? merged.join("\n")
                 : stdout.join("\n");
         }
-        catch (e) {
+        catch (ex) {
+            const e = ex;
             attachExecInfo(e, e.exitCode, cmd, args, false, opts);
             if (e.stderr) {
                 e.info.stderr = e.stderr;

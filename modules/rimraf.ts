@@ -7,7 +7,7 @@ export interface RimrafOptions {
   const _rimraf = require("rimraf");
 
   module.exports = function rimraf(at: string, opts?: RimrafOptions): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       if (opts) {
         // the rimraf module doesn't test if options are undefined
         // -> it tests if options is a function and shifts args :/

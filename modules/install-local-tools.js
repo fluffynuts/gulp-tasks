@@ -10,6 +10,7 @@ const
   nuget = require("./nuget"),
   ensureFolderExists = require("./ensure-folder-exists"),
   { ZarroError } = requireModule("zarro-error"),
+  env = requireModule("env"),
   del = require("del");
 
 function cleanFoldersFrom(toolsFolder) {
@@ -92,7 +93,7 @@ module.exports = {
         return acc;
       }, []);
       if (missing.length) {
-        return Promist.reject("multiple tools installations are not (yet) supported");
+        return Promise.reject("multiple tools installations are not (yet) supported");
       }
       return installingPromise;
     }

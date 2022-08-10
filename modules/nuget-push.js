@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const spawn = require("./spawn"), quoteIfRequired = require("./quote-if-required"), splitPath = require("./split-path"), env = require("./env"), exec = require("./exec"), findLocalNuget = require("./find-local-nuget");
+    const spawn = require("./spawn"), quoteIfRequired = require("./quote-if-required"), splitPath = require("./split-path"), env = require("./env"), findLocalNuget = require("./find-local-nuget");
     function isDotnetCore(binaryPath) {
         const trimmed = binaryPath.replace(/^"/, "")
             .replace(/"$/, ""), parts = splitPath(trimmed), executable = (parts[parts.length - 1] || "");
@@ -35,12 +35,13 @@
         try {
             return await spawn(nuget, args);
         }
-        catch (e) {
-            if (e.info && Array.isArray(e.info.stderr)) {
+        catch (ex) {
+            const e = ex;
+            if (Array.isArray(e.stderr)) {
                 const errors = e.stderr.join("\n").trim(), isDuplicatePackageError = errors.match(/: 409 /);
                 if (isDuplicatePackageError && options.suppressDuplicateError) {
                     console.warn(`ignoring duplicate package error: ${errors}`);
-                    return e.info;
+                    return e;
                 }
             }
             throw e;

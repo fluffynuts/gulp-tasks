@@ -39,8 +39,9 @@
                 "--rebase": true,
                 "--autostash": true
               });
-          } catch (e) {
-            const isNewBranch = (e.message || "").indexOf("couldn't find remote ref HEAD") > -1;
+          } catch (ex) {
+            const e = ex as Error;
+            const isNewBranch = (e.message || e.toString()).indexOf("couldn't find remote ref HEAD") > -1;
             if (!isNewBranch) {
               throw e;
             }

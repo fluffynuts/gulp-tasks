@@ -9,8 +9,8 @@
         try {
             return await runGit();
         }
-        catch (e) {
-            const message = e.message || e.toString();
+        catch (ex) {
+            const e = ex, message = e.message || e.toString();
             if (message.match(/not a git repository/i)) {
                 return defaultValue;
             }

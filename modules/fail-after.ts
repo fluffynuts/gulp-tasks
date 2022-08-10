@@ -8,7 +8,7 @@ import Timeout = NodeJS.Timeout;
     private _cancelled = false;
 
     constructor(public ms: number, message?: string) {
-      this.promise = new Promise((_, reject) => {
+      this.promise = new Promise<void>((_, reject) => {
         this._timer = setTimeout(() => {
           this._timer = undefined;
           message = message || "operation timed out";

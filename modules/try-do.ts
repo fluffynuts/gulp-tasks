@@ -23,7 +23,8 @@
     while (totalAttempts-- > 0) {
       try {
         return await logic();
-      } catch (e) {
+      } catch (ex) {
+        const e = ex as Error;
         if (totalAttempts > 0) {
           if (onTransientError) {
             onTransientError(e)

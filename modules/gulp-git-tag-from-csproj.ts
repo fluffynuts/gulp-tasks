@@ -53,7 +53,7 @@ import { Stream } from "stream";
           }
           this.emit("end");
         } catch (e) {
-          this.emit("error", new gutil.PluginError(PLUGIN_NAME, e));
+          this.emit("error", new gutil.PluginError(PLUGIN_NAME, e as Error));
         }
       }
     );

@@ -36,7 +36,8 @@
                     ]);
                     fail.cancel();
                 }
-                catch (e) {
+                catch (ex) {
+                    const e = ex;
                     const msg = e.message || e;
                     if (msg === "operation timed out") {
                         log.error(chalk.redBright(`fetch operation timed out:

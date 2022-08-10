@@ -30,7 +30,7 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
     if (env.resolveFlag(env.INITIAL_RELEASE)) {
       return;
     }
-    return new Promise(async (resolve, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
       const
         opts = fillInFromEnvironment(inputOpts),
         st = await stat(opts.packageJsonPath);

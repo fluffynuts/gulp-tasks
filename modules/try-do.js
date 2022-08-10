@@ -15,7 +15,8 @@
             try {
                 return await logic();
             }
-            catch (e) {
+            catch (ex) {
+                const e = ex;
                 if (totalAttempts > 0) {
                     if (onTransientError) {
                         onTransientError(e);

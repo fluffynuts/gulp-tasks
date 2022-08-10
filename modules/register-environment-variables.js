@@ -61,8 +61,8 @@ module.exports = function _env(env) {
 
   env.register({
     name: "DOTNET_TEST_PARALLEL",
-    default: false,
-    help: "(experimental) run your dotnet core tests in parallel"
+    default: "false",
+    help: "run your dotnet core tests in parallel - will be automatically enabled if not set and the quackers logger is used"
   });
 
   env.register({
@@ -544,6 +544,18 @@ module.exports = function _env(env) {
     help: retryMessage("nuget package restore"),
     default: "0",
     overriddenBy: "MAX_RETRIES"
+  });
+
+  env.register({
+    name: "RETAIN_TEST_DIAGNOSTICS",
+    help: "when set truthy, testing logs and internal traces won't be deleted after testing",
+    default: "true"
+  });
+
+  env.register({
+    name: "DOTNET_TEST_QUIET_QUACKERS",
+    help: "when set truthy and using the Quackers logger, suppress non-quackers logging",
+    default: "true"
   });
 
   debug("-- env registration complete --");

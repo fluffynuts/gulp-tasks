@@ -7,7 +7,7 @@ const version_reading_shared_1 = require("./version-reading-shared");
         const contents = await readTextFile(pathToCsProj), doc = await parseXml(contents);
         try {
             const propertyGroups = doc.Project.PropertyGroup;
-            return version_reading_shared_1.tryReadVersionFrom(propertyGroups, "PackageVersion");
+            return (0, version_reading_shared_1.tryReadVersionFrom)(propertyGroups, "PackageVersion");
         }
         catch (e) {
             throw new ZarroError(`Unable to read any xml node Project/PropertyGroup/PackageVersion in file ${pathToCsProj}`);

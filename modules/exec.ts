@@ -43,7 +43,7 @@ export interface ExecError extends Error {
     opts: ExecOpts,
     handlers?: IoHandlers): Promise<string> {
 
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       try {
         child_process.execFile(cmd, args, opts, function(error: Error, stdout: Buffer, stderr: Buffer) {
           const stdErrString = (stderr || "").toString();
@@ -175,7 +175,7 @@ stdout:
           reject(attachExecInfo(err, -1, cmd, args, false, opts));
         });
       } catch (e) {
-        reject(attachExecInfo(e, -1, cmd, args, false, opts));
+        reject(attachExecInfo(e as Error, -1, cmd, args, false, opts));
       }
     });
   }
@@ -272,7 +272,8 @@ stdout:
       return opts?.mergeIo
         ? merged.join("\n")
         : stdout.join("\n");
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as ExecError & SpawnError;
       attachExecInfo(e, e.exitCode, cmd, args, false, opts);
       if (e.stderr) {
         e.info.stderr = e.stderr;

@@ -1,4 +1,13 @@
 const
+  QUACKERS_LOG_PREFIX = "::",
+  QUACKERS_SUMMARY_START = `::SS::`,
+  QUACKERS_SUMMARY_COMPLETE = `::SC::`,
+  QUACKERS_FAILURES_MARKER = `::SF::`,
+  quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length,
+  quackersFullSummaryStartMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_START }`,
+  quackersFullSummaryCompleteMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_COMPLETE }`,
+  quackersFullFailureMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_FAILURES_MARKER }`,
+  { rm, ls, FsEntities, readTextFile } = require("yafs"),
   seed = requireModule("seed"),
   gulp = requireModule("gulp"),
   log = requireModule("log"),
@@ -8,19 +17,19 @@ const
   filter = require("gulp-filter"),
   fs = require("fs"),
   promisifyStream = requireModule("promisify"),
-  { test } = require("gulp-dotnet-cli"),
   nunit = require("./modules/gulp-nunit-runner"),
   testUtilFinder = requireModule("testutil-finder"),
   env = requireModule("env"),
   resolveTestMasks = requireModule("resolve-test-masks"),
   logConfig = requireModule("log-config"),
   gatherPaths = requireModule("gather-paths"),
+  { test } = requireModule("dotnet-cli"),
   netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter");
 
 gulp.task(
   "test-dotnet",
   `Runs all tests in your solution via NUnit *`,
-  [ "build" ],
+  ["build"],
   runTests
 );
 
@@ -30,7 +39,7 @@ gulp.task(
   runTests
 );
 
-const myTasks = [ "test-dotnet", "quick-test-dotnet" ],
+const myTasks = ["test-dotnet", "quick-test-dotnet"],
   myVars = [
     "BUILD_CONFIGURATION",
     "DOTNET_CORE",
@@ -42,7 +51,8 @@ const myTasks = [ "test-dotnet", "quick-test-dotnet" ],
     "NUNIT_ARCHITECTURE",
     "NUNIT_LABELS",
     "TEST_VERBOSITY",
-    "DOTNET_TEST_PARALLEL"
+    "DOTNET_TEST_PARALLEL",
+    "RETAIN_TEST_DIAGNOSTICS"
   ];
 env.associate(myVars, myTasks);
 
@@ -62,7 +72,26 @@ async function runTests() {
     configuration,
     testMasks
   });
-  return tester(configuration, testMasks);
+  await tester(configuration, testMasks);
+  await removeTestDiagnostics();
+}
+
+async function removeTestDiagnostics() {
+  const agentLogs = await ls(".", {
+    entities: FsEntities.files,
+    match: /nunit-agent.*\.log$/,
+    fullPaths: true
+  });
+  var internalTraces = await ls(".", {
+    entities: FsEntities.files,
+    match: /InternalTrace.*\.log/,
+    fullPaths: true
+  });
+
+  for (const f of agentLogs.concat(internalTraces)) {
+    debug(`delete test diagnostic: ${ f }`);
+    await rm(f);
+  }
 }
 
 function consolidatePathEnvVar() {
@@ -111,7 +140,7 @@ function testWithNunitCli(configuration, source) {
     config.options.process = nunitProcess;
     logInfo.process = "Process model for NUnit";
   }
-  log.info(`Using NUnit runner at ${config.executable}`);
+  log.info(`Using NUnit runner at ${ config.executable }`);
   log.info("Find files:", source);
   logConfig(config.options, logInfo);
   debug({
@@ -132,59 +161,275 @@ function testWithNunitCli(configuration, source) {
   );
 }
 
-function makeTestsPromise(
-  projectPaths,
-  configuration
-) {
-  if (!Array.isArray(projectPaths)) {
-    projectPaths = [ projectPaths ];
-  }
-  return promisifyStream(
-    gulp.src(projectPaths).pipe(
-      test({
-        verbosity: env.resolve("TEST_VERBOSITY"),
-        configuration,
-        noBuild: true
-      })
-    )
-  );
-}
-
-
 async function testAsDotnetCore(configuration, testProjects) {
-  // TODO: collect all projects in an array and then
-  //  run test projects in parallel, throttled by MAX_CONCURRENCY
-  if (env.resolveFlag("DOTNET_TEST_PARALLEL")) {
-    const
-      testProjectPaths = await gatherPaths(testProjects),
-      concurrency = env.resolveNumber("MAX_CONCURRENCY"),
-      chains = seed(concurrency).map(() => Promise.resolve());
-    let p, current = 0;
-    while (p = testProjectPaths.shift()) {
-      p = p.replace(/\\/g, "/");
-      console.log("add test run:", p);
-      const
-        idx = current++ % concurrency,
-        localP = p;
-      chains[idx] = chains[idx].then(() => {
-        console.log(`${idx}  start test run: ${localP}`);
-        return makeTestsPromise(localP, configuration);
-      });
-    }
-    return Promise.all(chains);
-  } else {
-    return promisifyStream(
-      gulp.src(testProjects).pipe(
-        test({
-          verbosity: env.resolve("BUILD_VERBOSITY"),
-          configuration,
-          noBuild: true,
-          logger: `console;verbosity=${env.resolve("TEST_VERBOSITY")}`
-        })
-      )
+  const
+    testResults = {
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      failureSummary: [],
+      started: Date.now()
+    },
+    testProcessResults = [],
+    testProjectPaths = await gatherPaths(testProjects, true),
+    verbosity = env.resolve("BUILD_VERBOSITY"),
+    parallelVar = "DOTNET_TEST_PARALLEL";
+
+  let testInParallel = env.resolveFlag(parallelVar);
+  if (process.env[parallelVar] === undefined) {
+    testInParallel = testProjectPaths.reduce(
+      (acc, cur) => acc && projectReferencesQuackers(cur),
+      true
     );
+    if (testInParallel) {
+      debug(`parallel testing automatically enabled: all test projects use Quackers!`);
+    }
+  }
+
+  const concurrency = testInParallel
+      ? env.resolveNumber("MAX_CONCURRENCY")
+      : 1,
+    chains = seed(concurrency).map(() => Promise.resolve());
+  let p, current = 0;
+  while (p = testProjectPaths.shift()) {
+    const
+      idx = current++ % concurrency,
+      target = p;
+    chains[idx] = chains[idx].then(async () => {
+      debug(`${ idx }  start test run: ${ target }`);
+      const result = testOneProject(target, configuration, verbosity, testResults, true);
+      testProcessResults.push(result);
+      return result;
+    });
+  }
+  await Promise.all(chains);
+  logOverallResults(testResults);
+  throwIfAnyFailed(testProcessResults);
+}
+
+function throwIfAnyFailed(testProcessResults) {
+  for (const result of testProcessResults) {
+    if (!result) {
+      continue;
+    }
+    if (result.exitCode === undefined) {
+      continue;
+    }
+    if (!!result.exitCode) {
+      throw new Error("One or more tests failed");
+    }
   }
 }
+
+function logOverallResults(testResults) {
+  const
+    total = testResults.passed + testResults.skipped + testResults.failed,
+    now = Date.now(),
+    runTimeMs = now - testResults.started,
+    runTime = nunitLikeTime(runTimeMs);
+  console.log(`
+Test Run Summary
+  Overall result: ${ overallResultFor(testResults) }
+  Test Count: ${ total }, Passed: ${ testResults.passed }, Failed: ${ testResults.failed }, Skipped: ${ testResults.skipped }
+  Start time: ${ dateString(testResults.started) }
+    End time: ${ dateString(now) }
+    Duration: ${ runTime }
+`);
+  if (testResults.failureSummary.length) {
+    console.log(`Failures:`);
+    for (const line of testResults.failureSummary) {
+      console.log(line);
+    }
+  }
+}
+
+function dateString(ms) {
+  return new Date(ms).toISOString().replace(/T/, " ");
+}
+
+function overallResultFor(testResults) {
+  if (testResults.failed) {
+    return "Failed";
+  }
+  if (testResults.skipped) {
+    return "Warning";
+  }
+  return "Passed";
+}
+
+function nunitLikeTime(totalMs) {
+  const
+    ms = totalMs % 1000,
+    seconds = Math.floor(totalMs / 1000)
+  return `${ seconds }.${ ms } seconds`;
+}
+
+async function testOneProject(
+  target,
+  configuration,
+  verbosity,
+  testResults,
+  runningInParallel
+) {
+  const
+    quackersState = {
+      inSummary: false, // gather summary info into test results
+      inFailureSummary: false,
+      // there is some valid logging (eg build) before the first quackers log
+      // -> suppress when running in parallel (and by default when sequential)
+      haveSeenQuackersLog: runningInParallel || env.resolveFlag("DOTNET_TEST_QUIET_QUACKERS"),
+      testResults
+    };
+  const
+    useQuackers = await projectReferencesQuackers(target),
+    stderr = useQuackers
+      ? s => {
+        console.error(s);
+      }
+      : undefined,
+    stdout = useQuackers
+      ? quackersStdOutHandler.bind(null, quackersState)
+      : undefined,
+    loggers = useQuackers
+      ? generateQuackersLoggerConfig()
+      : generateBuiltinConsoleLoggerConfig();
+  return await test({
+    target,
+    verbosity,
+    configuration,
+    noBuild: true,
+    loggers,
+    stderr,
+    stdout
+  });
+}
+
+function quackersStdOutHandler(state, s) {
+  s = s || "";
+  if (s.startsWith(quackersFullSummaryStartMarker)) {
+    state.inSummary = true;
+    return;
+  }
+  if (s.startsWith(quackersFullSummaryCompleteMarker)) {
+    state.inSummary = false;
+    return;
+  }
+  if (state.inSummary) {
+    /* actual summary log example
+::quackers log::::start summary::
+::quackers log::
+::quackers log::Test results:
+::quackers log::Passed:  8
+::quackers log::Failed:  2
+::quackers log::Skipped: 1
+::quackers log::Total:   11
+
+::quackers log::Failures:
+
+::quackers log::[1] QuackersTestHost.SomeTests.ShouldBeLessThan50(75)
+::quackers log::  NExpect.Exceptions.UnmetExpectationException : Expected 75 to be less than 50
+::quackers log::     at QuackersTestHost.SomeTests.ShouldBeLessThan50(Int32 value) in C:\code\opensource\quackers\src\Demo\SomeTests.cs:line 66
+::quackers log::
+
+::quackers log::[2] QuackersTestHost.SomeTests.ShouldFail
+::quackers log::  NExpect.Exceptions.UnmetExpectationException : Expected false but got true
+::quackers log::     at QuackersTestHost.SomeTests.ShouldFail() in C:\code\opensource\quackers\src\Demo\SomeTests.cs:line 28
+::quackers log::
+::quackers log::::end summary::
+     */
+    const line = stripQuackersLogPrefix(s);
+    if (line.startsWith(quackersFullFailureMarker)) {
+      state.inFailureSummary = true;
+      return;
+    }
+    if (state.inFailureSummary) {
+      state.testResults.failureSummary.push(line);
+      return;
+    }
+    incrementTestResultCount(state.testResults, line);
+    return;
+  }
+  const isQuackersLog = s.startsWith(QUACKERS_LOG_PREFIX);
+  if (isQuackersLog) {
+    state.haveSeenQuackersLog = true;
+  }
+  if (!state.haveSeenQuackersLog || isQuackersLog) {
+    console.log(stripQuackersLogPrefix(s));
+  }
+}
+
+function incrementTestResultCount(testResults, line) {
+  const
+    parts = line.split(":").map(p => p.trim().toLowerCase()),
+    numericPart = line.match(/\d+/) || ["0"],
+    count = parseInt(numericPart[0]);
+  switch (parts[0]) {
+    case "passed":
+      testResults.passed += count;
+      return;
+    case "failed":
+      testResults.failed += count;
+      return;
+    case "skipped":
+      testResults.skipped += count;
+      return;
+  }
+}
+
+function stripQuackersLogPrefix(line) {
+  return line.substring(quackersLogPrefixLength)
+}
+
+const quackersRefCache = {};
+
+async function projectReferencesQuackers(csproj) {
+  if (quackersRefCache[csproj] !== undefined) {
+    return quackersRefCache[csproj];
+  }
+  const
+    contents = await readTextFile(csproj),
+    lines = contents.split("\n").map(l => l.trim());
+  for (const line of lines) {
+    if (line.match(/<PackageReference Include="Quackers.TestLogger"/)) {
+      return quackersRefCache[csproj] = true;
+    }
+    if (line.match(/<ProjectReference Include=.*Quackers.TestLogger.csproj"/)) {
+      return quackersRefCache[csproj] = true;
+    }
+  }
+  return quackersRefCache[csproj] = false;
+}
+
+function generateBuiltinConsoleLoggerConfig() {
+  return {
+    console: {
+      verbosity: env.resolve("TEST_VERBOSITY")
+    }
+  }
+}
+
+const quackersEnvVarStart = /^QUACKERS_/;
+
+function generateQuackersLoggerConfig() {
+  const quackers = {
+    logprefix: QUACKERS_LOG_PREFIX,
+    summaryStartMarker: QUACKERS_SUMMARY_START,
+    summaryCompleteMarker: QUACKERS_SUMMARY_COMPLETE,
+    verboseSummary: "true",
+    outputFailuresInline: "true"
+  };
+  for (const envVar of Object.keys(process.env)) {
+    if (!envVar.match(quackersEnvVarStart)) {
+      continue;
+    }
+    const prop = envVar.replace(quackersEnvVarStart, "").toLowerCase();
+    quackers[prop] = process.env[envVar];
+  }
+  return {
+    quackers
+  };
+}
+
 
 function isDistinctFile(filePath, seenFiles) {
   const basename = path.basename(filePath),
