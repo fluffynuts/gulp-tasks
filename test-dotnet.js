@@ -6,7 +6,6 @@ const
   quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length,
   quackersFullSummaryStartMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_START }`,
   quackersFullSummaryCompleteMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_COMPLETE }`,
-  quackersFullFailureMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_FAILURES_MARKER }`,
   { rm, ls, FsEntities, readTextFile } = require("yafs"),
   seed = requireModule("seed"),
   gulp = requireModule("gulp"),
@@ -235,11 +234,8 @@ Test Run Summary
     End time: ${ dateString(now) }
     Duration: ${ runTime }
 `);
-  if (testResults.failureSummary.length) {
-    console.log(`Failures:`);
-    for (const line of testResults.failureSummary) {
-      console.log(line);
-    }
+  for (const line of testResults.failureSummary) {
+    console.log(line);
   }
 }
 
@@ -338,7 +334,7 @@ function quackersStdOutHandler(state, s) {
 ::quackers log::::end summary::
      */
     const line = stripQuackersLogPrefix(s);
-    if (line.startsWith(quackersFullFailureMarker)) {
+    if (line.startsWith(QUACKERS_FAILURES_MARKER)) {
       state.inFailureSummary = true;
       return;
     }
@@ -415,6 +411,7 @@ function generateQuackersLoggerConfig() {
     logprefix: QUACKERS_LOG_PREFIX,
     summaryStartMarker: QUACKERS_SUMMARY_START,
     summaryCompleteMarker: QUACKERS_SUMMARY_COMPLETE,
+    failureStartMarker: QUACKERS_FAILURES_MARKER,
     verboseSummary: "true",
     outputFailuresInline: "true"
   };
