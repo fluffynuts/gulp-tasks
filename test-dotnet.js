@@ -31,7 +31,7 @@ const
 gulp.task(
   "test-dotnet",
   `Runs all tests in your solution via NUnit *`,
-  ["build"],
+  [ "build" ],
   runTests
 );
 
@@ -41,7 +41,7 @@ gulp.task(
   runTests
 );
 
-const myTasks = ["test-dotnet", "quick-test-dotnet"],
+const myTasks = [ "test-dotnet", "quick-test-dotnet" ],
   myVars = [
     "BUILD_CONFIGURATION",
     "DOTNET_CORE",
@@ -192,9 +192,9 @@ async function testAsDotnetCore(configuration, testProjects) {
       : 1,
     chains = seed(concurrency).map(() => Promise.resolve());
 
-  console.log(`Will run tests for project${testProjectPaths.length === 1 ? "" : "s"}:`);
+  console.log(`Will run tests for project${ testProjectPaths.length === 1 ? "" : "s" }:`);
   for (const projectPath of testProjectPaths) {
-    console.log(`  ${projectPath}`);
+    console.log(`  ${ projectPath }`);
   }
 
   let p, current = 0;
@@ -242,9 +242,10 @@ Test Run Summary
     End time: ${ dateString(now) }
     Duration: ${ runTime }
 `));
-  if (testResults.failureSummary.length) {
-    console.log(`\n${chalk.redBright("Failures:")}`);
+  if (testResults.failureSummary.length == 0) {
+    return;
   }
+  console.log(`\n${ chalk.redBright("Failures:") }`);
   let
     blankLines = 0,
     failIndex = 1;
@@ -258,12 +259,13 @@ Test Run Summary
     if (blankLines > 1) {
       continue;
     }
-    const substituted = line.replace(QUACKERS_FAILURE_INDEX_PLACEHOLDER, `[${failIndex}]`);
+    const substituted = line.replace(QUACKERS_FAILURE_INDEX_PLACEHOLDER, `[${ failIndex }]`);
     if (substituted !== line) {
       failIndex++;
     }
     console.log(substituted);
   }
+  console.log("\n");
 }
 
 function dateString(ms) {
@@ -385,7 +387,7 @@ function quackersStdOutHandler(state, s) {
 function incrementTestResultCount(testResults, line) {
   const
     parts = line.split(":").map(p => p.trim().toLowerCase()),
-    numericPart = line.match(/\d+/) || ["0"],
+    numericPart = line.match(/\d+/) || [ "0" ],
     count = parseInt(numericPart[0]);
   switch (parts[0]) {
     case "passed":
