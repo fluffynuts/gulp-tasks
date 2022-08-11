@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const spawn = require("./spawn"), quoteIfRequired = require("./quote-if-required"), splitPath = require("./split-path"), env = require("./env"), findLocalNuget = require("./find-local-nuget");
+    const spawn = require("./spawn"), quoteIfRequired = require("./quote-if-required"), { splitPath } = require("./path-utils"), env = require("./env"), findLocalNuget = require("./find-local-nuget");
     function isDotnetCore(binaryPath) {
         const trimmed = binaryPath.replace(/^"/, "")
             .replace(/"$/, ""), parts = splitPath(trimmed), executable = (parts[parts.length - 1] || "");

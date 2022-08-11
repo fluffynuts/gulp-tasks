@@ -558,5 +558,12 @@ module.exports = function _env(env) {
     default: "true"
   });
 
+  env.register({
+    name: "DOTNET_TEST_PREFIXES",
+    default: "",
+    help: "prefix test names by project with a mapping like 'PROJECT:PREFIX;PROJECT:PREFIX'"
+  });
+
+
   debug("-- env registration complete --");
 };

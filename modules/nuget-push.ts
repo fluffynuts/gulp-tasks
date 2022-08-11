@@ -2,7 +2,7 @@
   const
     spawn = require("./spawn"),
     quoteIfRequired = require("./quote-if-required"),
-    splitPath = require("./split-path"),
+    { splitPath } = require("./path-utils"),
     env = require("./env"),
     findLocalNuget = require("./find-local-nuget");
 

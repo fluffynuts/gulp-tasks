@@ -23,6 +23,7 @@ const
   logConfig = requireModule("log-config"),
   gatherPaths = requireModule("gather-paths"),
   { test } = requireModule("dotnet-cli"),
+  { resolveTestPrefixFor } = requireModule("test-utils"),
   netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter");
 
 gulp.task(
@@ -81,7 +82,7 @@ async function removeTestDiagnostics() {
     match: /nunit-agent.*\.log$/,
     fullPaths: true
   });
-  var internalTraces = await ls(".", {
+  const internalTraces = await ls(".", {
     entities: FsEntities.files,
     match: /InternalTrace.*\.log/,
     fullPaths: true
@@ -274,7 +275,8 @@ async function testOneProject(
       // there is some valid logging (eg build) before the first quackers log
       // -> suppress when running in parallel (and by default when sequential)
       haveSeenQuackersLog: runningInParallel || env.resolveFlag("DOTNET_TEST_QUIET_QUACKERS"),
-      testResults
+      testResults,
+      target
     };
   const
     useQuackers = await projectReferencesQuackers(target),
@@ -287,7 +289,7 @@ async function testOneProject(
       ? quackersStdOutHandler.bind(null, quackersState)
       : undefined,
     loggers = useQuackers
-      ? generateQuackersLoggerConfig()
+      ? generateQuackersLoggerConfig(target)
       : generateBuiltinConsoleLoggerConfig();
   return await test({
     target,
@@ -404,29 +406,26 @@ function generateBuiltinConsoleLoggerConfig() {
   }
 }
 
-const quackersEnvVarStart = /^QUACKERS_/;
-
-function generateQuackersLoggerConfig() {
+function generateQuackersLoggerConfig(target) {
   const quackers = {
     logprefix: QUACKERS_LOG_PREFIX,
     summaryStartMarker: QUACKERS_SUMMARY_START,
     summaryCompleteMarker: QUACKERS_SUMMARY_COMPLETE,
     failureStartMarker: QUACKERS_FAILURES_MARKER,
     verboseSummary: "true",
-    outputFailuresInline: "true"
+    outputFailuresInline: "true",
   };
-  for (const envVar of Object.keys(process.env)) {
-    if (!envVar.match(quackersEnvVarStart)) {
-      continue;
-    }
-    const prop = envVar.replace(quackersEnvVarStart, "").toLowerCase();
-    quackers[prop] = process.env[envVar];
+  const prefix = resolveTestPrefixFor(target);
+  if (prefix) {
+    quackers.testNamePrefix = prefix;
   }
+  // quackers also accepts env vars, but the ones we're setting here
+  // are kinda required for zarro to operate as expected; fortunately,
+  // cli args supercede env vars in quackers' world
   return {
     quackers
   };
 }
-
 
 function isDistinctFile(filePath, seenFiles) {
   const basename = path.basename(filePath),
