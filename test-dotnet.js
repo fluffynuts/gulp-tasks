@@ -3,6 +3,7 @@ const
   QUACKERS_SUMMARY_START = `::SS::`,
   QUACKERS_SUMMARY_COMPLETE = `::SC::`,
   QUACKERS_FAILURES_MARKER = `::SF::`,
+  QUACKERS_FAILURE_INDEX_PLACEHOLDER = "::[#]::",
   quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length,
   quackersFullSummaryStartMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_START }`,
   quackersFullSummaryCompleteMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_COMPLETE }`,
@@ -15,6 +16,7 @@ const
   debug = require("debug")("test-dotnet"),
   filter = require("gulp-filter"),
   fs = require("fs"),
+  chalk = requireModule("chalk"),
   promisifyStream = requireModule("promisify"),
   nunit = require("./modules/gulp-nunit-runner"),
   testUtilFinder = requireModule("testutil-finder"),
@@ -174,7 +176,6 @@ async function testAsDotnetCore(configuration, testProjects) {
     testProjectPaths = await gatherPaths(testProjects, true),
     verbosity = env.resolve("BUILD_VERBOSITY"),
     parallelVar = "DOTNET_TEST_PARALLEL";
-
   let testInParallel = env.resolveFlag(parallelVar);
   if (process.env[parallelVar] === undefined) {
     testInParallel = testProjectPaths.reduce(
@@ -190,6 +191,12 @@ async function testAsDotnetCore(configuration, testProjects) {
       ? env.resolveNumber("MAX_CONCURRENCY")
       : 1,
     chains = seed(concurrency).map(() => Promise.resolve());
+
+  console.log(`Will run tests for project${testProjectPaths.length === 1 ? "" : "s"}:`);
+  for (const projectPath of testProjectPaths) {
+    console.log(`  ${projectPath}`);
+  }
+
   let p, current = 0;
   while (p = testProjectPaths.shift()) {
     const
@@ -227,16 +234,35 @@ function logOverallResults(testResults) {
     now = Date.now(),
     runTimeMs = now - testResults.started,
     runTime = nunitLikeTime(runTimeMs);
-  console.log(`
+  console.log(chalk.yellowBright(`
 Test Run Summary
   Overall result: ${ overallResultFor(testResults) }
   Test Count: ${ total }, Passed: ${ testResults.passed }, Failed: ${ testResults.failed }, Skipped: ${ testResults.skipped }
   Start time: ${ dateString(testResults.started) }
     End time: ${ dateString(now) }
     Duration: ${ runTime }
-`);
-  for (const line of testResults.failureSummary) {
-    console.log(line);
+`));
+  if (testResults.failureSummary.length) {
+    console.log(`\n${chalk.redBright("Failures:")}`);
+  }
+  let
+    blankLines = 0,
+    failIndex = 1;
+  for (let line of testResults.failureSummary) {
+    line = line.trim();
+    if (!line) {
+      blankLines++;
+    } else {
+      blankLines = 0;
+    }
+    if (blankLines > 1) {
+      continue;
+    }
+    const substituted = line.replace(QUACKERS_FAILURE_INDEX_PLACEHOLDER, `[${failIndex}]`);
+    if (substituted !== line) {
+      failIndex++;
+    }
+    console.log(substituted);
   }
 }
 
@@ -414,6 +440,7 @@ function generateQuackersLoggerConfig(target) {
     failureStartMarker: QUACKERS_FAILURES_MARKER,
     verboseSummary: "true",
     outputFailuresInline: "true",
+    failureIndexPlaceholder: QUACKERS_FAILURE_INDEX_PLACEHOLDER
   };
   const prefix = resolveTestPrefixFor(target);
   if (prefix) {
