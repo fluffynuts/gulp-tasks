@@ -166,6 +166,7 @@ function testWithNunitCli(configuration, source) {
 async function testAsDotnetCore(configuration, testProjects) {
   const
     testResults = {
+      quackersEnabled: false,
       passed: 0,
       failed: 0,
       skipped: 0,
@@ -204,13 +205,18 @@ async function testAsDotnetCore(configuration, testProjects) {
       target = p;
     chains[idx] = chains[idx].then(async () => {
       debug(`${ idx }  start test run: ${ target }`);
-      const result = testOneProject(target, configuration, verbosity, testResults, true);
+      const result = await testOneProject(target, configuration, verbosity, testResults, true);
       testProcessResults.push(result);
       return result;
     });
   }
   await Promise.all(chains);
-  logOverallResults(testResults);
+
+  if (testResults.quackersEnabled) {
+    logOverallResults(testResults);
+  } else {
+    console.log("If you install Quackers.TestLogger into your test projects, you'll get a lot more info here!");
+  }
   throwIfAnyFailed(testProcessResults);
 }
 
@@ -319,6 +325,7 @@ async function testOneProject(
     loggers = useQuackers
       ? generateQuackersLoggerConfig(target)
       : generateBuiltinConsoleLoggerConfig();
+  testResults.quackersEnabled = testResults.quackersEnabled || useQuackers;
   return await test({
     target,
     verbosity,
