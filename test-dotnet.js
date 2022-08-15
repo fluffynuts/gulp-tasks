@@ -26,7 +26,9 @@ const
   gatherPaths = requireModule("gather-paths"),
   { test } = requireModule("dotnet-cli"),
   { resolveTestPrefixFor } = requireModule("test-utils"),
+  buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML")),
   netFrameworkTestAssemblyFilter = requireModule("net-framework-test-assembly-filter");
+const { baseName, chopExtension } = require("./modules/path-utils");
 
 gulp.task(
   "test-dotnet",
@@ -59,7 +61,6 @@ const myTasks = [ "test-dotnet", "quick-test-dotnet" ],
 env.associate(myVars, myTasks);
 
 async function runTests() {
-  const buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML"));
   if (!fs.existsSync(buildReportFolder)) {
     fs.mkdirSync(buildReportFolder);
   }
@@ -325,6 +326,7 @@ async function testOneProject(
     loggers = useQuackers
       ? generateQuackersLoggerConfig(target)
       : generateBuiltinConsoleLoggerConfig();
+  addTrxLoggerTo(loggers, target);
   testResults.quackersEnabled = testResults.quackersEnabled || useQuackers;
   return await test({
     target,
@@ -335,6 +337,16 @@ async function testOneProject(
     stderr,
     stdout
   });
+}
+
+function addTrxLoggerTo(loggers, target) {
+  const
+    proj = baseName(target),
+    projName = chopExtension(proj),
+    logFileName = path.resolve(path.join(buildReportFolder, `${ projName }.trx`));
+  loggers.trx = {
+    logFileName
+  };
 }
 
 function quackersStdOutHandler(state, s) {
