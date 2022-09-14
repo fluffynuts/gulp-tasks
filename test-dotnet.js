@@ -400,6 +400,8 @@ function quackersStdOutHandler(state, s) {
   }
   if (!state.haveSeenQuackersLog || isQuackersLog) {
     console.log(stripQuackersLogPrefix(s));
+  } else {
+    debug(`discarding log: "${s}"`);
   }
 }
 

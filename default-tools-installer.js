@@ -3,7 +3,10 @@ const debug = require("debug")("default-tools-installer"),
   nugetSourceName = process.env.NUGET_SOURCE || "nuget.org",
   installLocalTools = requireModule("install-local-tools"),
   env = requireModule("env"),
-  tools = [
+  isDotnetCore = env.resolveFlag("DOTNET_CORE"),
+  tools = isDotnetCore
+    ? [] // currently, only dotnet targets are used for dotnet test/build
+    : [
     `${nugetSourceName}/nunit.console`,
     `${nugetSourceName}/opencover`,
     `${nugetSourceName}/Jetbrains.dotCover.CommandLineTools`,
