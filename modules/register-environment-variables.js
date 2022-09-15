@@ -329,6 +329,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "NUGET_PUSH_TIMEOUT",
+    help: "timeout, in seconds, for an attempted push of a nuget package; if left undefined, the default for the tool is used (typically 300, ie 5 min)",
+    default: ""
+  });
+
+  env.register({
     name: "DOTNET_PUBLISH_RUNTIMES",
     help: "Runtimes to publish dotnet core targets for, if required"
   });

@@ -27,6 +27,11 @@
         else if (dnc) {
             throw new Error("You must set the NUGET_API_KEY environment variable to be able to push packages with the dotnet executable");
         }
+        const pushTimeout = env.resolve("NUGET_PUSH_TIMEOUT"), timeout = parseInt(pushTimeout);
+        if (!isNaN(timeout)) {
+            args.push(dnc ? "-t" : "-Timeout");
+            args.push(timeout.toString());
+        }
         if (env.resolveFlag("DRY_RUN")) {
             console.log(`nuget publish dry run: ${nuget} ${args.join(" ")}`);
             return;
