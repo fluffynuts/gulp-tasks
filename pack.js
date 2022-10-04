@@ -91,11 +91,15 @@ function packWithDotnetCore(target, incrementVersion) {
       .pipe(incrementPackageVersion())
       .pipe(rewriteFile(removeBadEntities));
   }
+  const packConfig = {
+    output: path.resolve(target),
+    configuration
+  };
+  if (process.env["PACK_VERSION"] !== undefined) {
+    packConfig.version = process.env["PACK_VERSION"]
+  }
   return stream.pipe(
-    dotnetPack({
-      output: path.resolve(target),
-      configuration
-    })
+    dotnetPack(packConfig)
   );
 }
 
