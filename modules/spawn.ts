@@ -1,16 +1,15 @@
-import * as buffer from "buffer";
 import { IoConsumer } from "./exec";
 import { Readable } from "stream";
 
-(function () {
+(function() {
 // use for spawning actual processes.
 // You must use exec if you want to run batch files
 
-  const tryLoadDebug = function () {
+  const tryLoadDebug = function() {
       try {
         return require("debug")("spawn");
       } catch (e) {
-        return function () {
+        return function() {
         };
       }
     },
@@ -20,7 +19,7 @@ import { Readable } from "stream";
     child_process = require("child_process");
 
   const defaultOptions = {
-    stdio: [process.stdin, process.stdout, process.stderr],
+    stdio: [ process.stdin, process.stdout, process.stderr ],
     cwd: process.cwd(),
     shell: true,
     lineBuffer: true
@@ -36,7 +35,7 @@ import { Readable } from "stream";
     opts = Object.assign({}, defaultOptions, opts);
 
     if (!opts.stdio) {
-      opts.stdio = [...defaultOptions.stdio];
+      opts.stdio = [ ...defaultOptions.stdio ];
     }
 
     let
@@ -46,7 +45,7 @@ import { Readable } from "stream";
       stderrFnSpecified = typeof opts.stderr === "function";
 
     if (stdoutFnSpecified || stderrFnSpecified && !Array.isArray(opts.stdio)) {
-      opts.stdio = [...defaultOptions.stdio];
+      opts.stdio = [ ...defaultOptions.stdio ];
     }
 
     if (stdoutFnSpecified) {
@@ -80,7 +79,7 @@ import { Readable } from "stream";
       try {
         const child = child_process.spawn(executable, args, opts);
         if (!child) {
-          throw new Error(`unable to spawn ${ executable } with args [${ args.join(",") }]`);
+          reject(new Error(`unable to spawn ${ executable } with args [${ args.join(",") }]`));
         }
         debug(child);
         const stdout = [] as string[];
@@ -88,34 +87,44 @@ import { Readable } from "stream";
         child.on("error", (err: string) => {
           debug(`child error: ${ err }`);
           const e = new Error(
-            `"${ [executable].concat(args).join(" ") }" failed with "${ err }"`
+            `"${ [ executable ].concat(args).join(" ") }" failed with "${ err }"`
           ) as SpawnError;
           e.exitCode = -1;
           e.stderr = stderr;
           e.stdout = stdout;
           reject(e);
         });
-        child.on("close", (code: number) => {
-          debug(`child exits: ${ code }`);
-          result.exitCode = code;
-          result.stderr = stderr;
-          result.stdout = stdout;
-          if (code === 0) {
-            resolve(result);
-          } else {
-            const err = new Error(
-              `"${ [executable]
-                .concat(args)
-                .join(" ") }" failed with exit code ${ code }`
-            ) as SpawnError;
-            err.exitCode = code;
-            err.stdout = stdout;
-            err.stderr = stderr;
-            return reject(err);
-          }
-        });
+        let exited = false;
+        child.on("exit", generateExitHandler("exit"));
+        child.on("close", generateExitHandler("close"));
         setupIoHandler(stdOutWriter, child.stdout, stdout, opts.lineBuffer);
         setupIoHandler(stdErrWriter, child.stderr, stderr, opts.lineBuffer)
+
+        function generateExitHandler(eventName: string): (code: number) => void {
+          return (code: number) => {
+            if (exited) {
+              return;
+            }
+            exited = true;
+            debug(`child ${ eventName }s: ${ code }`);
+            result.exitCode = code;
+            result.stderr = stderr;
+            result.stdout = stdout;
+            if (code === 0) {
+              resolve(result);
+            } else {
+              const err = new Error(
+                `"${ [ executable ]
+                  .concat(args)
+                  .join(" ") }" failed with exit code ${ code }`
+              ) as SpawnError;
+              err.exitCode = code;
+              err.stdout = stdout;
+              err.stderr = stderr;
+              reject(err);
+            }
+          };
+        }
       } catch (e) {
         reject(`Unable to spawn process: ${ e }\n${ (e as Error).stack }`);
       }

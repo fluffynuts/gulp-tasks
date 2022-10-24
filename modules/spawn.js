@@ -60,7 +60,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             try {
                 const child = child_process.spawn(executable, args, opts);
                 if (!child) {
-                    throw new Error(`unable to spawn ${executable} with args [${args.join(",")}]`);
+                    reject(new Error(`unable to spawn ${executable} with args [${args.join(",")}]`));
                 }
                 debug(child);
                 const stdout = [];
@@ -73,26 +73,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
                     e.stdout = stdout;
                     reject(e);
                 });
-                child.on("close", (code) => {
-                    debug(`child exits: ${code}`);
-                    result.exitCode = code;
-                    result.stderr = stderr;
-                    result.stdout = stdout;
-                    if (code === 0) {
-                        resolve(result);
-                    }
-                    else {
-                        const err = new Error(`"${[executable]
-                            .concat(args)
-                            .join(" ")}" failed with exit code ${code}`);
-                        err.exitCode = code;
-                        err.stdout = stdout;
-                        err.stderr = stderr;
-                        return reject(err);
-                    }
-                });
+                let exited = false;
+                child.on("exit", generateExitHandler("exit"));
+                child.on("close", generateExitHandler("close"));
                 setupIoHandler(stdOutWriter, child.stdout, stdout, opts.lineBuffer);
                 setupIoHandler(stdErrWriter, child.stderr, stderr, opts.lineBuffer);
+                function generateExitHandler(eventName) {
+                    return (code) => {
+                        if (exited) {
+                            return;
+                        }
+                        exited = true;
+                        debug(`child ${eventName}s: ${code}`);
+                        result.exitCode = code;
+                        result.stderr = stderr;
+                        result.stdout = stdout;
+                        if (code === 0) {
+                            resolve(result);
+                        }
+                        else {
+                            const err = new Error(`"${[executable]
+                                .concat(args)
+                                .join(" ")}" failed with exit code ${code}`);
+                            err.exitCode = code;
+                            err.stdout = stdout;
+                            err.stderr = stderr;
+                            reject(err);
+                        }
+                    };
+                }
             }
             catch (e) {
                 reject(`Unable to spawn process: ${e}\n${e.stack}`);
