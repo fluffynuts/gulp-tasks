@@ -11,7 +11,7 @@ if (gulpVersion.major === 3) {
 } else {
   const
     quieter = requireModule("reduce-gulp-noise");
-    gulp = require("gulp"),
+  gulp = require("gulp"),
     help = {},
     FwdRef = require("undertaker-forward-reference");
 
@@ -19,7 +19,7 @@ if (gulpVersion.major === 3) {
 
   const
     originalTask = gulp.task,
-    newTask = function() {
+    newTask = function () {
       let
         args = Array.from(arguments),
         taskName = args[0],
@@ -51,12 +51,12 @@ if (gulpVersion.major === 3) {
     };
   gulp.task = newTask.bind(gulp);
   gulp.task("help", () => {
-    const chalk = require("ansi-colors"),
-      green = chalk.greenBright.bind(chalk),
-      yellow = chalk.yellowBright.bind(chalk),
-      cyan = chalk.cyanBright.bind(chalk);
+    try {
+      const chalk = require("ansi-colors"),
+        green = chalk.greenBright.bind(chalk),
+        yellow = chalk.yellowBright.bind(chalk),
+        cyan = chalk.cyanBright.bind(chalk);
 
-    return new Promise((resolve, reject) => {
       console.log(yellow("Task help"));
       console.log(yellow(" - Tasks marked with * are affected by environment variables"));
       console.log(yellow(" - run the help:environment task for more info"));
@@ -64,7 +64,7 @@ if (gulpVersion.major === 3) {
       const longestKeyLength = keys.reduce(function (acc, cur) {
         return cur.length > acc ? cur.length : acc;
       }, 0);
-      keys.forEach(function(key) {
+      keys.forEach(function (key) {
         if (!help[key]) {
           return console.log(cyan(key));
         }
@@ -74,19 +74,21 @@ if (gulpVersion.major === 3) {
         }
         console.log(cyan(key) + "  " + green(helpMessage));
       });
-      resolve();
-    });
+      return Promise.resolve();
+    } catch (e) {
+      return Promise.reject(e);
+    }
   });
   module.exports = gulp;
 }
 
-(function() {
+(function () {
   const
     env = requireModule("env"),
     gulp = module.exports;
 
-    gulp.task("help:environment", () => {
-      env.printHelp();
-      return Promise.resolve();
-    });
+  gulp.task("help:environment", () => {
+    env.printHelp();
+    return Promise.resolve();
+  });
 })();

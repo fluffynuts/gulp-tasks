@@ -37,28 +37,32 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
       if (!st) {
         return reject(`Can't find file at '${ opts.packageJsonPath }'`);
       }
-      const
-        json = await readTextFile(opts.packageJsonPath),
-        indent = guessIndent(json),
-        index = JSON.parse(json),
-        currentVersion = index.version || "0.0.0",
-        incremented = incrementVersion(
-          currentVersion,
-          opts.strategy,
-          opts.zero,
-          opts.incrementBy
-        );
-      index.version = incremented;
-      const newJson = JSON.stringify(index, null, indent);
-      if (opts.dryRun) {
-        gutil.log(
-          gutil.colors.green(
-            `dry run: would increment version in '${ opts.packageJsonPath }' from '${ currentVersion }' to '${ incremented }'`
-          )
-        );
+      try {
+        const
+          json = await readTextFile(opts.packageJsonPath),
+          indent = guessIndent(json),
+          index = JSON.parse(json),
+          currentVersion = index.version || "0.0.0",
+          incremented = incrementVersion(
+            currentVersion,
+            opts.strategy,
+            opts.zero,
+            opts.incrementBy
+          );
+        index.version = incremented;
+        const newJson = JSON.stringify(index, null, indent);
+        if (opts.dryRun) {
+          gutil.log(
+            gutil.colors.green(
+              `dry run: would increment version in '${ opts.packageJsonPath }' from '${ currentVersion }' to '${ incremented }'`
+            )
+          );
+        }
+        await writeTextFile(opts.packageJsonPath, newJson);
+        resolve();
+      } catch (e) {
+        reject(e);
       }
-      await writeTextFile(opts.packageJsonPath, newJson);
-      resolve();
     });
   }
 
