@@ -6,7 +6,7 @@ function isAlreadyQuoted(str) {
 
 module.exports = function quoteIfRequired(arg) {
   arg = arg || "";
-  return arg.indexOf(" ") > -1 &&
+  return (arg.indexOf(" ") > -1 || arg.indexOf(";") > -1) &&
     arg.match(/^".*"$/) == null
     ? isAlreadyQuoted(arg) ? arg : `"${arg}"`
     : arg;

@@ -61,7 +61,6 @@ import { Readable } from "stream";
       opts.stdio[2] = "inherit";
     }
 
-
     const result = {
       executable: executable,
       args: args,
@@ -72,12 +71,13 @@ import { Readable } from "stream";
 
     executable = quoteIfRequired(executable);
 
-    debug(`spawning: ${ executable } ${ args.map(a => "\"" + a + "\"").join(" ") }`);
+    const quotedArgs = args.map(quoteIfRequired);
+    debug(`spawning: ${ executable } ${ quotedArgs.join(" ") }`);
     debug({ opts });
 
     return new Promise((resolve, reject) => {
       try {
-        const child = child_process.spawn(executable, args, opts);
+        const child = child_process.spawn(executable, quotedArgs, opts);
         if (!child) {
           reject(new Error(`unable to spawn ${ executable } with args [${ args.join(",") }]`));
         }
