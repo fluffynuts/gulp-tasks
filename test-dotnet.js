@@ -222,6 +222,8 @@ async function testAsDotnetCore(configuration, testProjects) {
 }
 
 function throwIfAnyFailed(testProcessResults) {
+  const allErrors = [];
+  let haveGenericWarning = false;
   for (const result of testProcessResults) {
     if (!result) {
       continue;
@@ -230,8 +232,19 @@ function throwIfAnyFailed(testProcessResults) {
       continue;
     }
     if (!!result.exitCode) {
-      throw new Error("One or more tests failed");
+      const errors = (result.stderr || []);
+      if (errors.length === 0) {
+        if (!haveGenericWarning) {
+          allErrors.push("One or more tests failed");
+          haveGenericWarning = true;
+        }
+      } else {
+        allErrors.push(errors.join("\n"));
+      }
     }
+  }
+  if (allErrors.length) {
+    throw new Error(`One or more test runs failed:\n\t${allErrors.join("\n\t")}`);
   }
 }
 

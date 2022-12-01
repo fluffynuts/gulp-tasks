@@ -6,7 +6,6 @@ const
   debug = require("debug")("build"),
   promisifyStream = requireModule("promisify"),
   dotnetCli = require("gulp-dotnet-cli"),
-  dotnetClean = dotnetCli.clean,
   dotnetBuild = dotnetCli.build,
   throwIfNoFiles = requireModule("throw-if-no-files"),
   xbuild = requireModule("gulp-xbuild"),
