@@ -1,5 +1,6 @@
 import { IoConsumer } from "./exec";
 import { Readable } from "stream";
+import { ChildProcess } from "child_process";
 
 (function() {
 // use for spawning actual processes.
@@ -105,6 +106,7 @@ import { Readable } from "stream";
             if (exited) {
               return;
             }
+            destroyPipesOn(child);
             exited = true;
             debug(`child ${ eventName }s: ${ code }`);
             result.exitCode = code;
@@ -159,6 +161,25 @@ import { Readable } from "stream";
       stream.on("data", handle);
     }
 
+  }
+
+  function destroyPipesOn(child: ChildProcess) {
+    for (const pipe of [child.stdout, child.stderr, child.stdin]) {
+      if (pipe) {
+        try {
+          // I've seen times when child processes are dead, but the
+          // IO pipes are kept alive, preventing node from exiting.
+          // Specifically, when running dotnet test against a certain
+          // project - but not in any other project for the same
+          // usage. So this is just a bit of paranoia here - explicitly
+          // shut down any pipes on the child process - we're done
+          // with them anyway
+          pipe.destroy();
+        } catch (e) {
+          // suppress: if the pipe is already dead, that's fine.
+        }
+      }
+    }
   }
 
   module.exports = spawn;
