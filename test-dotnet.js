@@ -5,8 +5,8 @@ const
   QUACKERS_FAILURES_MARKER = `::SF::`,
   QUACKERS_FAILURE_INDEX_PLACEHOLDER = "::[#]::",
   quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length,
-  quackersFullSummaryStartMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_START }`,
-  quackersFullSummaryCompleteMarker = `${ QUACKERS_LOG_PREFIX }${ QUACKERS_SUMMARY_COMPLETE }`,
+  quackersFullSummaryStartMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_START}`,
+  quackersFullSummaryCompleteMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_COMPLETE}`,
   { rm, ls, FsEntities, readTextFile } = require("yafs"),
   seed = requireModule("seed"),
   gulp = requireModule("gulp"),
@@ -92,7 +92,7 @@ async function removeTestDiagnostics() {
   });
 
   for (const f of agentLogs.concat(internalTraces)) {
-    debug(`delete test diagnostic: ${ f }`);
+    debug(`delete test diagnostic: ${f}`);
     await rm(f);
   }
 }
@@ -138,12 +138,12 @@ function testWithNunitCli(configuration, source) {
     result: "Where to store test result (xml file)",
     labels: "What labels NUnit should display as tests run",
     agents: "How many NUnit agents to run"
-  }
+  };
   if (nunitProcess !== "auto") {
     config.options.process = nunitProcess;
     logInfo.process = "Process model for NUnit";
   }
-  log.info(`Using NUnit runner at ${ config.executable }`);
+  log.info(`Using NUnit runner at ${config.executable}`);
   log.info("Find files:", source);
   logConfig(config.options, logInfo);
   debug({
@@ -194,9 +194,9 @@ async function testAsDotnetCore(configuration, testProjects) {
       : 1,
     chains = seed(concurrency).map(() => Promise.resolve());
 
-  console.log(`Will run tests for project${ testProjectPaths.length === 1 ? "" : "s" }:`);
+  console.log(`Will run tests for project${testProjectPaths.length === 1 ? "" : "s"}:`);
   for (const projectPath of testProjectPaths) {
-    console.log(`  ${ projectPath }`);
+    console.log(`  ${projectPath}`);
   }
 
   let p, current = 0;
@@ -205,7 +205,7 @@ async function testAsDotnetCore(configuration, testProjects) {
       idx = current++ % concurrency,
       target = p;
     chains[idx] = chains[idx].then(async () => {
-      debug(`${ idx }  start test run: ${ target }`);
+      debug(`${idx}  start test run: ${target}`);
       const result = await testOneProject(target, configuration, verbosity, testResults, true);
       testProcessResults.push(result);
       return result;
@@ -253,19 +253,26 @@ function logOverallResults(testResults) {
     total = testResults.passed + testResults.skipped + testResults.failed,
     now = Date.now(),
     runTimeMs = now - testResults.started,
-    runTime = nunitLikeTime(runTimeMs);
-  console.log(chalk.yellowBright(`
+    runTime = nunitLikeTime(runTimeMs),
+    darkerThemeSelected = (process.env["QUACKERS_THEME"] || "").toLowerCase() === "darker",
+    yellow = darkerThemeSelected
+      ? chalk.yellow.bind(chalk)
+      : chalk.yellowBright.bind(chalk),
+    red = darkerThemeSelected
+      ? chalk.red.bind(chalk)
+      : chalk.redBright.bind(chalk);
+  console.log(yellow(`
 Test Run Summary
-  Overall result: ${ overallResultFor(testResults) }
-  Test Count: ${ total }, Passed: ${ testResults.passed }, Failed: ${ testResults.failed }, Skipped: ${ testResults.skipped }
-  Start time: ${ dateString(testResults.started) }
-    End time: ${ dateString(now) }
-    Duration: ${ runTime }
+  Overall result: ${overallResultFor(testResults)}
+  Test Count: ${total}, Passed: ${testResults.passed}, Failed: ${testResults.failed}, Skipped: ${testResults.skipped}
+  Start time: ${dateString(testResults.started)}
+    End time: ${dateString(now)}
+    Duration: ${runTime}
 `));
   if (testResults.failureSummary.length == 0) {
     return;
   }
-  console.log(`\n${ chalk.redBright("Failures:") }`);
+  console.log(`\n${red("Failures:")}`);
   let
     blankLines = 0,
     failIndex = 1;
@@ -279,7 +286,7 @@ Test Run Summary
     if (blankLines > 1) {
       continue;
     }
-    const substituted = line.replace(QUACKERS_FAILURE_INDEX_PLACEHOLDER, `[${ failIndex }]`);
+    const substituted = line.replace(QUACKERS_FAILURE_INDEX_PLACEHOLDER, `[${failIndex}]`);
     if (substituted !== line) {
       failIndex++;
     }
@@ -305,8 +312,8 @@ function overallResultFor(testResults) {
 function nunitLikeTime(totalMs) {
   const
     ms = totalMs % 1000,
-    seconds = Math.floor(totalMs / 1000)
-  return `${ seconds }.${ ms } seconds`;
+    seconds = Math.floor(totalMs / 1000);
+  return `${seconds}.${ms} seconds`;
 }
 
 async function testOneProject(
@@ -356,7 +363,7 @@ function addTrxLoggerTo(loggers, target) {
   const
     proj = baseName(target),
     projName = chopExtension(proj),
-    logFileName = path.resolve(path.join(buildReportFolder, `${ projName }.trx`));
+    logFileName = path.resolve(path.join(buildReportFolder, `${projName}.trx`));
   loggers.trx = {
     logFileName
   };
@@ -437,7 +444,7 @@ function incrementTestResultCount(testResults, line) {
 }
 
 function stripQuackersLogPrefix(line) {
-  return line.substring(quackersLogPrefixLength)
+  return line.substring(quackersLogPrefixLength);
 }
 
 const quackersRefCache = {};
@@ -465,7 +472,7 @@ function generateBuiltinConsoleLoggerConfig() {
     console: {
       verbosity: env.resolve("TEST_VERBOSITY")
     }
-  }
+  };
 }
 
 function generateQuackersLoggerConfig(target) {
