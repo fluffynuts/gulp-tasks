@@ -87,6 +87,7 @@ import { ChildProcess } from "child_process";
         const stderr = [] as string[];
         child.on("error", (err: string) => {
           debug(`child error: ${ err }`);
+          destroyPipesOn(child);
           const e = new Error(
             `"${ [ executable ].concat(args).join(" ") }" failed with "${ err }"`
           ) as SpawnError;
