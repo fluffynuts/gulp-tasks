@@ -68,6 +68,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 const stderr = [];
                 child.on("error", (err) => {
                     debug(`child error: ${err}`);
+                    destroyPipesOn(child);
                     const e = new Error(`"${[executable].concat(args).join(" ")}" failed with "${err}"`);
                     e.exitCode = -1;
                     e.stderr = stderr;

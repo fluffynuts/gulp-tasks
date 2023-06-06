@@ -11,7 +11,7 @@
   ): Promise<T> {
     // always attempt at least once
     const requestedRetries = typeof retries === "string"
-      ? env.resolveNumber(retries)
+      ? env.resolveNumber(retries as NumericEnvVar)
       : retries;
     let totalAttempts = requestedRetries + 1;
     if (totalAttempts < 0) {

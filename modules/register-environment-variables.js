@@ -22,31 +22,31 @@ module.exports = function _env(env) {
 
   env.register({
     name: "USE_SYSTEM_NUGET",
-    default: "false",
+    default: false,
     help: "Whether or not to use nuget.exe if found in the path"
   }, _env);
 
   env.register({
     name: "ENABLE_NUGET_PARALLEL_PROCESSING",
-    default: "false",
+    default: false,
     help: "Whether to enable parallel processing for nuget restore. Disabled by default as large restores can fail without proper errors"
   });
 
   env.register({
     name: "BUILD_SHOW_INFO",
-    default: "true",
+    default: true,
     help: "Whether or not to show information about the build before it starts"
   });
 
   env.register({
     name: "BUILD_FAIL_ON_ERROR",
-    default: "true",
+    default: true,
     help: "Whether to fail the build immediately on any build error"
   });
 
   env.register({
     name: "BUILD_MSBUILD_NODE_REUSE",
-    default: "false",
+    default: false,
     help: [
       "Whether or not to allow modern msbuild to reuse msbuild.exe nodes",
       "WARNING: enabling node reuse may cause esoteric build errors on shared environments"
@@ -61,7 +61,7 @@ module.exports = function _env(env) {
 
   env.register({
     name: "DOTNET_TEST_PARALLEL",
-    default: "false",
+    default: false,
     help: "run your dotnet core tests in parallel - will be automatically enabled if not set and the quackers logger is used"
   });
 
@@ -249,7 +249,7 @@ module.exports = function _env(env) {
   env.register({
     name: "DRY_RUN",
     help: "Flag that tasks may observe to only report what they are doing instead of actually doing it",
-    default: "false"
+    default: false
   });
 
   env.register({
@@ -266,7 +266,8 @@ module.exports = function _env(env) {
 
   env.register({
     name: "GIT_MAIN_BRANCH",
-    help: "The main branch (typically master) against which verification is done"
+    help: "The main branch (typically master) against which verification is done",
+    default: "master"
   });
 
   env.register({
@@ -305,7 +306,7 @@ module.exports = function _env(env) {
   });
 
   env.register({
-    name: "FETCH_RECENT_TIME",
+    name: "GIT_FETCH_RECENT_TIME",
     help: "(number) when testing the last gi fetch time, consider the fetch fresh enough if it happend within this many seconds in the past",
     default: 60 // default is to skip fetch if last fetch < 1 minute ago
   });
@@ -380,8 +381,11 @@ module.exports = function _env(env) {
     default: ""
   });
 
+  if (!!process.env.PACKAGE_TARGET_FOLDER) {
+    throw new Error(`env var PACKAGE_TARGET_FOLDER has been renamed to PACK_TARGET_FOLDER`);
+  }
   env.register({
-    name: "PACKAGE_TARGET_FOLDER",
+    name: "PACK_TARGET_FOLDER",
     help: "Folder to serve as output for package build tasks",
     default: "packages"
   });
@@ -425,7 +429,7 @@ module.exports = function _env(env) {
   env.register({
     name: "PACK_INCREMENT_VERSION",
     help: "Flag: should package version be incremented before packing?",
-    default: "true"
+    default: true
   });
 
   env.register({
@@ -495,7 +499,7 @@ module.exports = function _env(env) {
       "Flag: whether or not to reset lower-order version parts when incrementing higher-order ones",
       "eg: when incrementing the MAJOR version, should the MINOR and PATCH be set to zero?"
     ],
-    default: "true"
+    default: true
   });
 
   env.register({
@@ -517,9 +521,9 @@ module.exports = function _env(env) {
   env.register({
     name: "BETA",
     help: [
-      "Enable beta flag for operation"
+      "Enable beta flag for operation (eg beta or pre-release package)"
     ],
-    default: "false"
+    default: false
   });
 
   env.register({
@@ -555,7 +559,7 @@ module.exports = function _env(env) {
   env.register({
     name: "RETAIN_TEST_DIAGNOSTICS",
     help: "when set truthy, testing logs and internal traces won't be deleted after testing",
-    default: "true"
+    default: true
   });
 
   env.register({
@@ -569,7 +573,6 @@ module.exports = function _env(env) {
     default: "",
     help: "prefix test names by project with a mapping like 'PROJECT:PREFIX;PROJECT:PREFIX'"
   });
-
 
   debug("-- env registration complete --");
 };

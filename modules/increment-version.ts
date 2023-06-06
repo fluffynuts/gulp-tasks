@@ -1,41 +1,79 @@
-const { ZarroError } = requireModule("zarro-error");
+(function() {
+  const { ZarroError } = requireModule("zarro-error");
+  const { currentShortSHA } = requireModule<GitSha>("git-sha");
 
-function zeroFrom(parts: number[], startIndex: number) {
-  for (let i = startIndex; i < parts.length; i++) {
-    parts[i] = 0;
+  function zeroFrom(parts: number[], startIndex: number) {
+    for (let i = startIndex; i < parts.length; i++) {
+      parts[i] = 0;
+    }
   }
-}
 
-function incrementAt(
-  parts: number[],
-  index: number,
-  incrementBy: number) {
-  if (parts[index] === undefined) {
-    throw new ZarroError(`version '${parts.join(".")}' has no value at position ${index}`);
+  function incrementAt(
+    parts: number[],
+    index: number,
+    incrementBy: number
+  ) {
+    if (parts[index] === undefined) {
+      throw new ZarroError(`version '${ parts.join(".") }' has no value at position ${ index }`);
+    }
+    parts[index] += incrementBy;
   }
-  parts[index] += incrementBy;
-}
 
-const incrementLookup: { [key: string]: number } = {
-  "major": 0,
-  "minor": 1,
-  "patch": 2
-};
+  const incrementLookup: { [key: string]: number } = {
+    "prerelease": -1,
+    "major": 0,
+    "minor": 1,
+    "patch": 2
+  };
 
-
-module.exports = function incrementVersion(
-  version: string,
-  strategy: "major" | "minor" | "patch",
-  zeroLowerOrder: boolean,
-  incrementBy: number = 1): string {
-  const parts = version.split(".").map(i => parseInt(i));
-  let toIncrement = incrementLookup[(strategy || "").toLowerCase()]
-  if (toIncrement === undefined) {
-    throw new ZarroError(`Unknown version increment strategy: ${strategy}\n try one of 'major', 'minor' or 'patch'`);
+  module.exports = function incrementVersion(
+    version: string,
+    strategy: VersionIncrementStrategy,
+    zeroLowerOrder: boolean = true,
+    incrementBy: number = 1
+  ): string {
+    const
+      dashedParts = version.split("-"),
+      parts = dashedParts[0].split(".").map(i => parseInt(i));
+    let toIncrement = incrementLookup[(strategy || "").toLowerCase()]
+    if (toIncrement === undefined) {
+      throw new ZarroError(`Unknown version increment strategy: ${ strategy }\n try one of 'major', 'minor' or 'patch'`);
+    }
+    if (strategy != "prerelease") {
+      incrementAt(parts, toIncrement, incrementBy);
+      if (zeroLowerOrder) {
+        zeroFrom(parts, toIncrement + 1);
+      }
+    }
+    const result = parts.join(".");
+    if (strategy != "prerelease") {
+      return result;
+    }
+    const sha = currentShortSHA();
+    return `${ result }-${ timestamp() }-${ sha }`;
   }
-  incrementAt(parts, toIncrement, incrementBy);
-  if (zeroLowerOrder) {
-    zeroFrom(parts, toIncrement + 1);
+
+
+
+  function timestamp(): string {
+    const
+      now = new Date(Date.now()),
+      year = `${ now.getFullYear() }`.substring(2),
+      month = zeroPad(now.getMonth() + 1),
+      day = zeroPad(now.getDate()),
+      hour = zeroPad(now.getHours()),
+      minute = zeroPad(now.getMinutes());
+    return [
+      year,
+      month,
+      day,
+      hour,
+      minute
+    ].join("");
   }
-  return parts.join(".");
-}
+
+  function zeroPad(i: number): string {
+    return i < 10 ? `0${ i }` : `${ i }`;
+  }
+
+})()

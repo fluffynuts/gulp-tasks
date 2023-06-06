@@ -45,7 +45,7 @@
     if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
       const
         lastFetch = await readLastFetchTime(),
-        fetchRecentPeriod = env.resolveNumber("FETCH_RECENT_TIME") * 1000,
+        fetchRecentPeriod = env.resolveNumber("GIT_FETCH_RECENT_TIME") * 1000,
         now = Date.now();
       let recentEnough = false;
       if (lastFetch) {

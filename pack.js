@@ -17,13 +17,14 @@ const getToolsFolder = requireModule("get-tools-folder"),
 
 env.associate(
   [
-    "PACKAGE_TARGET_FOLDER",
+    "PACK_TARGET_FOLDER",
     "DOTNET_CORE",
     "PACK_INCLUDE_CSPROJ",
     "PACK_EXCLUDE_CSPROJ",
     "PACK_INCLUDE_NUSPEC",
     "PACK_EXCLUDE_NUSPEC",
-    "PACK_INCREMENT_VERSION"
+    "PACK_INCREMENT_VERSION",
+    "BETA"
   ],
   ["pack"]
 );
@@ -33,9 +34,9 @@ gulp.task(
   "Creates nupkgs from all nuspec files in this repo",
   ["prepack"],
   () => {
-    const target = env.resolve("PACKAGE_TARGET_FOLDER"),
+    const target = env.resolve("PACK_TARGET_FOLDER"),
       isDotnetCore = env.resolveFlag("DOTNET_CORE"),
-      incrementVersion = env.resolveFlag("PACK_INCREMENT_VERSION"),
+      incrementVersion = env.resolveFlag("PACK_INCREMENT_VERSION")
       packerFn = isDotnetCore ? packWithDotnetCore : packWithNuget;
     debug({
       isDotnetCore,
@@ -115,7 +116,7 @@ gulp.task(
   "clean-packages",
   "Removes any existing package artifacts",
   async () => {
-    const packageFolder = process.env.PACKAGE_TARGET_FOLDER || "packages";
+    const packageFolder = env.resolve("PACK_TARGET_FOLDER");
     await del(packageFolder);
     await fs.ensureDirectoryExists(packageFolder);
   }

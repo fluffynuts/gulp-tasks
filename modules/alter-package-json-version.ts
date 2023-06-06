@@ -17,12 +17,20 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
 
 (function() {
   const
+    validVersionStrategies = new Set(["major", "minor", "patch"]),
     gutil = requireModule<GulpUtil>("gulp-util"),
     env = requireModule<Env>("env"),
     { stat } = require("fs").promises,
     readTextFile = requireModule<ReadTextFile>("read-text-file"),
     writeTextFile = requireModule<WriteTextFile>("write-text-file"),
     incrementVersion = requireModule<IncrementVersion>("increment-version");
+
+  function validateVersioningStrategy(configuredStrategy: string) {
+    if (validVersionStrategies.has(configuredStrategy)) {
+      return;
+    }
+    throw new Error(`version incrementing for package.json is restricted to one of 'major', 'minor' or 'patch'`);
+  }
 
   async function alterPackageJsonVersion(
     inputOpts?: AlterPackageJsonVersionOptions
@@ -37,6 +45,7 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
       if (!st) {
         return reject(`Can't find file at '${ opts.packageJsonPath }'`);
       }
+      validateVersioningStrategy(opts.strategy);
       try {
         const
           json = await readTextFile(opts.packageJsonPath),

@@ -1,7 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version");
+    const validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version");
+    function validateVersioningStrategy(configuredStrategy) {
+        if (validVersionStrategies.has(configuredStrategy)) {
+            return;
+        }
+        throw new Error(`version incrementing for package.json is restricted to one of 'major', 'minor' or 'patch'`);
+    }
     async function alterPackageJsonVersion(inputOpts) {
         if (env.resolveFlag(env.INITIAL_RELEASE)) {
             return;
@@ -11,6 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (!st) {
                 return reject(`Can't find file at '${opts.packageJsonPath}'`);
             }
+            validateVersioningStrategy(opts.strategy);
             try {
                 const json = await readTextFile(opts.packageJsonPath), indent = guessIndent(json), index = JSON.parse(json), currentVersion = index.version || "0.0.0", incremented = incrementVersion(currentVersion, opts.strategy, opts.zero, opts.incrementBy);
                 index.version = incremented;

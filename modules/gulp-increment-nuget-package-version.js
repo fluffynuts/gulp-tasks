@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const gutil = requireModule("gulp-util"), debug = require("debug")("gulp-increment-nuget-package-version"), editXml = require("gulp-edit-xml"), incrementVersion = require("./increment-version-string"), { ZarroError } = requireModule("zarro-error"), xmlOpts = {
+    const env = requireModule("env"), gutil = requireModule("gulp-util"), debug = require("debug")("gulp-increment-nuget-package-version"), editXml = require("gulp-edit-xml"), incrementVersion = require("./increment-version"), { ZarroError } = requireModule("zarro-error"), xmlOpts = {
         builderOptions: {
             renderOpts: {
                 pretty: true
@@ -16,7 +16,7 @@
             return xml;
         }
         const node = packageVersionPropGroup.PackageVersion;
-        const newVersion = incrementVersion(node[0]);
+        const newVersion = incrementVersion(node[0], env.resolve("VERSION_INCREMENT_STRATEGY"), env.resolveFlag("VERSION_INCREMENT_ZERO"), env.resolveNumber("PACK_INCREMENT_VERSION_BY"), env.resolveFlag("BETA"));
         node[0] = newVersion;
         let packageIdPropGroup = xml.Project.PropertyGroup.filter((g) => !!g.PackageId)[0];
         let packageName = "(unknown)";

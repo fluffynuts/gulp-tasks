@@ -1,8 +1,10 @@
-(function () {
-  const gutil = requireModule<GulpUtil>("gulp-util"),
+(function() {
+  const
+    env = requireModule<Env>("env"),
+    gutil = requireModule<GulpUtil>("gulp-util"),
     debug = require("debug")("gulp-increment-nuget-package-version"),
     editXml = require("gulp-edit-xml"),
-    incrementVersion = require("./increment-version-string"),
+    incrementVersion = require("./increment-version"),
     { ZarroError } = requireModule("zarro-error"),
     xmlOpts = {
       builderOptions: {
@@ -23,7 +25,13 @@
       return xml;
     }
     const node = packageVersionPropGroup.PackageVersion;
-    const newVersion = incrementVersion(node[0]);
+    const newVersion = incrementVersion(
+      node[0],
+      env.resolve("VERSION_INCREMENT_STRATEGY"),
+      env.resolveFlag("VERSION_INCREMENT_ZERO"),
+      env.resolveNumber("PACK_INCREMENT_VERSION_BY"),
+      env.resolveFlag("BETA")
+    );
     node[0] = newVersion;
 
     let packageIdPropGroup = xml.Project.PropertyGroup.filter(
@@ -70,7 +78,7 @@
 
     gutil.log(
       gutil.colors.yellow(
-        `${packageName}: package version incremented to: ${newVersion}`
+        `${ packageName }: package version incremented to: ${ newVersion }`
       )
     );
 
@@ -91,7 +99,7 @@
     node[0] = newVersion;
     gutil.log(
       gutil.colors.yellow(
-        `${packageName}: package version incremented to: ${newVersion}`
+        `${ packageName }: package version incremented to: ${ newVersion }`
       )
     );
     return xml;
@@ -106,9 +114,9 @@
           return incrementPackageVersionInCsProj(xml, file);
         }
         throw new ZarroError(
-          `Don't know how to increment package version in document:\n\n${JSON.stringify(
+          `Don't know how to increment package version in document:\n\n${ JSON.stringify(
             xml
-          )}`
+          ) }`
         );
       },
       xmlOpts
