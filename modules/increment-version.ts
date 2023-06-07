@@ -50,7 +50,7 @@
       return result;
     }
     const sha = currentShortSHA();
-    return `${ result }-${ timestamp() }-${ sha }`;
+    return `${ result }-${ timestamp() }.${ sha }`;
   }
 
 

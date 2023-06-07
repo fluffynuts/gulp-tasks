@@ -36,7 +36,7 @@
             return result;
         }
         const sha = currentShortSHA();
-        return `${result}-${timestamp()}-${sha}`;
+        return `${result}-${timestamp()}.${sha}`;
     };
     function timestamp() {
         const now = new Date(Date.now()), year = `${now.getFullYear()}`.substring(2), month = zeroPad(now.getMonth() + 1), day = zeroPad(now.getDate()), hour = zeroPad(now.getHours()), minute = zeroPad(now.getMinutes());
