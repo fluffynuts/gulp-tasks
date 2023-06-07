@@ -40,9 +40,18 @@
       throw new ZarroError(`Unknown version increment strategy: ${ strategy }\n try one of 'major', 'minor' or 'patch'`);
     }
     if (strategy != "prerelease") {
-      incrementAt(parts, toIncrement, incrementBy);
+      const shouldNotActuallyIncrement = strategy === "patch" &&
+        dashedParts.length > 1;
+      if (!shouldNotActuallyIncrement) {
+        incrementAt(parts, toIncrement, incrementBy);
+      }
       if (zeroLowerOrder) {
         zeroFrom(parts, toIncrement + 1);
+      }
+    } else {
+      // bump the minor if this is the first pre-release
+      if (dashedParts.length === 1) {
+        incrementAt(parts, 2, 1);
       }
     }
     const result = parts.join(".");
