@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const PLUGIN_NAME = __filename.replace(/\.js$/, ""), gutil = requireModule("gulp-util"), loadXmlFile = requireModule("load-xml-file"), es = require("event-stream"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), { ZarroError } = requireModule("zarro-error"), defaultOptions = {
+    const PLUGIN_NAME = __filename.replace(/\.js$/, ""), gutil = requireModule("gulp-util"), loadXmlFile = requireModule("load-xml-file"), es = require("event-stream"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), { ZarroError } = requireModule("zarro-error"), { parseNugetVersion } = requireModule("parse-nuget-version"), defaultOptions = {
         push: true,
-        dryRun: false
+        dryRun: false,
+        ignorePreRelease: true
     };
     module.exports = function gitTagFromCsProj(options) {
         const opts = Object.assign({}, defaultOptions, options);
@@ -18,9 +19,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (csprojFiles.length > 1) {
                 throw new ZarroError(`too many csproj files! specify the one to use for creating a versioned tag!\n${csprojFiles.join("\n- ")}`);
             }
-            const xml = await loadXmlFile(csprojFiles[0]), version = findPackageVersion(xml, csprojFiles[0]);
+            const xml = await loadXmlFile(csprojFiles[0]), version = findPackageVersion(xml, csprojFiles[0]), versionInfo = parseNugetVersion(version);
             if (opts.dryRun) {
                 console.log(`Dry run: would have tagged at ${version}`);
+                return this.emit("end");
+            }
+            if (versionInfo.isPreRelease && opts.ignorePreRelease) {
+                console.log(`Not tagging: this is a pre-release. Set ignorePreRelease: false on options to tag pre-releases.`);
                 return this.emit("end");
             }
             try {

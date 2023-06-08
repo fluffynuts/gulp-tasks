@@ -10,51 +10,51 @@ import { Stream } from "stream";
     gitTag = requireModule<GitTag>("git-tag"),
     gitPushTags = requireModule<GitPushTags>("git-push-tags"),
     gitPush = requireModule<GitPush>("git-push"),
-    { ZarroError } = requireModule("zarro-error"),
     { parseNugetVersion } = requireModule<ParseNugetVersion>("parse-nuget-version"),
+    { ZarroError } = requireModule("zarro-error"),
     defaultOptions = {
       push: true,
       dryRun: false,
       ignorePreRelease: true
     } as Partial<GitTagOptions>;
 
-  module.exports = function gitTagFromCsProj(options?: GitTagOptions) {
-    const opts = Object.assign({}, defaultOptions, options) as GitTagOptions;
-    const csprojFiles: string[] = [];
+  module.exports = function gitTagFromPackageNuspec(options: GitTagOptions) {
+    options = Object.assign({}, defaultOptions, options) as GitTagOptions;
+    const nuspecs = [] as string[];
     return es.through(
       async function write(this: Stream, file: vinyl.BufferFile) {
-        csprojFiles.push(file.path);
+        nuspecs.push(file.path);
         this.emit("data", file);
       },
       async function end(this: Stream) {
-        if (csprojFiles.length == 0) {
-          throw new ZarroError("no csproj files found to tag from?");
+        if (nuspecs.length == 0) {
+          throw new ZarroError("no nuspecs found to tag from?");
         }
-        if (csprojFiles.length > 1) {
+        if (nuspecs.length > 1) {
           throw new ZarroError(
-            `too many csproj files! specify the one to use for creating a versioned tag!\n${ csprojFiles.join(
+            `too many nuspecs! specify the one to use for creating a versioned tag!\n${ nuspecs.join(
               "\n- "
             ) }`
           );
         }
         const
-          xml = await loadXmlFile(csprojFiles[0]),
-          version = findPackageVersion(xml, csprojFiles[0]),
+          xml = await loadXmlFile(nuspecs[0]),
+          version = xml.package.metadata[0].version[0].trim(),
           versionInfo = parseNugetVersion(version);
-        if (opts.dryRun) {
+
+        if (options.dryRun) {
           console.log(`Dry run: would have tagged at ${ version }`);
           return this.emit("end");
         }
-        if (versionInfo.isPreRelease && opts.ignorePreRelease) {
+
+        if (versionInfo.isPreRelease && options.ignorePreRelease) {
           console.log(`Not tagging: this is a pre-release. Set ignorePreRelease: false on options to tag pre-releases.`);
           return this.emit("end");
         }
+
         try {
-          await gitTag({
-            tag: `v${ version }`,
-            comment: `:bookmark: ${ version }`
-          });
-          if (opts.push) {
+          await gitTag(`v${ version }`, `:bookmark: ${ version }`);
+          if (options.push) {
             await gitPushTags();
             await gitPush();
             gutil.log(gutil.colors.green("-> all commits and tags pushed!"));
@@ -66,14 +66,4 @@ import { Stream } from "stream";
       }
     );
   };
-
-  function findPackageVersion(xml: any, fileName: string) {
-    const packageVersionPropGroup = xml.Project.PropertyGroup.filter(
-      (g: any) => !!g.PackageVersion
-    )[0];
-    if (!packageVersionPropGroup || (packageVersionPropGroup.PackageVersion[0] || "").trim() === "") {
-      throw new ZarroError(`No valid PackageVersion node found in any PropertyGroup within ${ fileName }`);
-    }
-    return packageVersionPropGroup.PackageVersion[0].trim();
-  }
 })();
