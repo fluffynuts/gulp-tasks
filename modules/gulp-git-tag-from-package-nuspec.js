@@ -24,12 +24,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 console.log(`Dry run: would have tagged at ${version}`);
                 return this.emit("end");
             }
-            if (versionInfo.isPreRelease && options.ignorePreRelease) {
-                console.log(`Not tagging: this is a pre-release. Set ignorePreRelease: false on options to tag pre-releases.`);
-                return this.emit("end");
-            }
             try {
-                await gitTag(`v${version}`, `:bookmark: ${version}`);
+                if (versionInfo.isPreRelease && options.ignorePreRelease) {
+                    console.log(`Not tagging: this is a pre-release. Set ignorePreRelease: false on options to tag pre-releases.`);
+                }
+                else {
+                    await gitTag(`v${version}`, `:bookmark: ${version}`);
+                }
                 if (options.push) {
                     await gitPushTags();
                     await gitPush();
