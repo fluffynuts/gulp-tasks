@@ -25,7 +25,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 return this.emit("end");
             }
             try {
-                if (versionInfo.isPreRelease && opts.ignorePreRelease) {
+                const shouldNotTag = versionInfo.isPreRelease && opts.ignorePreRelease;
+                if (shouldNotTag) {
                     console.log(`Not tagging: this is a pre-release. Set ignorePreRelease: false on options to tag pre-releases.`);
                 }
                 else {
@@ -35,7 +36,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
                     });
                 }
                 if (opts.push) {
-                    await gitPushTags();
+                    if (!shouldNotTag) {
+                        await gitPushTags();
+                    }
                     await gitPush();
                     gutil.log(gutil.colors.green("-> all commits and tags pushed!"));
                 }
