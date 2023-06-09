@@ -49,13 +49,16 @@ import { Stream } from "stream";
 
 
         try {
-          if (versionInfo.isPreRelease && options.ignorePreRelease) {
+          const shouldNotTag = versionInfo.isPreRelease && options.ignorePreRelease;
+          if (shouldNotTag) {
             console.log(`Not tagging: this is a pre-release. Set ignorePreRelease: false on options to tag pre-releases.`);
           } else {
             await gitTag(`v${ version }`, `:bookmark: ${ version }`);
           }
           if (options.push) {
-            await gitPushTags();
+            if (!shouldNotTag) {
+              await gitPushTags();
+            }
             await gitPush();
             gutil.log(gutil.colors.green("-> all commits and tags pushed!"));
           }
