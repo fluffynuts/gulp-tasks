@@ -1,14 +1,15 @@
-function isAlreadyQuoted(str) {
-  return str &&
-    str[0] === "\"" &&
-    str[str.length-1] === "\"";
-}
-
-module.exports = function quoteIfRequired(arg) {
-  arg = arg || "";
-  return (arg.indexOf(" ") > -1 || arg.indexOf(";") > -1) &&
-    arg.match(/^".*"$/) == null
-    ? isAlreadyQuoted(arg) ? arg : `"${arg}"`
-    : arg;
-}
-
+"use strict";
+(function () {
+    function isAlreadyQuoted(str) {
+        return !!str &&
+            str[0] === "\"" &&
+            str[str.length - 1] === "\"";
+    }
+    module.exports = function quoteIfRequired(arg) {
+        arg = arg || "";
+        return (arg.indexOf(" ") > -1 || arg.indexOf(";") > -1) &&
+            arg.match(/^".*"$/) == null
+            ? isAlreadyQuoted(arg) ? arg : `"${arg}"`
+            : arg;
+    };
+})();

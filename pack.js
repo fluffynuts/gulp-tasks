@@ -12,8 +12,7 @@ const getToolsFolder = requireModule("get-tools-folder"),
   { rewriteFile } = requireModule("rewrite-file"),
   del = require("del"),
   debug = require("debug")("pack"),
-  gulp = requireModule("gulp"),
-  { pack } = requireModule("gulp-nuget-pack");
+  gulp = requireModule("gulp");
 
 env.associate(
   [
@@ -53,6 +52,7 @@ function removeBadEntities(buffer) {
 }
 
 function packWithNuget(target, incrementVersion) {
+  const { pack } = requireModule("gulp-nuget-pack");
   const nuspecs = resolveMasks(
     "PACK_INCLUDE_NUSPEC",
     "PACK_EXCLUDE_NUSPEC",
@@ -72,6 +72,7 @@ function packWithNuget(target, incrementVersion) {
 }
 
 function packWithDotnetCore(target, incrementVersion) {
+  const { pack } = requireModule("gulp-dotnet-cli");
   const projects = resolveMasks("PACK_INCLUDE_CSPROJ", "PACK_EXCLUDE_CSPROJ", p => {
     return (p || "").match(/\.csproj$/) ? p : `${p}.csproj`;
   });
@@ -92,15 +93,17 @@ function packWithDotnetCore(target, incrementVersion) {
       .pipe(incrementPackageVersion())
       .pipe(rewriteFile(removeBadEntities));
   }
+  /** @type DotnetPackOptions */
   const packConfig = {
+    target: "[not set]",
     output: path.resolve(target),
     configuration
   };
   if (process.env["PACK_VERSION"] !== undefined) {
-    packConfig.version = process.env["PACK_VERSION"]
+    packConfig.versionSuffix = process.env["PACK_VERSION"]
   }
   return stream.pipe(
-    dotnetPack(packConfig)
+    pack(packConfig)
   );
 }
 

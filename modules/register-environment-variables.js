@@ -429,7 +429,7 @@ module.exports = function _env(env) {
   env.register({
     name: "PACK_CONFIGURATION",
     help: "Build configuration for dotnet-core packing",
-    default: "Release"
+    default: "Release",
   });
 
   env.register({
