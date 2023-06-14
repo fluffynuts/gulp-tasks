@@ -12,12 +12,15 @@
         if (os.platform() === "darwin") {
             console.warn(chalk.redBright(`up-to-date verification is experimental on OSX! Please report errors to davydm@gmail.com`));
         }
-        const remoteInfos = (await readAllGitRemotes()) || [], remotes = remoteInfos.map(r => r.name), mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes), verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
+        const remoteInfos = (await readAllGitRemotes()) || [], remotes = remoteInfos.map(r => r.name), mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes), defaultUpstream = env.resolveWithFallback("GIT_DEFAULT_UPSTREAM", remotes[0]), verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
         if (!mainBranch) {
             throw new ZarroError(`Can't determine main branch (try setting env: GIT_MAIN_BRANCH)`);
         }
         if (!verifyBranch) {
             throw new ZarroError(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
+        }
+        if (!defaultUpstream) {
+            throw new ZarroError(`Can't determine upstream to find main branch (try setting env: GIT_DEFAULT_UPSTREAM)`);
         }
         if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
             const lastFetch = await readLastFetchTime(), fetchRecentPeriod = env.resolveNumber("GIT_FETCH_RECENT_TIME") * 1000, now = Date.now();
@@ -51,7 +54,7 @@
                 log.info(`${taskName} :: skipping fetch: was last done at ${lastFetch}`);
             }
         }
-        const verifyResult = await readGitCommitDeltaCount(mainBranch || "master", verifyBranch);
+        const verifyResult = await readGitCommitDeltaCount(`${defaultUpstream}/${mainBranch}`, verifyBranch);
         // TODO: get the delta count & chuck if behind
         const aheadS = verifyResult.ahead === 1 ? "" : "s", behindS = verifyResult.behind === 1 ? "" : "s", message = `${chalk.yellow(verifyBranch)} is ${chalk.green(verifyResult.ahead)} commit${aheadS} ahead and ${chalk.red(verifyResult.behind)} commit${behindS} behind ${chalk.cyanBright(mainBranch)}`;
         log.info(`${taskName} :: ${message}`);

@@ -28,7 +28,8 @@ const
     explode,
     overrideDefault,
     resolveNumber,
-    resolveFlag
+    resolveFlag,
+    resolveWithFallback
   };
 
 const positives = [ "1", "yes", "true" ];
@@ -252,24 +253,40 @@ function resolve() {
   return result;
 }
 
+function resolveWithFallback(
+  varName,
+  fallback
+) {
+  return resolveInternal(varName, false, fallback);
+}
+
 function resolveFirst(names, ignoreDefault) {
   return names
     .reduce((acc, cur) =>
-      acc === undefined
-        ? resolveInternal(cur, ignoreDefault)
-        : acc,
+        acc === undefined
+          ? resolveInternal(cur, ignoreDefault)
+          : acc,
       undefined
     );
 }
 
-function resolveInternal(name, ignoreDefault) {
+function firstDefined() {
+  const args = Array.from(arguments);
+  for (const arg of args) {
+    if (arg !== undefined) {
+      return arg;
+    }
+  }
+}
+
+function resolveInternal(name, ignoreDefault, overrideDefault) {
   if (Array.isArray(name)) {
     // attempt to resolve the first defined variable
-    const firstDefined = resolveFirst(name, true);
+    const firstDefinedVar = resolveFirst(name, true);
     // if that doesn't work, get the first default value
-    return firstDefined === undefined
+    return firstDefinedVar === undefined
       ? resolveFirst(name, false)
-      : firstDefined;
+      : firstDefinedVar;
   }
 
   const target = registeredEnvironmentVariables[name] || {},
@@ -282,8 +299,9 @@ function resolveInternal(name, ignoreDefault) {
     overrideValues = overrides
       .map(s => process.env[s])
       .filter(s => s !== undefined),
-    initialValue =
-      (!ignoreDefault && process.env[name] === undefined) ? target.default : process.env[name];
+    initialValue = (!ignoreDefault && process.env[name] === undefined)
+      ? firstDefined(overrideDefault, target.default)
+      : process.env[name];
   if (overrideValues.length === 0) {
     return initialValue;
   }

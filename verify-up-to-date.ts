@@ -35,12 +35,16 @@
       remoteInfos = (await readAllGitRemotes()) || [],
       remotes = remoteInfos.map(r => r.name),
       mainBranch = env.resolve("GIT_MAIN_BRANCH") || await resolveDefaultVerifyTarget(remotes),
+      defaultUpstream = env.resolveWithFallback("GIT_DEFAULT_UPSTREAM", remotes[0]),
       verifyBranch = env.resolve("GIT_VERIFY_BRANCH") || await readCurrentBranch();
     if (!mainBranch) {
       throw new ZarroError(`Can't determine main branch (try setting env: GIT_MAIN_BRANCH)`);
     }
     if (!verifyBranch) {
       throw new ZarroError(`Can't determine branch to verify (try setting env: GIT_VERIFY_BRANCH)`);
+    }
+    if (!defaultUpstream) {
+      throw new ZarroError(`Can't determine upstream to find main branch (try setting env: GIT_DEFAULT_UPSTREAM)`);
     }
     if (remotes.length && !env.resolveFlag("SKIP_FETCH_ON_VERIFY")) {
       const
@@ -59,7 +63,7 @@
         try {
           const fail = failAfter(timeout);
           await Promise.race([
-            git.fetch(["--all"]),
+            git.fetch([ "--all" ]),
             fail.promise
           ]);
           fail.cancel();
@@ -70,7 +74,7 @@
             log.error(chalk.redBright(`fetch operation timed out:
  - check that the current account can fetch from all remotes
  - optionally disable fetch with SKIP_FETCH_ON_VERIFY=1
- - optionally increase GIT_FETCH_TIMEOUT from current value: ${timeout}`))
+ - optionally increase GIT_FETCH_TIMEOUT from current value: ${ timeout }`))
           }
         }
       } else {
@@ -78,7 +82,9 @@
       }
     }
     const verifyResult = await readGitCommitDeltaCount(
-      mainBranch || "master", verifyBranch);
+      `${defaultUpstream}/${mainBranch}`,
+      verifyBranch
+    );
     // TODO: get the delta count & chuck if behind
     const
       aheadS = verifyResult.ahead === 1 ? "" : "s",

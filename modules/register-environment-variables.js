@@ -271,6 +271,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "GIT_DEFAULT_UPSTREAM",
+    help: "The default upstream (typically origin) against which verification is done",
+    default: "origin"
+  });
+
+  env.register({
     name: "GIT_VERIFY_BRANCH",
     help: "The fully-qualified branch name to use when verifying (defaults to checked out branch)"
   });
