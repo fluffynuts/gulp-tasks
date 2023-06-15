@@ -90,7 +90,7 @@
     pushFlag(args, opts.noRestore, "--no-restore");
     pushFlag(args, opts.selfContained, "--self-contained");
     pushVersionSuffix(args, opts);
-    pushProperties(args, opts);
+    pushMsbuildProperties(args, opts);
     pushAdditionalArgs(args, opts);
 
     return runDotNetWith(args, opts);
@@ -112,7 +112,7 @@
     pushNoRestore(args, opts);
 
     pushLoggers(args, opts.loggers);
-    pushProperties(args, opts);
+    pushMsbuildProperties(args, opts);
     pushEnvVars(args, opts.env);
     pushAdditionalArgs(args, opts);
 
@@ -123,20 +123,27 @@
   async function pack(
     opts: DotNetPackOptions
   ): Promise<SpawnResult | SpawnError> {
+    validate(opts);
+    const copy = { ...opts, msbuildProperties: { ...opts.msbuildProperties } }
     const args = [
       "pack",
-      q(opts.target)
+      q(copy.target)
     ];
-    pushVerbosity(args, opts);
-    pushOutput(args, opts);
-    pushConfiguration(args, opts);
-    pushNoBuild(args, opts);
+    pushVerbosity(args, copy);
+    pushOutput(args, copy);
+    pushConfiguration(args, copy);
+    pushNoBuild(args, copy);
 
-    pushFlag(args, opts.includeSymbols, "--include-symbols");
-    pushFlag(args, opts.includeSource, "--include-source");
-    pushNoRestore(args, opts);
-    pushVersionSuffix(args, opts);
-    return runDotNetWith(args, opts);
+    pushFlag(args, copy.includeSymbols, "--include-symbols");
+    pushFlag(args, copy.includeSource, "--include-source");
+    pushNoRestore(args, copy);
+    pushVersionSuffix(args, copy);
+    if (copy.nuspec) {
+      copy.msbuildProperties = copy.msbuildProperties || {};
+      copy.msbuildProperties["NuspecFile"] = copy.nuspec;
+    }
+    pushMsbuildProperties(args, copy)
+    return runDotNetWith(args, copy);
   }
 
   function pushCommonBuildArgs(
@@ -232,13 +239,13 @@
     }
   }
 
-  function pushProperties(args: string[], opts: DotNetBaseOptions) {
+  function pushMsbuildProperties(args: string[], opts: DotNetBaseOptions) {
     if (!opts.msbuildProperties) {
       return;
     }
     for (const key of Object.keys(opts.msbuildProperties)) {
       args.push(
-        `/p:${ q(key) }=${ q(opts.msbuildProperties[key]) }`
+        `-p:${ q(key) }=${ q(opts.msbuildProperties[key]) }`
       )
     }
   }
