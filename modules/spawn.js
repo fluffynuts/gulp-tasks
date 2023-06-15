@@ -147,13 +147,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
         return new Promise((resolve, reject) => {
             try {
                 const child = child_process.spawn(executable, quotedArgs, opts);
-                if (executable.indexOf("gulp") > -1) {
-                    debug("gulp io", {
-                        stdout: child.stdout,
-                        stderr: child.stderr,
-                        stdin: child.stdin
-                    });
-                }
                 if (!child) {
                     reject(new Error(`unable to spawn ${executable} with args [${args.join(",")}]`));
                 }

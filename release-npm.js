@@ -36,7 +36,7 @@
                     args.push("--tag", "beta");
                 }
                 await spawn("npm", args, {
-                  interactive: true
+                    interactive: true
                 });
             }
         }
