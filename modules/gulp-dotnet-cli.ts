@@ -12,7 +12,7 @@
     };
   }
 
-  function pack(opts: DotnetPackOptions) {
+  function pack(opts: DotNetPackOptions) {
     return streamify(
       wrap(dotnetCli.pack),
       f => {
@@ -38,7 +38,7 @@
     );
   }
 
-  function test(opts: DotnetPackOptions) {
+  function test(opts: DotNetPackOptions) {
     return streamify(
       wrap(dotnetCli.test),
       f => {
@@ -51,9 +51,23 @@
     );
   }
 
+  function nugetPush(opts: DotNetNugetPushOptions) {
+    return streamify(
+      wrap(dotnetCli.nugetPush),
+      f => {
+        const copy = { ...opts };
+        copy.target = f.path;
+        return copy
+      },
+      "gulp-dotnet-cli-nuget-push",
+      "pushing nuget package"
+    )
+  }
+
   module.exports = {
     build,
     test,
-    pack
+    pack,
+    nugetPush
   };
 })();

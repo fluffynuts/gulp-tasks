@@ -2,6 +2,72 @@
 (function () {
     const spawn = requireModule("spawn");
     const q = requireModule("quote-if-required");
+    let defaultNugetSource;
+    async function determineDefaultNugetSource() {
+        if (defaultNugetSource) {
+            return defaultNugetSource;
+        }
+        const args = [
+            "nuget",
+            "list",
+            "source"
+        ];
+        const lines = [];
+        await spawn("dotnet", args, {
+            stdout: line => {
+                lines.push(line);
+            }
+        });
+        const enabledSources = lines
+            .join("\n") // can't guarantee we got lines individually
+            .split("\n")
+            .map(l => l.trim())
+            .filter(l => l.indexOf("[Enabled]") > -1)
+            // lines should come through like "  1.  nuget.org [Enabled]"
+            .map(l => l.replace(/^\s*\d+\.\s*/, "").replace("[Enabled]", "").trim())
+            .sort((a, b) => {
+            // try to sort such that nuget.org is at the top, if in the list
+            if (a.toLowerCase().indexOf("nuget.org") > -1) {
+                return -1;
+            }
+            if (b.toLowerCase().indexOf("nuget.org") > -1) {
+                return 1;
+            }
+            return 0;
+        });
+        const result = enabledSources[0];
+        if (!result) {
+            throw new Error(`Unable to determine default nuget source. Please specify 'source' on your options.`);
+        }
+        return result;
+    }
+    async function nugetPush(opts) {
+        validate(opts);
+        if (!opts.apiKey) {
+            throw new Error("apiKey was not specified");
+        }
+        const args = [
+            "nuget",
+            "push",
+            opts.target,
+            "--api-key",
+            opts.apiKey
+        ];
+        if (!opts.source) {
+            // dotnet core _demands_ that the source be set.
+            opts.source = await determineDefaultNugetSource();
+        }
+        pushIfSet(args, opts.source, "--source");
+        pushIfSet(args, opts.symbolApiKey, "--symbol-api-key");
+        pushIfSet(args, opts.symbolSource, "--symbol-source");
+        pushIfSet(args, opts.timeout, "--timeout");
+        pushFlag(args, opts.disableBuffering, "--disable-buffering");
+        pushFlag(args, opts.noSymbols, "--no-symbols");
+        pushFlag(args, opts.skipDuplicate, "--skip-duplicate");
+        pushFlag(args, opts.noServiceEndpoint, "--no-service-endpoint");
+        pushFlag(args, opts.forceEnglishOutput, "--force-english-output");
+        return runDotNetWith(args, opts);
+    }
     async function build(opts) {
         validate(opts);
         const args = [
@@ -91,15 +157,18 @@
             args.push.apply(args, opts.additionalArguments);
         }
     }
-    async function runDotNetWith(args, consumers) {
+    async function runDotNetWith(args, opts) {
         try {
             return await spawn("dotnet", args, {
-                stdout: consumers.stdout,
-                stderr: consumers.stderr
+                stdout: opts.stdout,
+                stderr: opts.stderr
             });
         }
         catch (e) {
-            return e;
+            if (opts.suppressErrors) {
+                return e;
+            }
+            throw e;
         }
     }
     function pushProperties(args, opts) {
@@ -135,7 +204,7 @@
     }
     function pushIfSet(args, value, cliSwitch) {
         if (value) {
-            args.push(cliSwitch, q(value));
+            args.push(cliSwitch, q(`${value}`));
         }
     }
     function pushFlag(args, value, cliSwitch) {
@@ -146,6 +215,7 @@
     module.exports = {
         test,
         build,
-        pack
+        pack,
+        nugetPush
     };
 })();

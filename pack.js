@@ -93,7 +93,7 @@ function packWithDotnetCore(target, incrementVersion) {
       .pipe(incrementPackageVersion())
       .pipe(rewriteFile(removeBadEntities));
   }
-  /** @type DotnetPackOptions */
+  /** @type DotNetPackOptions */
   const packConfig = {
     target: "[not set]",
     output: path.resolve(target),
