@@ -1,6 +1,9 @@
 (function() {
   const dotnetCli = requireModule<DotNetCli>("dotnet-cli");
   const { streamify } = requireModule<Streamify>("streamify");
+  const env = requireModule<Env>("env");
+  const path = require("path");
+  const { fileExists } = require("yafs");
 
   function wrap<T>(fn: (opts: T) => Promise<SpawnResult | SpawnError>): AsyncTVoid<T> {
     return async (opts: T) => {
@@ -15,9 +18,19 @@
   function pack(opts: DotNetPackOptions) {
     return streamify(
       wrap(dotnetCli.pack),
-      f => {
+      async f => {
         const copy = { ...opts };
         copy.target = f.path;
+        const containingFolder = path.dirname(f.path);
+        const supplementaryNuspec = path.resolve(
+          path.join(
+            containingFolder,
+            env.resolve(env.PACK_SUPPLEMENTARY_NUSPEC)
+          )
+        )
+        if (await fileExists(supplementaryNuspec)) {
+          copy.nuspec = supplementaryNuspec
+        }
         return copy;
       },
       "gulp-dotnet-cli-pack",

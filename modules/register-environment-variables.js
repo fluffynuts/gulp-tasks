@@ -355,13 +355,13 @@ module.exports = function _env(env) {
   env.register({
     name: "NO_UNICODE",
     help: "Prevent unicode output for status lines",
-    default: false
+    default: "false"
   });
 
   env.register({
     name: "NO_COLOR",
     help: "Prevent color output for status lines",
-    default: false
+    default: "false"
   });
 
   env.register({
@@ -388,7 +388,7 @@ module.exports = function _env(env) {
   });
 
   if (!!process.env.PACKAGE_TARGET_FOLDER) {
-    throw new Error(`env var PACKAGE_TARGET_FOLDER has been renamed to PACK_TARGET_FOLDER`);
+    throw new ZarroError(`env var PACKAGE_TARGET_FOLDER has been renamed to PACK_TARGET_FOLDER`);
   }
   env.register({
     name: "PACK_TARGET_FOLDER",
@@ -416,14 +416,20 @@ module.exports = function _env(env) {
 
   env.register({
     name: "PACK_INCLUDE_NUSPEC",
-    help: "Mask to apply for inclusions to 'pack' target for nuspec files",
+    help: "Mask to apply for inclusions to 'pack' target for nuspec files (nuget.exe packing)",
     default: "**/*.nuspec"
   });
 
   env.register({
     name: "PACK_EXCLUDE_NUSPEC",
-    help: "Mask to apply for exclusions to 'pack' target for nuspec files",
+    help: "Mask to apply for exclusions to 'pack' target for nuspec files (nuget.exe packing)",
     default: ""
+  });
+
+  env.register({
+    name: "PACK_SUPPLEMENTARY_NUSPEC",
+    help: "Relative path to use when packing with dotnet: look for this .nuspec relative to the current .csproj to supply to dotnet pack. If it is found, it will be used.",
+    default: "Package.nuspec"
   });
 
   env.register({

@@ -5,6 +5,91 @@ import { ChildProcess } from "child_process";
 (function() {
 // use for spawning actual processes.
 // You must use exec if you want to run batch files
+  class SpawnError extends Error {
+    get args(): string[] {
+      return this._args;
+    }
+
+    get exe(): string {
+      return this._exe;
+    }
+
+    get exitCode(): number {
+      return this._exitCode;
+    }
+
+    get stdout(): string[] {
+      return [ ...this._stdout ];
+    }
+
+    get stderr(): string[] {
+      return [ ...this._stderr ];
+    }
+
+    private readonly _args: string[];
+    private readonly _exe: string;
+    private readonly _exitCode: number;
+    private readonly _stdout: string[];
+    private readonly _stderr: string[];
+
+    constructor(
+      message: string,
+      exe: string,
+      args: string[],
+      exitCode: number,
+      stdout: string[],
+      stderr: string[],
+    ) {
+      super(message);
+      this._args = args;
+      this._exe = exe;
+      this._exitCode = exitCode;
+      this._stderr = [ ...stderr ];
+      this._stdout = [ ...stdout ];
+    }
+
+    public toString(): string {
+      const lines = [
+        `${ this.exe } ${ this.args.join(" ") }`,
+        `Process exited with code: ${ this.exitCode }`,
+      ];
+      const hasStdOut = this.stdout && this.stdout.length > 0;
+      const hasStdErr = this.stderr && this.stderr.length > 0;
+      const hasOutput = hasStdErr || hasStdOut;
+      if (!hasOutput) {
+        lines.push("No output was captured on stderr or stdout.");
+        return lines.join("\n");
+      }
+      if (hasStdErr) {
+        this.addOutput(lines, "stderr:", this.stderr);
+        if (hasStdOut) {
+          lines.push("");
+        }
+      }
+      if (hasStdOut) {
+        this.addOutput(lines, "stdout:", this.stdout);
+      }
+      return lines.join("\n");
+    }
+
+    private addOutput(lines: string[], label: string, source: string[]) {
+      lines.push(label);
+      for (const line of source) {
+        lines.push(` ${ line }`);
+      }
+    }
+  }
+
+  class SpawnResult {
+    constructor(
+      public exe: string,
+      public args: string[],
+      public exitCode: number,
+      public stderr: string[],
+      public stdout: string[]
+    ) {
+    }
+  }
 
   const tryLoadDebug = function() {
       try {
@@ -19,11 +104,23 @@ import { ChildProcess } from "child_process";
     readline = require("readline"),
     child_process = require("child_process");
 
+  function echoStdOut(data: string): void {
+    console.log(data);
+  }
+
+  function echoStdErr(data: string): void {
+    console.error(data);
+  }
+
   const defaultOptions = {
-    stdio: [ process.stdin, process.stdout, process.stderr ],
+    stdio: [ process.stdin, process.stdout, process.stdin ] as StdioOptions,
     cwd: process.cwd(),
     shell: true,
-    lineBuffer: true
+    lineBuffer: true,
+    // if no functions are set up, then the child stderr & stdout
+    // are null as they're not being piped to us at all
+    stderr: echoStdErr,
+    stdout: echoStdOut
   };
 
   // noinspection JSUnusedLocalSymbols
@@ -31,11 +128,26 @@ import { ChildProcess } from "child_process";
     // intentionally left blank
   }
 
-  function spawn(executable: string, args: string[], opts: SpawnOptions): Promise<SpawnResult> {
-    args = args || [];
-    opts = Object.assign({}, defaultOptions, opts);
+  function spawn(
+    executable: string,
+    commandlineArgs?: string[],
+    options?: SpawnOptions
+  ): Promise<SpawnResult> {
+    const args = !commandlineArgs ? [] : commandlineArgs;
+    if (options) {
+      // if the provided options have properties with the value
+      // undefined, they will overwrite the defaults, which is
+      // likely not what the consumer expects
+      const o = options as Dictionary<string>;
+      for (const k of Object.keys(o)) {
+        if (o[k] === undefined) {
+          delete o[k];
+        }
+      }
+    }
+    const opts = { ...defaultOptions, ...options };
 
-    if (!opts.stdio) {
+    if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
       opts.stdio = [ ...defaultOptions.stdio ];
     }
 
@@ -45,7 +157,10 @@ import { ChildProcess } from "child_process";
       stdoutFnSpecified = typeof opts.stdout === "function",
       stderrFnSpecified = typeof opts.stderr === "function";
 
-    if (stdoutFnSpecified || stderrFnSpecified && !Array.isArray(opts.stdio)) {
+    if ((stdoutFnSpecified || stderrFnSpecified) &&
+      !Array.isArray(opts.stdio) &&
+      !!defaultOptions.stdio /* just to make ts happy */
+    ) {
       opts.stdio = [ ...defaultOptions.stdio ];
     }
 
@@ -62,17 +177,17 @@ import { ChildProcess } from "child_process";
       opts.stdio[2] = "inherit";
     }
 
-    const result = {
-      executable: executable,
-      args: args,
-      exitCode: -1,
-      stderr: [],
-      stdout: []
-    } as SpawnResult;
+    const result = new SpawnResult(
+      executable,
+      args,
+      -1,
+      [],
+      []
+    )
 
     executable = quoteIfRequired(executable);
 
-    const quotedArgs = args.map(quoteIfRequired);
+    const quotedArgs = args.map(s => quoteIfRequired(s)) as string[];
     debug(`spawning: ${ executable } ${ quotedArgs.join(" ") }`);
     debug({ opts });
 
@@ -88,12 +203,14 @@ import { ChildProcess } from "child_process";
         child.on("error", (err: string) => {
           debug(`child error: ${ err }`);
           destroyPipesOn(child);
-          const e = new Error(
-            `"${ [ executable ].concat(args).join(" ") }" failed with "${ err }"`
-          ) as SpawnError;
-          e.exitCode = -1;
-          e.stderr = stderr;
-          e.stdout = stdout;
+          const e = new SpawnError(
+            `"${ [ executable ].concat(args).join(" ") }" failed with "${ err }"`,
+            executable,
+            quotedArgs,
+            -1,
+            stderr,
+            stdout
+          );
           reject(e);
         });
         let exited = false;
@@ -116,14 +233,16 @@ import { ChildProcess } from "child_process";
             if (code === 0) {
               resolve(result);
             } else {
-              const err = new Error(
+              const err = new SpawnError(
                 `"${ [ executable ]
                   .concat(args)
-                  .join(" ") }" failed with exit code ${ code }`
-              ) as SpawnError;
-              err.exitCode = code;
-              err.stdout = stdout;
-              err.stderr = stderr;
+                  .join(" ") }" failed with exit code ${ code }`,
+                executable,
+                args,
+                code,
+                stdout,
+                stderr
+              );
               reject(err);
             }
           };
@@ -140,8 +259,12 @@ import { ChildProcess } from "child_process";
     collector: string[],
     lineBuffer: Optional<boolean>
   ) {
-    if (!writer || !stream) {
+    if (!stream) {
       return;
+    }
+    if (!writer) {
+      writer = () => {
+      };
     }
 
     function handle(data: string | Buffer) {
@@ -165,7 +288,7 @@ import { ChildProcess } from "child_process";
   }
 
   function destroyPipesOn(child: ChildProcess) {
-    for (const pipe of [child.stdout, child.stderr, child.stdin]) {
+    for (const pipe of [ child.stdout, child.stderr, child.stdin ]) {
       if (pipe) {
         try {
           // I've seen times when child processes are dead, but the
@@ -182,6 +305,9 @@ import { ChildProcess } from "child_process";
       }
     }
   }
+
+  spawn.SpawnError = SpawnError;
+  spawn.SpawnResult = SpawnResult;
 
   module.exports = spawn;
 })();

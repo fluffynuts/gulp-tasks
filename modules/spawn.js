@@ -3,6 +3,69 @@ Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     // use for spawning actual processes.
     // You must use exec if you want to run batch files
+    class SpawnError extends Error {
+        constructor(message, exe, args, exitCode, stdout, stderr) {
+            super(message);
+            this._args = args;
+            this._exe = exe;
+            this._exitCode = exitCode;
+            this._stderr = [...stderr];
+            this._stdout = [...stdout];
+        }
+        get args() {
+            return this._args;
+        }
+        get exe() {
+            return this._exe;
+        }
+        get exitCode() {
+            return this._exitCode;
+        }
+        get stdout() {
+            return [...this._stdout];
+        }
+        get stderr() {
+            return [...this._stderr];
+        }
+        toString() {
+            const lines = [
+                `${this.exe} ${this.args.join(" ")}`,
+                `Process exited with code: ${this.exitCode}`,
+            ];
+            const hasStdOut = this.stdout && this.stdout.length > 0;
+            const hasStdErr = this.stderr && this.stderr.length > 0;
+            const hasOutput = hasStdErr || hasStdOut;
+            if (!hasOutput) {
+                lines.push("No output was captured on stderr or stdout.");
+                return lines.join("\n");
+            }
+            if (hasStdErr) {
+                this.addOutput(lines, "stderr:", this.stderr);
+                if (hasStdOut) {
+                    lines.push("");
+                }
+            }
+            if (hasStdOut) {
+                this.addOutput(lines, "stdout:", this.stdout);
+            }
+            return lines.join("\n");
+        }
+        addOutput(lines, label, source) {
+            lines.push(label);
+            for (const line of source) {
+                lines.push(` ${line}`);
+            }
+        }
+    }
+    class SpawnResult {
+        constructor(exe, args, exitCode, stderr, stdout) {
+            this.exe = exe;
+            this.args = args;
+            this.exitCode = exitCode;
+            this.stderr = stderr;
+            this.stdout = stdout;
+        }
+    }
     const tryLoadDebug = function () {
         try {
             return require("debug")("spawn");
@@ -12,24 +75,47 @@ Object.defineProperty(exports, "__esModule", { value: true });
             };
         }
     }, quoteIfRequired = require("./quote-if-required"), debug = tryLoadDebug(), readline = require("readline"), child_process = require("child_process");
+    function echoStdOut(data) {
+        console.log(data);
+    }
+    function echoStdErr(data) {
+        console.error(data);
+    }
     const defaultOptions = {
-        stdio: [process.stdin, process.stdout, process.stderr],
+        stdio: [process.stdin, process.stdout, process.stdin],
         cwd: process.cwd(),
         shell: true,
-        lineBuffer: true
+        lineBuffer: true,
+        // if no functions are set up, then the child stderr & stdout
+        // are null as they're not being piped to us at all
+        stderr: echoStdErr,
+        stdout: echoStdOut
     };
     // noinspection JSUnusedLocalSymbols
     function nullConsumer(str) {
         // intentionally left blank
     }
-    function spawn(executable, args, opts) {
-        args = args || [];
-        opts = Object.assign({}, defaultOptions, opts);
-        if (!opts.stdio) {
+    function spawn(executable, commandlineArgs, options) {
+        const args = !commandlineArgs ? [] : commandlineArgs;
+        if (options) {
+            // if the provided options have properties with the value
+            // undefined, they will overwrite the defaults, which is
+            // likely not what the consumer expects
+            const o = options;
+            for (const k of Object.keys(o)) {
+                if (o[k] === undefined) {
+                    delete o[k];
+                }
+            }
+        }
+        const opts = Object.assign(Object.assign({}, defaultOptions), options);
+        if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
             opts.stdio = [...defaultOptions.stdio];
         }
         let stdOutWriter = nullConsumer, stdErrWriter = nullConsumer, stdoutFnSpecified = typeof opts.stdout === "function", stderrFnSpecified = typeof opts.stderr === "function";
-        if (stdoutFnSpecified || stderrFnSpecified && !Array.isArray(opts.stdio)) {
+        if ((stdoutFnSpecified || stderrFnSpecified) &&
+            !Array.isArray(opts.stdio) &&
+            !!defaultOptions.stdio /* just to make ts happy */) {
             opts.stdio = [...defaultOptions.stdio];
         }
         if (stdoutFnSpecified) {
@@ -46,15 +132,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
         else if (Array.isArray(opts.stdio)) {
             opts.stdio[2] = "inherit";
         }
-        const result = {
-            executable: executable,
-            args: args,
-            exitCode: -1,
-            stderr: [],
-            stdout: []
-        };
+        const result = new SpawnResult(executable, args, -1, [], []);
         executable = quoteIfRequired(executable);
-        const quotedArgs = args.map(quoteIfRequired);
+        const quotedArgs = args.map(s => quoteIfRequired(s));
         debug(`spawning: ${executable} ${quotedArgs.join(" ")}`);
         debug({ opts });
         return new Promise((resolve, reject) => {
@@ -69,10 +149,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 child.on("error", (err) => {
                     debug(`child error: ${err}`);
                     destroyPipesOn(child);
-                    const e = new Error(`"${[executable].concat(args).join(" ")}" failed with "${err}"`);
-                    e.exitCode = -1;
-                    e.stderr = stderr;
-                    e.stdout = stdout;
+                    const e = new SpawnError(`"${[executable].concat(args).join(" ")}" failed with "${err}"`, executable, quotedArgs, -1, stderr, stdout);
                     reject(e);
                 });
                 let exited = false;
@@ -95,12 +172,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
                             resolve(result);
                         }
                         else {
-                            const err = new Error(`"${[executable]
+                            const err = new SpawnError(`"${[executable]
                                 .concat(args)
-                                .join(" ")}" failed with exit code ${code}`);
-                            err.exitCode = code;
-                            err.stdout = stdout;
-                            err.stderr = stderr;
+                                .join(" ")}" failed with exit code ${code}`, executable, args, code, stdout, stderr);
                             reject(err);
                         }
                     };
@@ -112,8 +186,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
         });
     }
     function setupIoHandler(writer, stream, collector, lineBuffer) {
-        if (!writer || !stream) {
+        if (!stream) {
             return;
+        }
+        if (!writer) {
+            writer = () => {
+            };
         }
         function handle(data) {
             if (data === undefined) {
@@ -152,5 +230,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         }
     }
+    spawn.SpawnError = SpawnError;
+    spawn.SpawnResult = SpawnResult;
     module.exports = spawn;
 })();

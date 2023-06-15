@@ -203,6 +203,7 @@ function bootstrapGulp() {
 
   function shouldDump(e) {
     return isZarroError(e) ||
+      e.shouldAlwaysSurface ||
       process.env.ALWAYS_DUMP_GULP_ERRORS ||
       process.env.DEBUG === "*" ||
       probablyNotReportedByGulp(e);

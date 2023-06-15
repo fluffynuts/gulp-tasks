@@ -2,6 +2,9 @@
 (function () {
     const dotnetCli = requireModule("dotnet-cli");
     const { streamify } = requireModule("streamify");
+    const env = requireModule("env");
+    const path = require("path");
+    const { fileExists } = require("yafs");
     function wrap(fn) {
         return async (opts) => {
             const result = await fn(opts);
@@ -12,9 +15,14 @@
         };
     }
     function pack(opts) {
-        return streamify(wrap(dotnetCli.pack), f => {
+        return streamify(wrap(dotnetCli.pack), async (f) => {
             const copy = Object.assign({}, opts);
             copy.target = f.path;
+            const containingFolder = path.dirname(f.path);
+            const supplementaryNuspec = path.resolve(path.join(containingFolder, env.resolve(env.PACK_SUPPLEMENTARY_NUSPEC)));
+            if (await fileExists(supplementaryNuspec)) {
+                copy.nuspec = supplementaryNuspec;
+            }
             return copy;
         }, "gulp-dotnet-cli-pack", "creating nuget package");
     }

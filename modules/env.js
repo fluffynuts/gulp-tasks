@@ -372,7 +372,12 @@ const positiveFlags = [ "yes", "true", "1" ];
 const negativeFlags = [ "no", "false", "0" ];
 
 function resolveFlag(name) {
-  const value = (resolveInternal(name) || "").toLowerCase();
+  const
+    resolved = resolveInternal(name),
+    value = (resolved === undefined ? "" : resolved).toLowerCase();
+  if (value === true || value === false) {
+    return value;
+  }
   if (positiveFlags.indexOf(value) > -1) {
     logResolved(name, true);
     return true;
