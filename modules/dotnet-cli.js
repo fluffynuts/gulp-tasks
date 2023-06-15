@@ -1,5 +1,6 @@
 "use strict";
 (function () {
+    // TODO: perhaps one day, this should become an npm module of its own
     const spawn = requireModule("spawn");
     const q = requireModule("quote-if-required");
     let defaultNugetSource;
