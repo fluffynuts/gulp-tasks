@@ -35,7 +35,9 @@
                 if (isBeta) {
                     args.push("--tag", "beta");
                 }
-                await spawn("npm", args);
+                await spawn("npm", args, {
+                  interactive: true
+                });
             }
         }
         catch (e) {

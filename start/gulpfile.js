@@ -230,6 +230,10 @@ function runNpmWith(args) {
   const os = require("os");
 
   return os.platform() === "win32"
-    ? spawn("cmd", [ "/c", "npm" ].concat(args))
-    : spawn("npm", args);
+    ? spawn("cmd", [ "/c", "npm" ].concat(args), {
+      interactive: true
+    })
+    : spawn("npm", args, {
+      interactive: true
+    });
 }

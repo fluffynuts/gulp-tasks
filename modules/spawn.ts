@@ -119,8 +119,8 @@ import { ChildProcess } from "child_process";
     lineBuffer: true,
     // if no functions are set up, then the child stderr & stdout
     // are null as they're not being piped to us at all
-    stderr: echoStdErr,
-    stdout: echoStdOut
+    stderr: echoStdErr as Optional<ProcessIO>,
+    stdout: echoStdOut as Optional<ProcessIO>
   };
 
   // noinspection JSUnusedLocalSymbols
@@ -146,6 +146,13 @@ import { ChildProcess } from "child_process";
       }
     }
     const opts = { ...defaultOptions, ...options };
+    if (opts.interactive) {
+      opts.stderr = undefined;
+      opts.stdout = undefined;
+    }
+    if (debug("gulp") > -1) {
+      console.log("running gulp", opts);
+    }
 
     if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
       opts.stdio = [ ...defaultOptions.stdio ];

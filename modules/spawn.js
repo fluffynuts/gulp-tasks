@@ -109,6 +109,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         }
         const opts = Object.assign(Object.assign({}, defaultOptions), options);
+        if (opts.interactive) {
+            opts.stderr = undefined;
+            opts.stdout = undefined;
+        }
+        if (debug("gulp") > -1) {
+            console.log("running gulp", opts);
+        }
         if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
             opts.stdio = [...defaultOptions.stdio];
         }
@@ -140,6 +147,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
         return new Promise((resolve, reject) => {
             try {
                 const child = child_process.spawn(executable, quotedArgs, opts);
+                if (executable.indexOf("gulp") > -1) {
+                    debug("gulp io", {
+                        stdout: child.stdout,
+                        stderr: child.stderr,
+                        stdin: child.stdin
+                    });
+                }
                 if (!child) {
                     reject(new Error(`unable to spawn ${executable} with args [${args.join(",")}]`));
                 }

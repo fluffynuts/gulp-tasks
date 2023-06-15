@@ -59,7 +59,8 @@ function updateZarroPipe(beta: boolean) {
       tag = beta ? "beta" : "latest",
       args = ["install", save ? "--save" : "--save-dev", `zarro@${tag}`, "--no-progress", "--silent"],
       opts = {
-        cwd: file.dirname
+        cwd: file.dirname,
+        interactive: true
       }
     if (env.resolveFlag(env.DRY_RUN)) {
       console.log({
