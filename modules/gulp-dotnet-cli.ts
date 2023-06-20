@@ -15,6 +15,45 @@
     };
   }
 
+  function build(opts: DotNetBuildOptions) {
+    return streamify(
+      wrap(dotnetCli.build),
+      f => {
+        const copy = { ...opts };
+        copy.target = f.path;
+        return copy;
+      },
+      "gulp-dotnet-cli-build",
+      "building project or solution"
+    );
+  }
+
+  function clean(opts: DotNetCleanOptions) {
+    return streamify(
+      wrap(dotnetCli.clean),
+      f => {
+        const copy = { ...opts };
+        copy.target = f.path;
+        return copy;
+      },
+      "gulp-dotnet-cli-clean",
+      "cleaning project or solution"
+    )
+  }
+
+  function test(opts: DotNetPackOptions) {
+    return streamify(
+      wrap(dotnetCli.test),
+      f => {
+        const copy = { ...opts };
+        copy.target = f.path;
+        return copy;
+      },
+      "gulp-dotnet-cli-pack",
+      "creating nuget package"
+    );
+  }
+
   function pack(opts: DotNetPackOptions) {
     return streamify(
       wrap(dotnetCli.pack),
@@ -38,32 +77,6 @@
     );
   }
 
-  function build(opts: DotNetBuildOptions) {
-    return streamify(
-      wrap(dotnetCli.build),
-      f => {
-        const copy = { ...opts };
-        copy.target = f.path;
-        return copy;
-      },
-      "gulp-dotnet-cli-build",
-      "building project or solution"
-    );
-  }
-
-  function test(opts: DotNetPackOptions) {
-    return streamify(
-      wrap(dotnetCli.test),
-      f => {
-        const copy = { ...opts };
-        copy.target = f.path;
-        return copy;
-      },
-      "gulp-dotnet-cli-pack",
-      "creating nuget package"
-    );
-  }
-
   function nugetPush(opts: DotNetNugetPushOptions) {
     return streamify(
       wrap(dotnetCli.nugetPush),
@@ -79,8 +92,9 @@
 
   module.exports = {
     build,
+    clean,
     test,
     pack,
     nugetPush
-  };
+  } as GulpDotNetCli;
 })();

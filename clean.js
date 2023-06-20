@@ -5,7 +5,7 @@ const
   debug = require("debug")("clean"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
   msbuild = require("gulp-msbuild"),
-  dotnetClean = require("gulp-dotnet-cli").clean,
+  dotnetClean = requireModule("gulp-dotnet-cli").clean,
   resolveMasks = requireModule("resolve-masks"),
   env = requireModule("env");
 const chalk = require("ansi-colors");
@@ -19,7 +19,8 @@ const myVars = [
   "BUILD_PLATFORM",
   "BUILD_ARCHITECTURE",
   "BUILD_MSBUILD_NODE_REUSE",
-  "BUILD_RETRIES"
+  "BUILD_RETRIES",
+  "BUILD_TARGETS"
 ];
 env.associate(myVars, "clean");
 
@@ -48,10 +49,12 @@ function clean() {
 
 async function cleanWithDotnet() {
   const
-    configuration = env.resolve("BUILD_CONFIGURATION"),
-    slnMasks = resolveBuildSolutionMasks();
+    configuration = env.resolveArray("BUILD_CONFIGURATION"),
+    slnMasks = resolveBuildSolutionMasks(),
+    targets = env.resolveArray("BUILD_TARGETS");
   debug({
     slnMasks,
+    targets,
     cwd: process.cwd()
   });
   const solutions = gulp

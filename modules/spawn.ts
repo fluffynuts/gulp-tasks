@@ -19,33 +19,33 @@ import { ChildProcess } from "child_process";
     }
 
     get stdout(): string[] {
-      return [ ...this._stdout ];
+      return this._stdout ? [ ...this._stdout ] : [];
     }
 
     get stderr(): string[] {
-      return [ ...this._stderr ];
+      return this._stderr ? [ ...this._stderr ] : [];
     }
 
     private readonly _args: string[];
     private readonly _exe: string;
     private readonly _exitCode: number;
-    private readonly _stdout: string[];
-    private readonly _stderr: string[];
+    private readonly _stdout: Nullable<string[]>;
+    private readonly _stderr: Nullable<string[]>;
 
     constructor(
       message: string,
       exe: string,
       args: string[],
       exitCode: number,
-      stdout: string[],
-      stderr: string[],
+      stdout: Nullable<string[]>,
+      stderr: Nullable<string[]>
     ) {
       super(message);
       this._args = args;
       this._exe = exe;
       this._exitCode = exitCode;
-      this._stderr = [ ...stderr ];
-      this._stdout = [ ...stdout ];
+      this._stderr = stderr ? [ ...stderr ] : null;
+      this._stdout = stdout ? [ ...stdout ] : null;
     }
 
     public toString(): string {
@@ -53,6 +53,10 @@ import { ChildProcess } from "child_process";
         `${ this.exe } ${ this.args.join(" ") }`,
         `Process exited with code: ${ this.exitCode }`,
       ];
+      if (this._stderr === null && this._stdout === null) {
+        // io has been suppressed;
+        return lines.join("\n");
+      }
       const hasStdOut = this.stdout && this.stdout.length > 0;
       const hasStdErr = this.stderr && this.stderr.length > 0;
       const hasOutput = hasStdErr || hasStdOut;
@@ -215,8 +219,8 @@ import { ChildProcess } from "child_process";
             executable,
             quotedArgs,
             -1,
-            stderr,
-            stdout
+            opts.suppressStdIoInErrors ? null : stderr,
+            opts.suppressStdIoInErrors ? null : stdout
           );
           reject(e);
         });
@@ -247,8 +251,8 @@ import { ChildProcess } from "child_process";
                 executable,
                 args,
                 code,
-                stdout,
-                stderr
+                opts.suppressStdIoInErrors ? null : stdout,
+                opts.suppressStdIoInErrors ? null : stderr
               );
               reject(err);
             }
@@ -315,6 +319,12 @@ import { ChildProcess } from "child_process";
 
   spawn.SpawnError = SpawnError;
   spawn.SpawnResult = SpawnResult;
+  spawn.isSpawnError = function(o: any): o is SpawnError {
+    return o instanceof SpawnError;
+  }
+  spawn.isSpawnResult = function(o: any): o is SpawnResult {
+    return o instanceof SpawnResult;
+  }
 
   module.exports = spawn;
 })();

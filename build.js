@@ -5,8 +5,6 @@ const
   gulp = requireModule("gulp"),
   debug = require("debug")("build"),
   promisifyStream = requireModule("promisify"),
-  dotnetCli = require("gulp-dotnet-cli"),
-  dotnetBuild = dotnetCli.build,
   throwIfNoFiles = requireModule("throw-if-no-files"),
   xbuild = requireModule("gulp-xbuild"),
   gutil = requireModule("gulp-util"),
@@ -90,7 +88,7 @@ function buildForNetCore(solutions) {
   const options = {
     target: "[not set]",
     verbosity: env.resolve("BUILD_VERBOSITY"),
-    configuration,
+    configuration: configuration,
     additionalArguments: msbuildArgs
   };
   return promisifyStream(

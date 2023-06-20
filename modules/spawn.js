@@ -9,8 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
             this._args = args;
             this._exe = exe;
             this._exitCode = exitCode;
-            this._stderr = [...stderr];
-            this._stdout = [...stdout];
+            this._stderr = stderr ? [...stderr] : null;
+            this._stdout = stdout ? [...stdout] : null;
         }
         get args() {
             return this._args;
@@ -22,16 +22,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
             return this._exitCode;
         }
         get stdout() {
-            return [...this._stdout];
+            return this._stdout ? [...this._stdout] : [];
         }
         get stderr() {
-            return [...this._stderr];
+            return this._stderr ? [...this._stderr] : [];
         }
         toString() {
             const lines = [
                 `${this.exe} ${this.args.join(" ")}`,
                 `Process exited with code: ${this.exitCode}`,
             ];
+            if (this._stderr === null && this._stdout === null) {
+                // io has been suppressed;
+                return lines.join("\n");
+            }
             const hasStdOut = this.stdout && this.stdout.length > 0;
             const hasStdErr = this.stderr && this.stderr.length > 0;
             const hasOutput = hasStdErr || hasStdOut;
@@ -156,7 +160,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 child.on("error", (err) => {
                     debug(`child error: ${err}`);
                     destroyPipesOn(child);
-                    const e = new SpawnError(`"${[executable].concat(args).join(" ")}" failed with "${err}"`, executable, quotedArgs, -1, stderr, stdout);
+                    const e = new SpawnError(`"${[executable].concat(args).join(" ")}" failed with "${err}"`, executable, quotedArgs, -1, opts.suppressStdIoInErrors ? null : stderr, opts.suppressStdIoInErrors ? null : stdout);
                     reject(e);
                 });
                 let exited = false;
@@ -181,7 +185,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                         else {
                             const err = new SpawnError(`"${[executable]
                                 .concat(args)
-                                .join(" ")}" failed with exit code ${code}`, executable, args, code, stdout, stderr);
+                                .join(" ")}" failed with exit code ${code}`, executable, args, code, opts.suppressStdIoInErrors ? null : stdout, opts.suppressStdIoInErrors ? null : stderr);
                             reject(err);
                         }
                     };
@@ -239,5 +243,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
     }
     spawn.SpawnError = SpawnError;
     spawn.SpawnResult = SpawnResult;
+    spawn.isSpawnError = function (o) {
+        return o instanceof SpawnError;
+    };
+    spawn.isSpawnResult = function (o) {
+        return o instanceof SpawnResult;
+    };
     module.exports = spawn;
 })();

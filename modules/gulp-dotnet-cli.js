@@ -14,6 +14,27 @@
             // otherwise, discard the result
         };
     }
+    function build(opts) {
+        return streamify(wrap(dotnetCli.build), f => {
+            const copy = Object.assign({}, opts);
+            copy.target = f.path;
+            return copy;
+        }, "gulp-dotnet-cli-build", "building project or solution");
+    }
+    function clean(opts) {
+        return streamify(wrap(dotnetCli.clean), f => {
+            const copy = Object.assign({}, opts);
+            copy.target = f.path;
+            return copy;
+        }, "gulp-dotnet-cli-clean", "cleaning project or solution");
+    }
+    function test(opts) {
+        return streamify(wrap(dotnetCli.test), f => {
+            const copy = Object.assign({}, opts);
+            copy.target = f.path;
+            return copy;
+        }, "gulp-dotnet-cli-pack", "creating nuget package");
+    }
     function pack(opts) {
         return streamify(wrap(dotnetCli.pack), async (f) => {
             const copy = Object.assign({}, opts);
@@ -26,20 +47,6 @@
             return copy;
         }, "gulp-dotnet-cli-pack", "creating nuget package");
     }
-    function build(opts) {
-        return streamify(wrap(dotnetCli.build), f => {
-            const copy = Object.assign({}, opts);
-            copy.target = f.path;
-            return copy;
-        }, "gulp-dotnet-cli-build", "building project or solution");
-    }
-    function test(opts) {
-        return streamify(wrap(dotnetCli.test), f => {
-            const copy = Object.assign({}, opts);
-            copy.target = f.path;
-            return copy;
-        }, "gulp-dotnet-cli-pack", "creating nuget package");
-    }
     function nugetPush(opts) {
         return streamify(wrap(dotnetCli.nugetPush), f => {
             const copy = Object.assign({}, opts);
@@ -49,6 +56,7 @@
     }
     module.exports = {
         build,
+        clean,
         test,
         pack,
         nugetPush
