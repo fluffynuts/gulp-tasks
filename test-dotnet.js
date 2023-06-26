@@ -68,15 +68,20 @@ async function runTests() {
   const dotNetCore = env.resolveFlag("DOTNET_CORE");
   const testMasks = resolveTestMasks(dotNetCore),
     configuration = env.resolve("BUILD_CONFIGURATION"),
-    tester = dotNetCore ? testAsDotnetCore : testWithNunitCli;
+    tester = dotNetCore
+      ? testAsDotnetCore
+      : testWithNunitCli;
 
   debug({
     tester,
     configuration,
     testMasks
   });
-  await tester(configuration, testMasks);
-  await removeTestDiagnostics();
+  try {
+    await tester(configuration, testMasks);
+  } finally {
+    await removeTestDiagnostics();
+  }
 }
 
 async function removeTestDiagnostics() {
@@ -355,7 +360,8 @@ async function testOneProject(
     noBuild: true,
     loggers,
     stderr,
-    stdout
+    stdout,
+    suppressErrors: true // we want to collect the errors later, not die when one happens
   });
 }
 
