@@ -39,11 +39,6 @@
         return streamify(wrap(dotnetCli.pack), async (f) => {
             const copy = Object.assign({}, opts);
             copy.target = f.path;
-            const containingFolder = path.dirname(f.path);
-            const supplementaryNuspec = path.resolve(path.join(containingFolder, env.resolve(env.PACK_SUPPLEMENTARY_NUSPEC)));
-            if (await fileExists(supplementaryNuspec)) {
-                copy.nuspec = supplementaryNuspec;
-            }
             return copy;
         }, "gulp-dotnet-cli-pack", "creating nuget package");
     }
@@ -66,6 +61,7 @@
         clean,
         test,
         pack,
-        nugetPush
+        nugetPush,
+        publish
     };
 })();

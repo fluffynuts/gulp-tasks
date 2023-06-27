@@ -1,4 +1,6 @@
 import { config } from "yargs";
+import { fileExists } from "yafs";
+import path from "path";
 
 (function() {
   // TODO: perhaps one day, this should become an npm module of its own
@@ -6,6 +8,8 @@ import { config } from "yargs";
   const spawn = requireModule<Spawn>("spawn");
   const { isSpawnError } = spawn;
   const { yellow } = require("ansi-colors");
+  const path = require("path");
+  const { fileExists } = require("yafs");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
 
   let defaultNugetSource: string;
@@ -35,7 +39,7 @@ import { config } from "yargs";
         pushIfSet(args, opts.versionSuffix, "--version-suffix");
         pushRuntime(args, opts);
         pushOperatingSystem(args, opts);
-        pushSelfContained(args, opts);
+        pushSelfContainedForPublish(args, opts);
         pushArch(args, opts);
         pushDisableBuildServers(args, opts);
 
@@ -131,7 +135,7 @@ import { config } from "yargs";
     return runOnAllConfigurations(
       "Packing",
       opts,
-      configuration => {
+      async configuration => {
         const copy = { ...opts, msbuildProperties: { ...opts.msbuildProperties } }
         const args = [
           "pack",
@@ -146,7 +150,7 @@ import { config } from "yargs";
         pushFlag(args, copy.includeSource, "--include-source");
         pushNoRestore(args, copy);
         pushVersionSuffix(args, copy);
-        if (copy.nuspec) {
+        if (copy.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
           copy.msbuildProperties = copy.msbuildProperties || {};
           copy.msbuildProperties["NuspecFile"] = copy.nuspec;
         }
@@ -154,6 +158,28 @@ import { config } from "yargs";
         pushAdditionalArgs(args, copy);
         return runDotNetWith(args, copy);
       });
+  }
+
+  async function shouldIncludeNuspec(
+    opts: DotNetPackOptions,
+    target: string
+  ): Promise<boolean> {
+    if (!opts.nuspec) {
+      return false;
+    }
+
+    if (await fileExists(opts.nuspec)) {
+      return true;
+    }
+
+    const
+      container = path.dirname(target),
+      resolved = path.resolve(path.join(container, opts.nuspec));
+    if (await fileExists(resolved)) {
+      return true;
+    }
+
+    return opts.ignoreMissingNuspec === false;
   }
 
   async function nugetPush(
@@ -188,15 +214,19 @@ import { config } from "yargs";
     return runDotNetWith(args, opts);
   }
 
-  function pushSelfContained(
+  function pushSelfContainedForPublish(
     args: string[],
     opts: DotNetPublishOptions
   ) {
     if (opts.runtime === undefined) {
       return;
     }
+    if (opts.selfContained === undefined) {
+      args.push("--self-contained");
+      return;
+    }
     args.push(
-      !!opts.selfContained
+      opts.selfContained
         ? "--self-contained"
         : "--no-self-contained"
     );

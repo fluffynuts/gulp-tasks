@@ -1,9 +1,15 @@
 const
   chalk = require("ansi-colors"),
   os = require("os"),
+  /**
+   * @type Env
+   */
   env = requireModule("env"),
   gulp = requireModule("gulp"),
   debug = require("debug")("build"),
+  /**
+   * @type PromisifyStream
+   */
   promisifyStream = requireModule("promisify"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
   xbuild = requireModule("gulp-xbuild"),

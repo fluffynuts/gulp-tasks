@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     const spawn = requireModule("spawn");
     const { isSpawnError } = spawn;
     const { yellow } = require("ansi-colors");
+    const path = require("path");
+    const { fileExists } = require("yafs");
     const q = requireModule("quote-if-required");
     let defaultNugetSource;
     function showHeader(label) {
@@ -25,7 +27,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             pushIfSet(args, opts.versionSuffix, "--version-suffix");
             pushRuntime(args, opts);
             pushOperatingSystem(args, opts);
-            pushSelfContained(args, opts);
+            pushSelfContainedForPublish(args, opts);
             pushArch(args, opts);
             pushDisableBuildServers(args, opts);
             pushVerbosity(args, opts);
@@ -90,7 +92,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         });
     }
     async function pack(opts) {
-        return runOnAllConfigurations("Packing", opts, configuration => {
+        return runOnAllConfigurations("Packing", opts, async (configuration) => {
             const copy = Object.assign(Object.assign({}, opts), { msbuildProperties: Object.assign({}, opts.msbuildProperties) });
             const args = [
                 "pack",
@@ -104,7 +106,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             pushFlag(args, copy.includeSource, "--include-source");
             pushNoRestore(args, copy);
             pushVersionSuffix(args, copy);
-            if (copy.nuspec) {
+            if (copy.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
                 copy.msbuildProperties = copy.msbuildProperties || {};
                 copy.msbuildProperties["NuspecFile"] = copy.nuspec;
             }
@@ -112,6 +114,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
             pushAdditionalArgs(args, copy);
             return runDotNetWith(args, copy);
         });
+    }
+    async function shouldIncludeNuspec(opts, target) {
+        if (!opts.nuspec) {
+            return false;
+        }
+        if (await fileExists(opts.nuspec)) {
+            return true;
+        }
+        const container = path.dirname(target), resolved = path.resolve(path.join(container, opts.nuspec));
+        if (await fileExists(resolved)) {
+            return true;
+        }
+        return opts.ignoreMissingNuspec === false;
     }
     async function nugetPush(opts) {
         validate(opts);
@@ -141,11 +156,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
         pushAdditionalArgs(args, opts);
         return runDotNetWith(args, opts);
     }
-    function pushSelfContained(args, opts) {
+    function pushSelfContainedForPublish(args, opts) {
         if (opts.runtime === undefined) {
             return;
         }
-        args.push(!!opts.selfContained
+        if (opts.selfContained === undefined) {
+            args.push("--self-contained");
+            return;
+        }
+        args.push(opts.selfContained
             ? "--self-contained"
             : "--no-self-contained");
     }

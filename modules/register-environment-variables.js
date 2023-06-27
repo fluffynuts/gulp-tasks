@@ -11,6 +11,7 @@ const
   getToolsFolder = requireModule("get-tools-folder");
 
 module.exports = function _env(env) {
+  const msbuildVerbosityOptions = "one of: q[uiet] / m[inimal] / n[ormal] / d[etailed] / diag[nostic]"
   debug("-- start env var registration --");
 
   env.register({
@@ -181,8 +182,13 @@ module.exports = function _env(env) {
 
   env.register({
     name: "TEST_VERBOSITY",
-    help: "Verbosity of reporting for dotnet core testing",
+    help: `Verbosity of reporting for dotnet core testing: ${msbuildVerbosityOptions}`,
     default: "normal"
+  });
+
+  env.register({
+    name: "PACK_VERBOSITY",
+    help: `Verbosity of reporting when packing: ${msbuildVerbosityOptions}`
   });
 
   env.register({
@@ -199,7 +205,7 @@ module.exports = function _env(env) {
 
   env.register({
     name: "BUILD_VERBOSITY",
-    help: "Verbosity of reporting for msbuild building",
+    help: `Verbosity of reporting for msbuild building: ${msbuildVerbosityOptions}`,
     default: "minimal"
   });
 
@@ -353,6 +359,67 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "DOTNET_PUBLISH_OS",
+    help: "The target operating system for the publish command (default is the current OS)"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_ARCH",
+    help: "The architecture to use for publish commands"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_FRAMEWORK",
+    help: "The .net framework to use for publish commands"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_SELF_CONTAINED",
+    help: "Flag: whether or not to publish self-contained. If a runtime is specified and this is not, it's assume on as that's the default for 'dotnet publish'",
+    default: "true"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_MANIFEST",
+    help: "Path to a target manifest file that contains a list of packages to be excluded from the publish step"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_NO_BUILD",
+    help: "Skip build on publish",
+    default: "false"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_VERSION_SUFFIX",
+    help: "Set the version suffix for the published artifact(s)"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_NO_RESTORE",
+    help: "Skip package restore on publish",
+    default: "false"
+  });
+
+  env.register({
+    name: "DOTNET_PUBLISH_USE_CURRENT_RUNTIME",
+    help: "Use the current runtime for published artifacts",
+    default: "true"
+  });
+
+
+  env.register({
+    name: "DOTNET_PUBLISH_VERBOSITY",
+    help: `Verbosity to use during publish operation: ${msbuildVerbosityOptions}`
+  });
+
+  env.register({
+    name: "DOTNET_DISABLE_BUILD_SERVERS",
+    help: "Force dotnet to ignore any persistent build servers",
+    default: "false"
+  });
+
+  env.register({
     name: "NO_UNICODE",
     help: "Prevent unicode output for status lines",
     default: "false"
@@ -433,6 +500,12 @@ module.exports = function _env(env) {
   });
 
   env.register({
+    name: "PACK_IGNORE_MISSING_DEFAULT_NUSPEC",
+    help: "When PACK_SUPPLEMENTARY_NUSPEC has not been explicitly set, ignore default missing .nuspec files (ie, use Package.nuspec if available, otherwise don't)",
+    default: "true"
+  });
+
+  env.register({
     name: "PACK_CONFIGURATION",
     help: "Build configuration for dotnet-core packing",
     default: "Release",
@@ -441,7 +514,7 @@ module.exports = function _env(env) {
   env.register({
     name: "PACK_INCREMENT_VERSION",
     help: "Flag: should package version be incremented before packing?",
-    default: true
+    default: "true"
   });
 
   env.register({
@@ -458,7 +531,7 @@ module.exports = function _env(env) {
   env.register({
     name: "PACK_INCLUDE_EMPTY_DIRECTORIES",
     help: "Flag: include empty directories in the output nupkg",
-    default: false
+    default: "false"
   });
 
   env.register({
@@ -469,14 +542,32 @@ module.exports = function _env(env) {
   env.register({
     name: "PACK_INCLUDE_SYMBOLS",
     help: "Include symbols in the output (default is .snupkg)",
-    default: true
+    default: "true"
+  });
+
+  env.register({
+    name: "PACK_INCLUDE_SOURCE",
+    help: "Include source in the output packages",
+    default: "false"
   });
 
   env.register({
     name: "PACK_LEGACY_SYMBOLS",
     help: "When including symbols, use legacy output",
-    default: false
+    default: "false"
   })
+
+  env.register({
+    name: "PACK_NO_BUILD",
+    help: "Skip build when packing",
+    default: "false"
+  });
+
+  env.register({
+    name: "PACK_NO_RESTORE",
+    help: "Skip package restore when packing",
+    default: "false"
+  });
 
   env.register({
     name: "PACKAGE_JSON",
@@ -494,7 +585,7 @@ module.exports = function _env(env) {
     name: "VERSION_INCREMENT_STRATEGY",
     help: [
       "Selects which part of a version is incremented when attempting to increment version numbers",
-      "- select from major, minor, patch"
+      "- select from major, minor, patch, prerelease"
     ].join("\n"),
     default: "patch"
   });

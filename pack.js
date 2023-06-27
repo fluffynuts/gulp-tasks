@@ -1,8 +1,6 @@
 const getToolsFolder = requireModule("get-tools-folder"),
   path = require("path"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
-  dotnetCli = require("gulp-dotnet-cli"),
-  dotnetPack = dotnetCli.pack,
   { incrementPackageVersion } = requireModule(
     "gulp-increment-nuget-package-version"
   ),
@@ -13,6 +11,7 @@ const getToolsFolder = requireModule("get-tools-folder"),
   del = require("del"),
   debug = require("debug")("pack"),
   gulp = requireModule("gulp");
+const { fileExists } = require("yafs");
 
 env.associate(
   [
@@ -23,20 +22,27 @@ env.associate(
     "PACK_INCLUDE_NUSPEC",
     "PACK_EXCLUDE_NUSPEC",
     "PACK_INCREMENT_VERSION",
-    "BETA"
+    "PACK_NO_BUILD",
+    "PACK_NO_RESTORE",
+    "BETA",
+    "PACK_VERBOSITY",
+    "PACK_INCLUDE_SOURCE",
+    "PACK_INCLUDE_SYMBOLS",
+    "PACK_SUPPLEMENTARY_NUSPEC",
+    "PACK_VERSION"
   ],
-  ["pack"]
+  [ "pack" ]
 );
 
 gulp.task(
   "pack",
   "Creates nupkgs from all nuspec files in this repo",
-  ["prepack"],
+  [ "prepack" ],
   () => {
     const target = env.resolve("PACK_TARGET_FOLDER"),
       isDotnetCore = env.resolveFlag("DOTNET_CORE"),
-      incrementVersion = env.resolveFlag("PACK_INCREMENT_VERSION")
-      packerFn = isDotnetCore ? packWithDotnetCore : packWithNuget;
+      incrementVersion = env.resolveFlag("PACK_INCREMENT_VERSION");
+    packerFn = isDotnetCore ? packWithDotnetCore : packWithNuget;
     debug({
       isDotnetCore,
       incrementVersion
@@ -72,11 +78,17 @@ function packWithNuget(target, incrementVersion) {
 }
 
 function packWithDotnetCore(target, incrementVersion) {
-  const { pack } = requireModule("gulp-dotnet-cli");
+  const {
+    /**
+     * @type GulpDotNetPackFunction
+     */
+    pack
+  } = requireModule("gulp-dotnet-cli");
   const projects = resolveMasks("PACK_INCLUDE_CSPROJ", "PACK_EXCLUDE_CSPROJ", p => {
     return (p || "").match(/\.csproj$/) ? p : `${p}.csproj`;
   });
-  const configuration = env.resolve("PACK_CONFIGURATION");
+  const
+    configuration = env.resolve("PACK_CONFIGURATION");
   debug({
     projects,
     configuration
@@ -93,14 +105,22 @@ function packWithDotnetCore(target, incrementVersion) {
       .pipe(incrementPackageVersion())
       .pipe(rewriteFile(removeBadEntities));
   }
+
   /** @type DotNetPackOptions */
   const packConfig = {
     target: "[not set]",
     output: path.resolve(target),
-    configuration
+    configuration,
+    noBuild: env.resolveFlag("PACK_NO_BUILD"),
+    noRestore: env.resolveFlag("PACK_NO_RESTORE"),
+    verbosity: env.resolve("PACK_VERBOSITY"),
+    includeSource: env.resolveFlag("PACK_INCLUDE_SOURCE"),
+    includeSymbols: env.resolveFlag("PACK_INCLUDE_SYMBOLS"),
+    nuspec: env.resolve("PACK_SUPPLEMENTARY_NUSPEC"),
+    versionSuffix: env.resolve("PACK_VERSION")
   };
   if (process.env["PACK_VERSION"] !== undefined) {
-    packConfig.versionSuffix = process.env["PACK_VERSION"]
+    packConfig.versionSuffix = process.env["PACK_VERSION"];
   }
   return stream.pipe(
     pack(packConfig)
