@@ -90,6 +90,21 @@
     )
   }
 
+  function publish(
+    opts: DotNetPublishOptions
+  ) {
+    return streamify(
+      wrap(dotnetCli.publish),
+      f => {
+        const copy = { ...opts };
+        copy.target = f.path;
+        return copy;
+      },
+      "gulp-dotnet-cli-publish",
+      "publishing dotnet project"
+    )
+  }
+
   module.exports = {
     build,
     clean,

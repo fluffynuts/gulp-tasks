@@ -14,6 +14,37 @@ import { config } from "yargs";
     console.log(yellow(label));
   }
 
+  async function publish(
+    opts: DotNetPublishOptions
+  ): Promise<SpawnResult | SpawnError> {
+    return runOnAllConfigurations(
+      `Publishing`,
+      opts,
+      configuration => {
+        const args = [
+          "publish",
+          q(opts.target)
+        ];
+        pushFlag(args, opts.useCurrentRuntime, "--use-current-runtime");
+        pushOutput(args, opts);
+        pushIfSet(args, opts.manifest, "--manifest");
+        pushNoBuild(args, opts);
+        pushNoRestore(args, opts);
+        pushConfiguration(args, configuration);
+        pushFramework(args, opts);
+        pushIfSet(args, opts.versionSuffix, "--version-suffix");
+        pushRuntime(args, opts);
+        pushOperatingSystem(args, opts);
+        pushSelfContained(args, opts);
+        pushArch(args, opts);
+        pushDisableBuildServers(args, opts);
+
+        pushVerbosity(args, opts);
+        return runDotNetWith(args, opts);
+      }
+    )
+  }
+
   async function clean(
     opts: DotNetCleanOptions
   ): Promise<SpawnResult | SpawnError> {
@@ -30,6 +61,7 @@ import { config } from "yargs";
         pushConfiguration(args, configuration);
         pushVerbosity(args, opts);
         pushOutput(args, opts);
+        pushAdditionalArgs(args, opts);
         return runDotNetWith(args, opts);
       }
     )
@@ -47,13 +79,13 @@ import { config } from "yargs";
           q(opts.target)
         ];
         pushCommonBuildArgs(args, opts, configuration);
-        pushFlag(args, opts.disableBuildServers, "--disable-build-servers");
         pushFlag(args, opts.noIncremental, "--no-incremental");
         pushFlag(args, opts.noDependencies, "--no-dependencies");
         pushFlag(args, opts.noRestore, "--no-restore");
         pushFlag(args, opts.selfContained, "--self-contained");
         pushVersionSuffix(args, opts);
         pushMsbuildProperties(args, opts);
+        pushDisableBuildServers(args, opts);
         pushAdditionalArgs(args, opts);
 
         return runDotNetWith(args, opts);
@@ -119,6 +151,7 @@ import { config } from "yargs";
           copy.msbuildProperties["NuspecFile"] = copy.nuspec;
         }
         pushMsbuildProperties(args, copy)
+        pushAdditionalArgs(args, copy);
         return runDotNetWith(args, copy);
       });
   }
@@ -151,7 +184,26 @@ import { config } from "yargs";
     pushFlag(args, opts.skipDuplicate, "--skip-duplicate");
     pushFlag(args, opts.noServiceEndpoint, "--no-service-endpoint");
     pushFlag(args, opts.forceEnglishOutput, "--force-english-output");
+    pushAdditionalArgs(args, opts);
     return runDotNetWith(args, opts);
+  }
+
+  function pushSelfContained(
+    args: string[],
+    opts: DotNetPublishOptions
+  ) {
+    if (opts.runtime === undefined) {
+      return;
+    }
+    args.push(
+      !!opts.selfContained
+        ? "--self-contained"
+        : "--no-self-contained"
+    );
+  }
+
+  function pushDisableBuildServers(args: string[], opts: DotNetPublishOptions) {
+    pushFlag(args, opts.disableBuildServers, "--disable-build-servers");
   }
 
   async function runOnAllConfigurations(
@@ -166,7 +218,7 @@ import { config } from "yargs";
     }
     let lastResult: Optional<SpawnResult>;
     for (const configuration of configurations) {
-      showHeader(`${label} ${q(opts.target)} with configuration ${configuration}`)
+      showHeader(`${ label } ${ q(opts.target) } with configuration ${ configuration }`)
       const thisResult = await toRun(configuration);
       if (isSpawnError(thisResult)) {
         return thisResult;
@@ -245,7 +297,10 @@ import { config } from "yargs";
     pushIfSet(args, opts.arch, "--arch");
   }
 
-  function pushConfiguration(args: string[], configuration: string) {
+  function pushConfiguration(
+    args: string[],
+    configuration: string
+  ) {
     debugger;
     if (!configuration) {
       return;
@@ -266,8 +321,12 @@ import { config } from "yargs";
     pushFramework(args, opts);
     pushRuntime(args, opts);
     pushArch(args, opts);
-    pushIfSet(args, opts.os, "--os");
+    pushOperatingSystem(args, opts);
     pushOutput(args, opts);
+  }
+
+  function pushOperatingSystem(args: string[], opts: DotNetTestOptions) {
+    pushIfSet(args, opts.os, "--os");
   }
 
   function pushVersionSuffix(
@@ -378,7 +437,7 @@ import { config } from "yargs";
         const value = options[key];
         build.push([ key, value ].join("="));
       }
-      args.push("--logger", `"${build.join(";")}"`);
+      args.push("--logger", `"${ build.join(";") }"`);
     }
   }
 
@@ -403,6 +462,7 @@ import { config } from "yargs";
     build,
     pack,
     clean,
-    nugetPush
+    nugetPush,
+    publish
   };
 })();

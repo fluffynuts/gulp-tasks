@@ -9,6 +9,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
     function showHeader(label) {
         console.log(yellow(label));
     }
+    async function publish(opts) {
+        return runOnAllConfigurations(`Publishing`, opts, configuration => {
+            const args = [
+                "publish",
+                q(opts.target)
+            ];
+            pushFlag(args, opts.useCurrentRuntime, "--use-current-runtime");
+            pushOutput(args, opts);
+            pushIfSet(args, opts.manifest, "--manifest");
+            pushNoBuild(args, opts);
+            pushNoRestore(args, opts);
+            pushConfiguration(args, configuration);
+            pushFramework(args, opts);
+            pushIfSet(args, opts.versionSuffix, "--version-suffix");
+            pushRuntime(args, opts);
+            pushOperatingSystem(args, opts);
+            pushSelfContained(args, opts);
+            pushArch(args, opts);
+            pushDisableBuildServers(args, opts);
+            pushVerbosity(args, opts);
+            return runDotNetWith(args, opts);
+        });
+    }
     async function clean(opts) {
         return runOnAllConfigurations(`Cleaning`, opts, configuration => {
             const args = [
@@ -20,6 +43,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             pushConfiguration(args, configuration);
             pushVerbosity(args, opts);
             pushOutput(args, opts);
+            pushAdditionalArgs(args, opts);
             return runDotNetWith(args, opts);
         });
     }
@@ -30,13 +54,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 q(opts.target)
             ];
             pushCommonBuildArgs(args, opts, configuration);
-            pushFlag(args, opts.disableBuildServers, "--disable-build-servers");
             pushFlag(args, opts.noIncremental, "--no-incremental");
             pushFlag(args, opts.noDependencies, "--no-dependencies");
             pushFlag(args, opts.noRestore, "--no-restore");
             pushFlag(args, opts.selfContained, "--self-contained");
             pushVersionSuffix(args, opts);
             pushMsbuildProperties(args, opts);
+            pushDisableBuildServers(args, opts);
             pushAdditionalArgs(args, opts);
             return runDotNetWith(args, opts);
         });
@@ -85,6 +109,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 copy.msbuildProperties["NuspecFile"] = copy.nuspec;
             }
             pushMsbuildProperties(args, copy);
+            pushAdditionalArgs(args, copy);
             return runDotNetWith(args, copy);
         });
     }
@@ -113,7 +138,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
         pushFlag(args, opts.skipDuplicate, "--skip-duplicate");
         pushFlag(args, opts.noServiceEndpoint, "--no-service-endpoint");
         pushFlag(args, opts.forceEnglishOutput, "--force-english-output");
+        pushAdditionalArgs(args, opts);
         return runDotNetWith(args, opts);
+    }
+    function pushSelfContained(args, opts) {
+        if (opts.runtime === undefined) {
+            return;
+        }
+        args.push(!!opts.selfContained
+            ? "--self-contained"
+            : "--no-self-contained");
+    }
+    function pushDisableBuildServers(args, opts) {
+        pushFlag(args, opts.disableBuildServers, "--disable-build-servers");
     }
     async function runOnAllConfigurations(label, opts, toRun) {
         validate(opts);
@@ -211,8 +248,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
         pushFramework(args, opts);
         pushRuntime(args, opts);
         pushArch(args, opts);
-        pushIfSet(args, opts.os, "--os");
+        pushOperatingSystem(args, opts);
         pushOutput(args, opts);
+    }
+    function pushOperatingSystem(args, opts) {
+        pushIfSet(args, opts.os, "--os");
     }
     function pushVersionSuffix(args, opts) {
         pushIfSet(args, opts.versionSuffix, "--version-suffix");
@@ -303,6 +343,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         build,
         pack,
         clean,
-        nugetPush
+        nugetPush,
+        publish
     };
 })();

@@ -54,6 +54,13 @@
             return copy;
         }, "gulp-dotnet-cli-nuget-push", "pushing nuget package");
     }
+    function publish(opts) {
+        return streamify(wrap(dotnetCli.publish), f => {
+            const copy = Object.assign({}, opts);
+            copy.target = f.path;
+            return copy;
+        }, "gulp-dotnet-cli-publish", "publishing dotnet project");
+    }
     module.exports = {
         build,
         clean,
