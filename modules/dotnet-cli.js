@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const spawn = requireModule("spawn");
     const { isSpawnError } = spawn;
-    const { yellow } = require("ansi-colors");
     const path = require("path");
     const { fileExists } = require("yafs");
+    const { yellow } = requireModule("ansi-colors");
     const q = requireModule("quote-if-required");
     let defaultNugetSource;
     function showHeader(label) {

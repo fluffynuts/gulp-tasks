@@ -1,5 +1,5 @@
 const
-  chalk = require("ansi-colors"),
+  chalk = requireModule("ansi-colors"),
   env = requireModule("env"),
   gulp = requireModule("gulp"),
   debug = require("debug")("nuget-restore"),

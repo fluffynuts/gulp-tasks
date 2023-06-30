@@ -1,5 +1,5 @@
 const
-  chalk = require("ansi-colors"),
+  chalk = requireModule("ansi-colors"),
   os = require("os"),
   /**
    * @type Env

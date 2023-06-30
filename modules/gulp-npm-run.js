@@ -3,7 +3,7 @@
     // replaces the gulp-npm-run node module
     // which relies on ramda -- that keeps on having
     // breaking changes released. NO MORE.
-    const { readFileSync } = require("fs"), debug = require("debug")("gulp-npm-run"), exec = require("./exec"), path = require("path"), chalk = require("ansi-colors"), { ZarroError } = requireModule("zarro-error"), findNpmBase = require("./find-npm-base");
+    const { readFileSync } = require("fs"), debug = require("debug")("gulp-npm-run"), exec = require("./exec"), path = require("path"), chalk = requireModule("ansi-colors"), { ZarroError } = requireModule("zarro-error"), findNpmBase = require("./find-npm-base");
     function gulpNpmRun(gulp) {
         const packageIndex = findPackageIndex(), scripts = packageIndex.scripts || {};
         Object.keys(scripts).forEach(k => {

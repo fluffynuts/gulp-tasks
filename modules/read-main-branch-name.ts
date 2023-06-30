@@ -1,7 +1,7 @@
 (function() {
   const
     os = require("os"),
-    chalk = require("ansi-colors"),
+    chalk = requireModule<AnsiColors>("ansi-colors"),
     gitFactory = require("simple-git"),
     readGitRemote = requireModule<ReadGitRemote>("read-git-remote"),
     exec = requireModule<Exec>("exec");

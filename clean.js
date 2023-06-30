@@ -7,8 +7,8 @@ const
   msbuild = require("gulp-msbuild"),
   dotnetClean = requireModule("gulp-dotnet-cli").clean,
   resolveMasks = requireModule("resolve-masks"),
-  env = requireModule("env");
-const chalk = require("ansi-colors");
+  env = requireModule("env"),
+  chalk = requireModule("ansi-colors");
 
 const myVars = [
   "BUILD_TOOLSVERSION",

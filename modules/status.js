@@ -1,7 +1,7 @@
 "use strict";
 (function () {
     "use strict";
-    const env = requireModule("env"), chalk = require("ansi-colors"), noUnicode = env.resolveFlag("NO_UNICODE"), noColor = env.resolveFlag("NO_COLOR"), prefixSize = noUnicode ? 6 : 2, asciiOk = "[ OK ]", asciiFail = "[FAIL]", okMarker = noUnicode
+    const env = requireModule("env"), chalk = requireModule("ansi-colors"), noUnicode = env.resolveFlag("NO_UNICODE"), noColor = env.resolveFlag("NO_COLOR"), prefixSize = noUnicode ? 6 : 2, asciiOk = "[ OK ]", asciiFail = "[FAIL]", okMarker = noUnicode
         ? (noColor ? asciiOk : chalk.green(asciiOk))
         : chalk.greenBright("✓"), failMarker = noUnicode
         ? (noColor ? asciiFail : chalk.redBright(asciiFail))

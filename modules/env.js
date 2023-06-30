@@ -10,7 +10,7 @@ if (!Array.prototype.flatMap) {
 }
 const
   { ZarroError } = requireModule("zarro-error"),
-  chalk = require("ansi-colors"),
+  chalk = requireModule("ansi-colors"),
   debug = require("debug")("env"),
   registeredEnvironmentVariables = {},
   longestStringLength = require("./longest-string-length"),

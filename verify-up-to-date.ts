@@ -1,7 +1,7 @@
 (function() {
   const
     os = require("os"),
-    chalk = require("ansi-colors"),
+    chalk = requireModule<AnsiColors>("ansi-colors"),
     log = requireModule<Log>("log"),
     env = requireModule<Env>("env"),
     gitFactory = require("simple-git"),
@@ -92,9 +92,9 @@
       message = `${
         chalk.yellow(verifyBranch)
       } is ${
-        chalk.green(verifyResult.ahead)
+        chalk.green(`${verifyResult.ahead}`)
       } commit${ aheadS } ahead and ${
-        chalk.red(verifyResult.behind)
+        chalk.red(`${verifyResult.behind}`)
       } commit${ behindS } behind ${
         chalk.cyanBright(mainBranch)
       }`;

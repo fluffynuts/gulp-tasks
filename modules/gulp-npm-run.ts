@@ -7,7 +7,7 @@
     debug = require("debug")("gulp-npm-run"),
     exec = require("./exec") as Exec,
     path = require("path"),
-    chalk = require("ansi-colors"),
+    chalk = requireModule<AnsiColors>("ansi-colors"),
     { ZarroError } = requireModule("zarro-error"),
     findNpmBase = require("./find-npm-base");
 

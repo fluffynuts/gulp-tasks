@@ -1,15 +1,11 @@
-import { config } from "yargs";
-import { fileExists } from "yafs";
-import path from "path";
-
 (function() {
   // TODO: perhaps one day, this should become an npm module of its own
   type PerConfigurationFunction = (configuration: string) => Promise<SpawnResult | SpawnError>;
   const spawn = requireModule<Spawn>("spawn");
   const { isSpawnError } = spawn;
-  const { yellow } = require("ansi-colors");
   const path = require("path");
   const { fileExists } = require("yafs");
+  const { yellow } = requireModule<AnsiColors>("ansi-colors");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
 
   let defaultNugetSource: string;

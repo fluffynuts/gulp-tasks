@@ -2,7 +2,7 @@
   "use strict";
   const
     env = requireModule<Env>("env"),
-    chalk = require("ansi-colors"),
+    chalk = requireModule<AnsiColors>("ansi-colors"),
     noUnicode = env.resolveFlag("NO_UNICODE"),
     noColor = env.resolveFlag("NO_COLOR"),
     prefixSize = noUnicode ? 6 : 2,
@@ -17,7 +17,7 @@
     spacedPrefix = " ".repeat(prefixSize);
 
   function start(message: string, color?: Colors) {
-    if (color && chalk[color as string]) {
+    if (color && chalk[color as keyof AnsiColors]) {
       message = chalk[color](message);
     }
     process.stdout.write(`${spacedPrefix} ${message}`);

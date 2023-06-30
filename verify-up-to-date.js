@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const os = require("os"), chalk = require("ansi-colors"), log = requireModule("log"), env = requireModule("env"), gitFactory = require("simple-git"), failAfter = requireModule("fail-after"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), { ZarroError } = requireModule("zarro-error"), taskName = "verify-up-to-date";
+    const os = require("os"), chalk = requireModule("ansi-colors"), log = requireModule("log"), env = requireModule("env"), gitFactory = require("simple-git"), failAfter = requireModule("fail-after"), readMainBranchName = requireModule("read-main-branch-name"), readAllGitRemotes = requireModule("read-all-git-remotes"), readCurrentBranch = requireModule("read-current-git-branch"), readGitCommitDeltaCount = requireModule("read-git-commit-delta-count"), readLastFetchTime = requireModule("read-last-fetch-time"), gulp = requireModule("gulp"), { ZarroError } = requireModule("zarro-error"), taskName = "verify-up-to-date";
     env.associate([
         "SKIP_FETCH_ON_VERIFY",
         "ENFORCE_VERIFICATION",
@@ -56,7 +56,7 @@
         }
         const verifyResult = await readGitCommitDeltaCount(`${defaultUpstream}/${mainBranch}`, verifyBranch);
         // TODO: get the delta count & chuck if behind
-        const aheadS = verifyResult.ahead === 1 ? "" : "s", behindS = verifyResult.behind === 1 ? "" : "s", message = `${chalk.yellow(verifyBranch)} is ${chalk.green(verifyResult.ahead)} commit${aheadS} ahead and ${chalk.red(verifyResult.behind)} commit${behindS} behind ${chalk.cyanBright(mainBranch)}`;
+        const aheadS = verifyResult.ahead === 1 ? "" : "s", behindS = verifyResult.behind === 1 ? "" : "s", message = `${chalk.yellow(verifyBranch)} is ${chalk.green(`${verifyResult.ahead}`)} commit${aheadS} ahead and ${chalk.red(`${verifyResult.behind}`)} commit${behindS} behind ${chalk.cyanBright(mainBranch)}`;
         log.info(`${taskName} :: ${message}`);
         if (verifyResult.behind > 0) {
             if (env.resolveFlag("ENFORCE_VERIFICATION")) {

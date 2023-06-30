@@ -1,7 +1,7 @@
 (function() {
   const
     env = requireModule<Env>("env"),
-    chalk = require("ansi-colors");
+    chalk = requireModule<AnsiColors>("ansi-colors");
 
   async function tryDo<T>(
     logic: AsyncVoidFunc<T>,

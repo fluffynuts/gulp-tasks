@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const os = require("os"), chalk = require("ansi-colors"), gitFactory = require("simple-git"), readGitRemote = requireModule("read-git-remote"), exec = requireModule("exec");
+    const os = require("os"), chalk = requireModule("ansi-colors"), gitFactory = require("simple-git"), readGitRemote = requireModule("read-git-remote"), exec = requireModule("exec");
     module.exports = async function readMainBranchName() {
         const all = await listBranchesRaw("*"), headRef = all.map(b => {
             const match = b.match(/HEAD -> (.*)/);

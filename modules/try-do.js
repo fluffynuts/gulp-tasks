@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const env = requireModule("env"), chalk = require("ansi-colors");
+    const env = requireModule("env"), chalk = requireModule("ansi-colors");
     async function tryDo(logic, retries, onTransientError, onFinalFailure) {
         // always attempt at least once
         const requestedRetries = typeof retries === "string"
