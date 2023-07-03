@@ -66,7 +66,9 @@ import { readFileSync } from "fs";
       return update(name, fallback, help, tasks, overriddenBy, when);
     }
     tasks = normaliseArray(tasks);
-    help = trim(help);
+    help = Array.isArray(help)
+      ? trimAll(help)
+      : trim(help);
     fallback = trim(fallback);
 
     registeredEnvironmentVariables[name] = {
@@ -144,14 +146,16 @@ import { readFileSync } from "fs";
   function update(
     varName: string,
     fallbackValue?: string,
-    help?: string,
+    help?: string | string[],
     tasks?: string | string[],
     overriddenBy?: string | string[],
     when?: OverrideWhen
   ) {
     const target = registeredEnvironmentVariables[varName];
     if (!target.help) {
-      target.help = trim(help);
+      target.help = Array.isArray(help)
+        ? trimAll(help)
+        : trim(help);
     }
     if (!target.default) {
       target.default = trim(fallbackValue);
@@ -174,6 +178,13 @@ import { readFileSync } from "fs";
       return "";
     }
     return `${ str }`.trim();
+  }
+
+  function trimAll(a: string[] | undefined | null): string[] {
+    if (!a) {
+      return [];
+    }
+    return a.map(s => `${s}`.trim());
   }
 
   function printHelp() {
@@ -218,7 +229,14 @@ import { readFileSync } from "fs";
     result.push(chalk.yellow(`${ padRight(k, longest) }`));
     const target = registeredEnvironmentVariables[k];
     if (target.help) {
-      result.push(indent(chalk.gray(target.help)));
+      if (Array.isArray(target.help)) {
+        result.push.apply(
+          result,
+          target.help.map(s => chalk.gray(s))
+        );
+      } else {
+        result.push(indent(chalk.gray(target.help)));
+      }
     }
     if (target.default) {
       result.push(indent(`${ defaultPre }: ${ target.default }`, 2));
@@ -447,7 +465,11 @@ import { readFileSync } from "fs";
       logResolved(name, false);
       return false;
     }
-    throw new ZarroError(`environmental flag not appropriately set: ${ name }`);
+    if (value === undefined) {
+      throw new ZarroError(`environment flag not set and no default registered: ${ name }`);
+    } else {
+      throw new ZarroError(`environmental flag not appropriately set: ${ name } (received: '${ value }')`);
+    }
   }
 
   function explode(str: string, delimiter?: string): string[] {
@@ -465,7 +487,7 @@ import { readFileSync } from "fs";
         : fallback;
     }
     const trimmed = raw.trim();
-    if (trimmed.startsWith('{')) {
+    if (trimmed.startsWith("{")) {
       return JSON.parse(trimmed) as T;
     }
     const
@@ -473,9 +495,9 @@ import { readFileSync } from "fs";
       result = {} as Dictionary<string>;
     for (const part of parts) {
       const
-        sub = part.split('='),
-      key = sub[0],
-      value = sub.slice(1).join('=');
+        sub = part.split("="),
+        key = sub[0],
+        value = sub.slice(1).join("=");
       result[key] = value;
     }
     return result as unknown as T;

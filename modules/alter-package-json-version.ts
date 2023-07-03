@@ -17,6 +17,7 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
 
 (function() {
   const
+    { ZarroError } = requireModule("zarro-error"),
     validVersionStrategies = new Set(["major", "minor", "patch"]),
     gutil = requireModule<GulpUtil>("gulp-util"),
     env = requireModule<Env>("env"),
@@ -29,7 +30,7 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
     if (validVersionStrategies.has(configuredStrategy)) {
       return;
     }
-    throw new Error(`version incrementing for package.json is restricted to one of 'major', 'minor' or 'patch'`);
+    throw new ZarroError(`version incrementing for package.json is restricted to one of 'major', 'minor' or 'patch'`);
   }
 
   async function alterPackageJsonVersion(

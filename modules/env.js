@@ -52,7 +52,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
             return update(name, fallback, help, tasks, overriddenBy, when);
         }
         tasks = normaliseArray(tasks);
-        help = trim(help);
+        help = Array.isArray(help)
+            ? trimAll(help)
+            : trim(help);
         fallback = trim(fallback);
         registeredEnvironmentVariables[name] = {
             name,
@@ -122,7 +124,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
     function update(varName, fallbackValue, help, tasks, overriddenBy, when) {
         const target = registeredEnvironmentVariables[varName];
         if (!target.help) {
-            target.help = trim(help);
+            target.help = Array.isArray(help)
+                ? trimAll(help)
+                : trim(help);
         }
         if (!target.default) {
             target.default = trim(fallbackValue);
@@ -144,6 +148,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
             return "";
         }
         return `${str}`.trim();
+    }
+    function trimAll(a) {
+        if (!a) {
+            return [];
+        }
+        return a.map(s => `${s}`.trim());
     }
     function printHelp() {
         const filter = (process.env.HELP_ENV_FILTER || "")
@@ -173,7 +183,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
         result.push(chalk.yellow(`${padRight(k, longest)}`));
         const target = registeredEnvironmentVariables[k];
         if (target.help) {
-            result.push(indent(chalk.gray(target.help)));
+            if (Array.isArray(target.help)) {
+                result.push.apply(result, target.help.map(s => chalk.gray(s)));
+            }
+            else {
+                result.push(indent(chalk.gray(target.help)));
+            }
         }
         if (target.default) {
             result.push(indent(`${defaultPre}: ${target.default}`, 2));
@@ -233,6 +248,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
     function resolveEnvOrFileContents(name) {
         if (process.env[name] !== undefined) {
             return process.env[name];
+        }
+        if (name.match(/PATH/) || name.match(/FILE/)) {
+            // refuse to look in files when the variable looks like
+            // a file name or a path to something
+            return undefined;
         }
         const key = "ZARRO_ALLOW_FILE_RESOLUTIONS", raw = process.env[key], fileResolutionsAreEnabled = resolveAsBoolean(name, raw, true);
         if (!fileResolutionsAreEnabled) {
@@ -334,7 +354,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
             logResolved(name, false);
             return false;
         }
-        throw new ZarroError(`environmental flag not appropriately set: ${name}`);
+        if (value === undefined) {
+            throw new ZarroError(`environment flag not set and no default registered: ${name}`);
+        }
+        else {
+            throw new ZarroError(`environmental flag not appropriately set: ${name} (received: '${value}')`);
+        }
     }
     function explode(str, delimiter) {
         return str
@@ -350,12 +375,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 : fallback;
         }
         const trimmed = raw.trim();
-        if (trimmed.startsWith('{')) {
+        if (trimmed.startsWith("{")) {
             return JSON.parse(trimmed);
         }
         const parts = explode(raw, delimiter), result = {};
         for (const part of parts) {
-            const sub = part.split('='), key = sub[0], value = sub.slice(1).join('=');
+            const sub = part.split("="), key = sub[0], value = sub.slice(1).join("=");
             result[key] = value;
         }
         return result;

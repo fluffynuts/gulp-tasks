@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version");
+    const { ZarroError } = requireModule("zarro-error"), validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version");
     function validateVersioningStrategy(configuredStrategy) {
         if (validVersionStrategies.has(configuredStrategy)) {
             return;
         }
-        throw new Error(`version incrementing for package.json is restricted to one of 'major', 'minor' or 'patch'`);
+        throw new ZarroError(`version incrementing for package.json is restricted to one of 'major', 'minor' or 'patch'`);
     }
     async function alterPackageJsonVersion(inputOpts) {
         if (env.resolveFlag(env.INITIAL_RELEASE)) {
