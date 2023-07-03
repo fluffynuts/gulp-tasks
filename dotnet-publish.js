@@ -20,7 +20,8 @@ env.associate([
   "DOTNET_PUBLISH_FRAMEWORK",
   "DOTNET_PUBLISH_NO_BUILD",
   "DOTNET_PUBLISH_NO_RESTORE",
-  "DOTNET_PUBLISH_VERBOSITY"
+  "DOTNET_PUBLISH_VERBOSITY",
+  "MSBUILD_PROPERTIES"
 ], "dotnet-publish");
 
 gulp.task(
@@ -45,7 +46,8 @@ gulp.task(
       noBuild: env.resolveFlag("DOTNET_PUBLISH_NO_BUILD"),
       noRestore: env.resolveFlag("DOTNET_PUBLISH_NO_RESTORE"),
       target: "[ not set ]",
-      verbosity: env.resolve("DOTNET_PUBLISH_VERBOSITY")
+      verbosity: env.resolve("DOTNET_PUBLISH_VERBOSITY"),
+      msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES")
     };
 
     const testInclusionsInverted = env.resolveArray("TEST_INCLUDE")

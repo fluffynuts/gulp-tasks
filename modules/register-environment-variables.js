@@ -407,10 +407,14 @@ module.exports = function _env(env) {
     default: "true"
   });
 
-
   env.register({
     name: "DOTNET_PUBLISH_VERBOSITY",
     help: `Verbosity to use during publish operation: ${msbuildVerbosityOptions}`
+  });
+
+  env.register({
+    name: "MSBUILD_PROPERTIES",
+    help: "MSBuild properties: either a comma-delimited list like 'VAR1=VAL1,VAR2=VAL2' or json, or a path to a file containing json"
   });
 
   env.register({
@@ -675,6 +679,15 @@ module.exports = function _env(env) {
     name: "DOTNET_TEST_PREFIXES",
     default: "",
     help: "prefix test names by project with a mapping like 'PROJECT:PREFIX;PROJECT:PREFIX'"
+  });
+
+  env.register({
+    name: "ZARRO_ALLOW_FILE_CONFIG_RESOLUTION",
+    default: "true",
+    help: `when enabled, the value provided by an environment variable may be the path
+ to a file to use for that configuration; for example MSBUILD_PROPERTIES=foo.json will
+ instruct Zarro to read the mapping in foo.json for extra msbuild properties to pass on
+ where applicable.`
   });
 
   debug("-- env registration complete --");

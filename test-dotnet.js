@@ -358,6 +358,7 @@ async function testOneProject(
     verbosity,
     configuration,
     noBuild: true,
+    msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES"),
     loggers,
     stderr,
     stdout,

@@ -63,7 +63,8 @@ async function cleanWithDotnet() {
   await promisifyStream(
     solutions.pipe(
       dotnetClean({
-        configuration
+        configuration,
+        msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES")
       })
     )
   );
