@@ -162,30 +162,37 @@ import { ChildProcess } from "child_process";
       opts.stdio = [ ...defaultOptions.stdio ];
     }
 
+
     let
       stdOutWriter = nullConsumer,
       stdErrWriter = nullConsumer,
       stdoutFnSpecified = typeof opts.stdout === "function",
       stderrFnSpecified = typeof opts.stderr === "function";
 
-    if ((stdoutFnSpecified || stderrFnSpecified) &&
-      !Array.isArray(opts.stdio) &&
-      !!defaultOptions.stdio /* just to make ts happy */
-    ) {
-      opts.stdio = [ ...defaultOptions.stdio ];
-    }
+    if (opts.detached) {
+      opts.stdio = "ignore";
+      opts.stdout = undefined;
+      opts.stderr = undefined;
+    } else {
+      if ((stdoutFnSpecified || stderrFnSpecified) &&
+        !Array.isArray(opts.stdio) &&
+        !!defaultOptions.stdio /* just to make ts happy */
+      ) {
+        opts.stdio = [ ...defaultOptions.stdio ];
+      }
 
-    if (stdoutFnSpecified) {
-      stdOutWriter = opts.stdout as StringConsumer;
-      (opts.stdio as string[])[1] = "pipe";
-    } else if (Array.isArray(opts.stdio)) {
-      opts.stdio[1] = "inherit";
-    }
-    if (stderrFnSpecified) {
-      stdErrWriter = opts.stderr as StringConsumer;
-      (opts.stdio as string[])[2] = "pipe";
-    } else if (Array.isArray(opts.stdio)) {
-      opts.stdio[2] = "inherit";
+      if (stdoutFnSpecified) {
+        stdOutWriter = opts.stdout as StringConsumer;
+        (opts.stdio as string[])[1] = "pipe";
+      } else if (Array.isArray(opts.stdio)) {
+        opts.stdio[1] = "inherit";
+      }
+      if (stderrFnSpecified) {
+        stdErrWriter = opts.stderr as StringConsumer;
+        (opts.stdio as string[])[2] = "pipe";
+      } else if (Array.isArray(opts.stdio)) {
+        opts.stdio[2] = "inherit";
+      }
     }
 
     const result = new SpawnResult(
@@ -206,7 +213,10 @@ import { ChildProcess } from "child_process";
       try {
         const child = child_process.spawn(executable, quotedArgs, opts);
         if (!child) {
-          reject(new Error(`unable to spawn ${ executable } with args [${ args.join(",") }]`));
+          return reject(new Error(`unable to spawn ${ executable } with args [${ args.join(",") }]`));
+        }
+        if (opts.detached) {
+          return resolve(result);
         }
         debug(child);
         const stdout = [] as string[];

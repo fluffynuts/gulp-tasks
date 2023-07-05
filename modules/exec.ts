@@ -1,3 +1,5 @@
+import { ChildProcess } from "child_process";
+
 export type IoConsumer = (d: string) => void
 
 export interface IoHandlers {
@@ -104,7 +106,7 @@ export interface ExecError extends Error {
     cmd: string,
     args: string[],
     opts: ExecOpts
-  ) {
+  ): ChildProcess {
     if (os.platform() == "win32") {
       const cmdArgs = ["/c", cmd];
       cmdArgs.push.apply(cmdArgs, args);

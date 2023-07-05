@@ -112,7 +112,7 @@ globally-available `requireModule` function. Some available modules include:
 - `gulp`
     - uses `gulp-help` (for v3 gulp) to provide a modified `gulp` where a second parameter can
         be provided to give useful help. Read more on the `gulp-help` documentation.
-- `http-downloader`
+- `http-client`
     - provides a simple async http downloading class
 - `spawn`, `exec`
     - provides fairly safe ways to start processes on Windows

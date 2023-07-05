@@ -695,6 +695,48 @@
  where applicable.`
     });
 
+    env.register({
+      name: "DEV_SMTP_PORT",
+      help: `the port to start the smtp dev server on`,
+      default: "25"
+    });
+
+    env.register({
+      name: "DEV_SMTP_INTERFACE_PORT",
+      help: "the port to start the http interface on for the dev smtp server",
+      default: "8025"
+    });
+
+    env.register({
+      name: "DEV_SMTP_DETACHED",
+      help: "start the dev smtp server in the background (ie, don't wait on it); you'll have to stop it yourself",
+      default: "false"
+    });
+
+    env.register({
+      name: "DEV_SMTP_IGNORE_ERRORS",
+      help: "when set true, don't break on being unable to download or run the dev smtp server software - just log it and move on",
+      default: "false"
+    });
+
+    env.register({
+      name: "DEV_SMTP_BIND_IP",
+      help: "IP to listen on for SMTP connections; default is to bind to all available interfaces",
+      default: ""
+    });
+
+    env.register({
+      name: "DEV_SMTP_INTERFACE_BIND_IP",
+      help: "IP to listen on for the interface; default is to bind to all available interfaces",
+      default: ""
+    });
+
+    env.register({
+      name: "DEV_SMTP_OPEN_INTERFACE",
+      help: "flag: when set true, zarro will open the dev smtp server interface after starting it",
+      default: "true"
+    });
+
     debug("-- env registration complete --");
   };
 

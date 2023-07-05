@@ -3,10 +3,12 @@
   type PerConfigurationFunction = (configuration: string) => Promise<SpawnResult | SpawnError>;
   const spawn = requireModule<Spawn>("spawn");
   const { isSpawnError } = spawn;
+  const { ZarroError } = requireModule("zarro-error");
   const path = require("path");
-  const { fileExists } = require("yafs");
+  const { fileExists, readTextFile } = require("yafs");
   const { yellow } = requireModule<AnsiColors>("ansi-colors");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
+  const parseXml = requireModule<ParseXml>("parse-xml");
 
   let defaultNugetSource: string;
 
@@ -14,9 +16,76 @@
     console.log(yellow(label));
   }
 
+  async function listPackages(csproj: string): Promise<DotNetPackageReference[]> {
+    if (!(await fileExists(csproj))) {
+      return [];
+    }
+    const contents = await readTextFile(csproj);
+    const xml = await parseXml(contents) as XmlNode;
+    const pkgRefs = findPackageReferencesOn(xml);
+    const result = [] as DotNetPackageReference[];
+    for (const ref of pkgRefs) {
+      result.push({
+        id: ref.$.Include,
+        version: ref.$.Version
+      });
+    }
+    return result;
+  }
+
+  function getByPath(obj: any, path: string): any {
+    if (obj === undefined || obj === null) {
+      return undefined;
+    }
+    const parts = path.split(".");
+    if (parts.length === 0) {
+      return undefined;
+    }
+    let result = obj;
+    do {
+      const el = parts.shift();
+      if (el === undefined) {
+        break;
+      }
+      result = result[el];
+    } while (result !== undefined);
+
+    return result;
+  }
+
+  function findPackageReferencesOn(xml: XmlNode): XmlNode[] {
+    const itemGroups = getByPath(xml, "Project.ItemGroup") as Dictionary<XmlNode[]>[];
+    const result = [] as XmlNode[];
+    for (const dict of itemGroups) {
+      const packageReferences = getByPath(dict, "PackageReference") as XmlNode[];
+      if (packageReferences) {
+        result.push.apply(result, packageReferences);
+      }
+    }
+    return result;
+  }
+
+  interface XmlNode extends Dictionary<XmlNode[] | Dictionary<string>> {
+    $: Dictionary<string>
+  }
+
+  const requiredContainerPackage = "Microsoft.NET.Build.Containers";
   async function publish(
     opts: DotNetPublishOptions
   ): Promise<SpawnResult | SpawnError> {
+    if (opts.publishContainer) {
+      const packageRefs = await listPackages(opts.target);
+      const match = packageRefs.find(
+        // nuget package refs are actually case-insensitive, though
+        // the constant is of the "proper" casing
+        o => o.id.toLowerCase() == requiredContainerPackage.toLowerCase()
+      );
+      if (!match) {
+        throw new ZarroError(
+          `container publish logic requires a nuget package reference for '${requiredContainerPackage}' on project '${opts.target}'`
+        )
+      }
+    }
     return runOnAllConfigurations(
       `Publishing`,
       opts,
@@ -39,10 +108,22 @@
         pushArch(args, opts);
         pushDisableBuildServers(args, opts);
 
+        pushContainerOpts(args, opts);
+
         pushVerbosity(args, opts);
         return runDotNetWith(args, opts);
       }
     )
+  }
+
+  function pushContainerOpts(
+    args: string[],
+    opts: DotNetPublishContainerOptions
+  ) {
+    if (!opts.publishContainer) {
+      return;
+    }
+    args.push("/t:PublishContainer");
   }
 
   async function clean(
@@ -489,6 +570,7 @@
     pack,
     clean,
     nugetPush,
-    publish
+    publish,
+    listPackages
   };
 })();

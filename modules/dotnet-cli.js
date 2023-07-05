@@ -2,15 +2,73 @@
 (function () {
     const spawn = requireModule("spawn");
     const { isSpawnError } = spawn;
+    const { ZarroError } = requireModule("zarro-error");
     const path = require("path");
-    const { fileExists } = require("yafs");
+    const { fileExists, readTextFile } = require("yafs");
     const { yellow } = requireModule("ansi-colors");
     const q = requireModule("quote-if-required");
+    const parseXml = requireModule("parse-xml");
     let defaultNugetSource;
     function showHeader(label) {
         console.log(yellow(label));
     }
+    async function listPackages(csproj) {
+        if (!(await fileExists(csproj))) {
+            return [];
+        }
+        const contents = await readTextFile(csproj);
+        const xml = await parseXml(contents);
+        const pkgRefs = findPackageReferencesOn(xml);
+        const result = [];
+        for (const ref of pkgRefs) {
+            result.push({
+                id: ref.$.Include,
+                version: ref.$.Version
+            });
+        }
+        return result;
+    }
+    function getByPath(obj, path) {
+        if (obj === undefined || obj === null) {
+            return undefined;
+        }
+        const parts = path.split(".");
+        if (parts.length === 0) {
+            return undefined;
+        }
+        let result = obj;
+        do {
+            const el = parts.shift();
+            if (el === undefined) {
+                break;
+            }
+            result = result[el];
+        } while (result !== undefined);
+        return result;
+    }
+    function findPackageReferencesOn(xml) {
+        const itemGroups = getByPath(xml, "Project.ItemGroup");
+        const result = [];
+        for (const dict of itemGroups) {
+            const packageReferences = getByPath(dict, "PackageReference");
+            if (packageReferences) {
+                result.push.apply(result, packageReferences);
+            }
+        }
+        return result;
+    }
+    const requiredContainerPackage = "Microsoft.NET.Build.Containers";
     async function publish(opts) {
+        if (opts.publishContainer) {
+            const packageRefs = await listPackages(opts.target);
+            const match = packageRefs.find(
+            // nuget package refs are actually case-insensitive, though
+            // the constant is of the "proper" casing
+            o => o.id.toLowerCase() == requiredContainerPackage.toLowerCase());
+            if (!match) {
+                throw new ZarroError(`container publish logic requires a nuget package reference for '${requiredContainerPackage}' on project '${opts.target}'`);
+            }
+        }
         return runOnAllConfigurations(`Publishing`, opts, configuration => {
             const args = [
                 "publish",
@@ -29,9 +87,16 @@
             pushSelfContainedForPublish(args, opts);
             pushArch(args, opts);
             pushDisableBuildServers(args, opts);
+            pushContainerOpts(args, opts);
             pushVerbosity(args, opts);
             return runDotNetWith(args, opts);
         });
+    }
+    function pushContainerOpts(args, opts) {
+        if (!opts.publishContainer) {
+            return;
+        }
+        args.push("/t:PublishContainer");
     }
     async function clean(opts) {
         return runOnAllConfigurations(`Cleaning`, opts, configuration => {
@@ -362,6 +427,7 @@
         pack,
         clean,
         nugetPush,
-        publish
+        publish,
+        listPackages
     };
 })();
