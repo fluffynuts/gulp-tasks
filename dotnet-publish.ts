@@ -1,9 +1,7 @@
 (function() {
   const
     { publish } = requireModule<GulpDotNetCli>("gulp-dotnet-cli"),
-    /**
-     * @type Env
-     */
+    resolveMasks = requireModule<ResolveMasks>("resolve-masks"),
     env = requireModule<Env>("env"),
     gulp = requireModule<Gulp>("gulp");
 
@@ -60,10 +58,12 @@
       };
 
 
-      const testInclusionsInverted = env.resolveArray(env.TEST_INCLUDE)
-        .map(p => `!${ p }.csproj`);
+      const publishMasks = resolveMasks(
+        env.DOTNET_PUBLISH_INCLUDE,
+        [ env.DOTNET_PUBLISH_EXCLUDE, env.DOTNET_PUBLISH_ADDITIONAL_EXCLUDE ]
+      );
       return gulp
-        .src([ "**/*.csproj" ].concat(testInclusionsInverted))
+        .src(publishMasks)
         .pipe(
           publish(publishOpts)
         );
