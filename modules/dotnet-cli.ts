@@ -70,6 +70,7 @@
   }
 
   const requiredContainerPackage = "Microsoft.NET.Build.Containers";
+
   async function publish(
     opts: DotNetPublishOptions
   ): Promise<SpawnResult | SpawnError> {
@@ -82,7 +83,7 @@
       );
       if (!match) {
         throw new ZarroError(
-          `container publish logic requires a nuget package reference for '${requiredContainerPackage}' on project '${opts.target}'`
+          `container publish logic requires a nuget package reference for '${ requiredContainerPackage }' on project '${ opts.target }'`
         )
       }
     }
@@ -123,7 +124,54 @@
     if (!opts.publishContainer) {
       return;
     }
-    args.push("/t:PublishContainer");
+    args.push("-t:PublishContainer");
+    pushContainerImageTag(args, opts);
+    pushContainerRegistry(args, opts);
+    pushContainerImageName(args, opts);
+  }
+
+  function pushContainerImageName(
+    args: string[],
+    opts: DotNetPublishContainerOptions
+  ) {
+    pushMsbuildPropertyIfSet(
+      args,
+      opts.containerImageName,
+      "ContainerImageName"
+    )
+  }
+
+  function pushContainerImageTag(
+    args: string[],
+    opts: DotNetPublishContainerOptions
+  ) {
+    pushMsbuildPropertyIfSet(
+      args,
+      opts.containerImageTag,
+      "ContainerImageTag"
+    );
+  }
+
+  function pushContainerRegistry(
+    args: string[],
+    opts: DotNetPublishContainerOptions
+  ) {
+    pushMsbuildPropertyIfSet(
+      args,
+      opts.containerRegistry,
+      "ContainerRegistry"
+    );
+  }
+
+  function pushMsbuildPropertyIfSet(
+    args: string[],
+    value: Optional<string>,
+    name: string
+  ) {
+    if (!value) {
+      return;
+    }
+    pushMsbuildProperty(args, name, value);
   }
 
   async function clean(
@@ -510,15 +558,36 @@
     }
   }
 
-  function pushMsbuildProperties(args: string[], opts: DotNetBaseOptions) {
+  function pushMsbuildProperties(
+    args: string[],
+    opts: DotNetBaseOptions | Dictionary<string>
+  ) {
     if (!opts.msbuildProperties) {
       return;
     }
-    for (const key of Object.keys(opts.msbuildProperties)) {
-      args.push(
-        `-p:${ q(key) }=${ q(opts.msbuildProperties[key]) }`
-      )
+    if (hasMsbuildProperties(opts)) {
+      for (const key of Object.keys(opts.msbuildProperties)) {
+        pushMsbuildProperty(args, key, opts.msbuildProperties[key]);
+      }
+    } else {
+      for (const key of Object.keys(opts)) {
+        pushMsbuildProperty(args, key, opts[key]);
+      }
     }
+  }
+
+  function pushMsbuildProperty(
+    args: string[],
+    key: string,
+    value: string
+  ) {
+    args.push(
+      `-p:${ q(key) }=${ q(value) }`
+    )
+  }
+
+  function hasMsbuildProperties(opts: any): opts is DotNetBaseOptions {
+    return opts !== undefined && opts.msbuildProperties !== undefined;
   }
 
   function pushEnvVars(args: string[], env?: Dictionary<string>) {
@@ -564,6 +633,16 @@
     }
   }
 
+  function issueContainerWarnings(
+    opts: DotNetPublishOptions
+  ) {
+    // TODO: warnings:
+    // - missing tag: will use file version
+    // - missing registry: will publish local
+    // - missing name: will use assembly name
+
+  }
+
   module.exports = {
     test,
     build,
@@ -571,6 +650,7 @@
     clean,
     nugetPush,
     publish,
-    listPackages
+    listPackages,
+    issueContainerWarnings
   };
 })();

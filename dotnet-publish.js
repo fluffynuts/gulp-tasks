@@ -50,6 +50,13 @@ gulp.task(
       msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES")
     };
 
+    // TODO: add in publish opts
+    // DOTNET_PUBLISH_CONTAINER (flag)
+    // DOTNET_PUBLISH_CONTAINER_REGISTRY (string)
+    // DOTNET_PUBLISH_CONTAINER_IMAGE_TAG (string)
+    // DOTNET_PUBLISH_CONTAINER_IMAGE_NAME (string)
+    // issue warnings, unless suppressed (DOTNET_PUBLISH_SUPPRESS_WARNINGS (flag))
+
     const testInclusionsInverted = env.resolveArray("TEST_INCLUDE")
       .map(p => `!${p}.csproj`);
     return gulp

@@ -96,7 +96,25 @@
         if (!opts.publishContainer) {
             return;
         }
-        args.push("/t:PublishContainer");
+        args.push("-t:PublishContainer");
+        pushContainerImageTag(args, opts);
+        pushContainerRegistry(args, opts);
+        pushContainerImageName(args, opts);
+    }
+    function pushContainerImageName(args, opts) {
+        pushMsbuildPropertyIfSet(args, opts.containerImageName, "ContainerImageName");
+    }
+    function pushContainerImageTag(args, opts) {
+        pushMsbuildPropertyIfSet(args, opts.containerImageTag, "ContainerImageTag");
+    }
+    function pushContainerRegistry(args, opts) {
+        pushMsbuildPropertyIfSet(args, opts.containerRegistry, "ContainerRegistry");
+    }
+    function pushMsbuildPropertyIfSet(args, value, name) {
+        if (!value) {
+            return;
+        }
+        pushMsbuildProperty(args, name, value);
     }
     async function clean(opts) {
         return runOnAllConfigurations(`Cleaning`, opts, configuration => {
@@ -384,9 +402,22 @@
         if (!opts.msbuildProperties) {
             return;
         }
-        for (const key of Object.keys(opts.msbuildProperties)) {
-            args.push(`-p:${q(key)}=${q(opts.msbuildProperties[key])}`);
+        if (hasMsbuildProperties(opts)) {
+            for (const key of Object.keys(opts.msbuildProperties)) {
+                pushMsbuildProperty(args, key, opts.msbuildProperties[key]);
+            }
         }
+        else {
+            for (const key of Object.keys(opts)) {
+                pushMsbuildProperty(args, key, opts[key]);
+            }
+        }
+    }
+    function pushMsbuildProperty(args, key, value) {
+        args.push(`-p:${q(key)}=${q(value)}`);
+    }
+    function hasMsbuildProperties(opts) {
+        return opts !== undefined && opts.msbuildProperties !== undefined;
     }
     function pushEnvVars(args, env) {
         if (!env) {
@@ -421,6 +452,12 @@
             args.push(cliSwitch);
         }
     }
+    function issueContainerWarnings(opts) {
+        // TODO: warnings:
+        // - missing tag: will use file version
+        // - missing registry: will publish local
+        // - missing name: will use assembly name
+    }
     module.exports = {
         test,
         build,
@@ -428,6 +465,7 @@
         clean,
         nugetPush,
         publish,
-        listPackages
+        listPackages,
+        issueContainerWarnings
     };
 })();
