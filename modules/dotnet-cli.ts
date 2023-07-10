@@ -711,7 +711,7 @@
     let
       value = opts[option] as string,
       usingFallback = false;
-    if (value === undefined) {
+    if (!value) {
       value = await fallback();
       usingFallback = true
     }

@@ -109,7 +109,7 @@
     label: string,
     opt: ResolvedContainerOption
   ) {
-    log(`${ yellowBright(label) }: ${ cyanBright(opt.value) } (${opt.environmentVariable})`);
+    log(`${ yellowBright(label) }: ${ cyanBright(opt.value) } (override with: ${opt.environmentVariable})`);
   }
 
   function definitelyFind<T>(

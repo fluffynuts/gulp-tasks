@@ -1,10 +1,6 @@
 "use strict";
 (function () {
-    const { publish } = requireModule("gulp-dotnet-cli"), 
-    /**
-     * @type Env
-     */
-    env = requireModule("env"), gulp = requireModule("gulp");
+    const { publish } = requireModule("gulp-dotnet-cli"), resolveMasks = requireModule("resolve-masks"), env = requireModule("env"), gulp = requireModule("gulp");
     env.associate([
         env.DOTNET_PUBLISH_BUILD_CONFIGURATION,
         env.DOTNET_PUBLISH_RUNTIMES,
@@ -52,10 +48,9 @@
             containerImageTag: env.resolve(env.DOTNET_PUBLISH_CONTAINER_IMAGE_TAG),
             containerRegistry: env.resolve(env.DOTNET_PUBLISH_CONTAINER_REGISTRY)
         };
-        const testInclusionsInverted = env.resolveArray(env.TEST_INCLUDE)
-            .map(p => `!${p}.csproj`);
+        const publishMasks = resolveMasks(env.DOTNET_PUBLISH_INCLUDE, [env.DOTNET_PUBLISH_EXCLUDE, env.DOTNET_PUBLISH_ADDITIONAL_EXCLUDE]);
         return gulp
-            .src(["**/*.csproj"].concat(testInclusionsInverted))
+            .src(publishMasks)
             .pipe(publish(publishOpts));
     });
 })();

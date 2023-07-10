@@ -477,7 +477,7 @@
     }
     async function pushResolvedContainerOption(collected, opts, option, environmentVariable, fallback) {
         let value = opts[option], usingFallback = false;
-        if (value === undefined) {
+        if (!value) {
             value = await fallback();
             usingFallback = true;
         }

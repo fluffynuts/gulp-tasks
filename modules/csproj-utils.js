@@ -26,11 +26,14 @@
         return groups.reduce((acc, cur) => acc || readTextFrom(cur[nodeName]), undefined);
     }
     async function readCsProjProperty(pathToCsProj, property, fallback) {
-        var _a;
         const contents = await readTextFile(pathToCsProj), doc = await parseXml(contents);
         try {
             const propertyGroups = doc.Project.PropertyGroup;
-            return (_a = tryReadNodeFrom(propertyGroups, property)) !== null && _a !== void 0 ? _a : await resolveFallback(fallback);
+            const result = tryReadNodeFrom(propertyGroups, property);
+            if (!!result) {
+                return result;
+            }
+            return await resolveFallback(fallback);
         }
         catch (e) {
             return await resolveFallback();

@@ -75,8 +75,11 @@
     try {
       const
         propertyGroups = doc.Project.PropertyGroup
-      return tryReadNodeFrom(propertyGroups, property)
-        ?? await resolveFallback(fallback);
+      const result = tryReadNodeFrom(propertyGroups, property);
+      if (!!result) {
+        return result;
+      }
+      return await resolveFallback(fallback);
     } catch (e) {
       return await resolveFallback();
     }
