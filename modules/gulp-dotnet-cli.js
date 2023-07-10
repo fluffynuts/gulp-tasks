@@ -63,7 +63,7 @@
         }, "gulp-dotnet-cli-publish", "publishing dotnet project");
     }
     function logResolvedOption(label, opt) {
-        log(`${yellowBright(label)}: ${cyanBright(opt.value)} (${opt.environmentVariable})`);
+        log(`${yellowBright(label)}: ${cyanBright(opt.value)} (override with: ${opt.environmentVariable})`);
     }
     function definitelyFind(collection, predicate) {
         const found = collection.find(predicate);
