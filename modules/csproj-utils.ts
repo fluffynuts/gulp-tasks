@@ -7,46 +7,27 @@
 
 
   async function readProjectVersion(pathToCsProj: string) {
-    const
-      contents = await readTextFile(pathToCsProj),
-      doc = await parseXml(contents);
-
-    try {
-      const
-        propertyGroups = doc.Project.PropertyGroup
-      return tryReadNodeFrom(propertyGroups, "Version") ?? fallbackAssemblyVersion;
-    } catch (e) {
-      return fallbackAssemblyVersion;
-    }
+    return readCsProjProperty(
+      pathToCsProj,
+      "Version",
+      fallbackAssemblyVersion
+    );
   }
 
   async function readPackageVersion(pathToCsProj: string) {
-    const
-      contents = await readTextFile(pathToCsProj),
-      doc = await parseXml(contents);
-
-    try {
-      const
-        propertyGroups = doc.Project.PropertyGroup
-      return tryReadNodeFrom(propertyGroups, "PackageVersion") ?? fallbackAssemblyVersion;
-    } catch (e) {
-      return fallbackAssemblyVersion;
-    }
+    return readCsProjProperty(
+      pathToCsProj,
+      "PackageVersion",
+      fallbackAssemblyVersion
+    );
   }
 
   async function readAssemblyVersion(pathToCsProj: string) {
-    const
-      contents = await readTextFile(pathToCsProj),
-      doc = await parseXml(contents);
-
-    try {
-      const
-        propertyGroups = doc.Project.PropertyGroup
-      return tryReadNodeFrom(propertyGroups, "AssemblyVersion")
-        ?? fallbackAssemblyVersion;
-    } catch (e) {
-      return fallbackAssemblyVersion;
-    }
+    return readCsProjProperty(
+      pathToCsProj,
+      "AssemblyVersion",
+      fallbackAssemblyVersion
+    );
   }
 
   function determineAssemblyNameFromProjectPath(
@@ -58,18 +39,11 @@
   }
 
   async function readAssemblyName(pathToCsProj: string) {
-    const
-      contents = await readTextFile(pathToCsProj),
-      doc = await parseXml(contents);
-
-    try {
-      const
-        propertyGroups = doc.Project.PropertyGroup
-      return tryReadNodeFrom(propertyGroups, "AssemblyName")
-        ?? determineAssemblyNameFromProjectPath(pathToCsProj);
-    } catch (e) {
-      return fallbackAssemblyVersion;
-    }
+    return await readCsProjProperty(
+      pathToCsProj,
+      "AssemblyName",
+      async () => determineAssemblyNameFromProjectPath(pathToCsProj)
+    );
   }
 
   function readTextFrom(node: string[]): string | undefined {
@@ -89,10 +63,42 @@
     );
   }
 
+  async function readCsProjProperty(
+    pathToCsProj: string,
+    property: string,
+    fallback?: string | (() => Promise<string>)
+  ): Promise<Optional<string>> {
+    const
+      contents = await readTextFile(pathToCsProj),
+      doc = await parseXml(contents);
+
+    try {
+      const
+        propertyGroups = doc.Project.PropertyGroup
+      return tryReadNodeFrom(propertyGroups, property)
+        ?? await resolveFallback(fallback);
+    } catch (e) {
+      return await resolveFallback();
+    }
+  }
+
+  async function resolveFallback(
+    fallback?: string | (() => Promise<string>)
+  ) {
+    if (fallback === undefined) {
+      return undefined;
+    }
+    if (typeof fallback === "string") {
+      return fallback;
+    }
+    return await fallback();
+  }
+
   module.exports = {
     readProjectVersion,
     readAssemblyVersion,
     readPackageVersion,
-    readAssemblyName
+    readAssemblyName,
+    readCsProjProperty
   };
 })();

@@ -1,9 +1,9 @@
 (function() {
   const dotnetCli = requireModule<DotNetCli>("dotnet-cli");
   const { streamify } = requireModule<Streamify>("streamify");
-  const env = requireModule<Env>("env");
-  const path = require("path");
-  const { fileExists } = require("yafs");
+  const { ZarroError } = requireModule("zarro-error");
+  const { log, colors } = requireModule<GulpUtil>("gulp-util");
+  const { yellowBright, cyanBright } = colors;
 
   function wrap<T>(fn: (opts: T) => Promise<SpawnResult | SpawnError>): AsyncTVoid<T> {
     return async (opts: T) => {
@@ -85,14 +85,42 @@
   ) {
     return streamify(
       wrap(dotnetCli.publish),
-      f => {
+      async f => {
         const copy = { ...opts };
         copy.target = f.path;
+        if (copy.publishContainer) {
+          const
+            containerOpts = await dotnetCli.resolveContainerOptions(copy),
+            nameOpt = definitelyFind(containerOpts, o => o.option === "containerImageName"),
+            tagOpt = definitelyFind(containerOpts, o => o.option === "containerImageTag"),
+            registryOpt = definitelyFind(containerOpts, o => o.option == "containerRegistry");
+          logResolvedOption("Publish container", nameOpt);
+          logResolvedOption("         with tag", tagOpt);
+          logResolvedOption("      to registry", registryOpt);
+        }
         return copy;
       },
       "gulp-dotnet-cli-publish",
       "publishing dotnet project"
     )
+  }
+
+  function logResolvedOption(
+    label: string,
+    opt: ResolvedContainerOption
+  ) {
+    log(`${ yellowBright(label) }: ${ cyanBright(opt.value) } (${opt.environmentVariable})`);
+  }
+
+  function definitelyFind<T>(
+    collection: T[],
+    predicate: ((item: T) => boolean)
+  ): T {
+    const found = collection.find(predicate);
+    if (found) {
+      return found;
+    }
+    throw new ZarroError(`Unable to find item with predicate: (${ predicate })`);
   }
 
   module.exports = {

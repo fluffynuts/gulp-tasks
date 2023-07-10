@@ -8,6 +8,8 @@
     const { yellow } = requireModule("ansi-colors");
     const q = requireModule("quote-if-required");
     const parseXml = requireModule("parse-xml");
+    const { readAssemblyVersion, readCsProjProperty, readAssemblyName } = requireModule("csproj-utils");
+    const env = requireModule("env");
     let defaultNugetSource;
     function showHeader(label) {
         console.log(yellow(label));
@@ -452,11 +454,39 @@
             args.push(cliSwitch);
         }
     }
-    function issueContainerWarnings(opts) {
-        // TODO: warnings:
-        // - missing tag: will use file version
-        // - missing registry: will publish local
-        // - missing name: will use assembly name
+    async function resolveContainerOptions(opts) {
+        const result = [];
+        await pushResolvedContainerOption(result, opts, "containerImageTag", env.DOTNET_PUBLISH_CONTAINER_IMAGE_TAG, () => findFallbackContainerImageTag(opts.target));
+        await pushResolvedContainerOption(result, opts, "containerRegistry", env.DOTNET_PUBLISH_CONTAINER_REGISTRY, async () => (await readCsProjProperty(opts.target, "ContainerRegistry", "localhost")));
+        await pushResolvedContainerOption(result, opts, "containerImageName", env.DOTNET_PUBLISH_CONTAINER_IMAGE_NAME, () => findFallbackContainerImageName(opts.target));
+        return result;
+    }
+    async function findFallbackContainerImageTag(csproj) {
+        const specified = await readCsProjProperty(csproj, "ContainerImageTag");
+        if (specified) {
+            return specified;
+        }
+        return readAssemblyVersion(csproj);
+    }
+    async function findFallbackContainerImageName(csproj) {
+        const specified = await readCsProjProperty(csproj, "ContainerImageName");
+        if (specified) {
+            return specified;
+        }
+        return readAssemblyName(csproj);
+    }
+    async function pushResolvedContainerOption(collected, opts, option, environmentVariable, fallback) {
+        let value = opts[option], usingFallback = false;
+        if (value === undefined) {
+            value = await fallback();
+            usingFallback = true;
+        }
+        collected.push({
+            option,
+            value,
+            environmentVariable,
+            usingFallback
+        });
     }
     module.exports = {
         test,
@@ -466,6 +496,6 @@
         nugetPush,
         publish,
         listPackages,
-        issueContainerWarnings
+        resolveContainerOptions
     };
 })();

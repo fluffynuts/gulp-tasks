@@ -1,4 +1,4 @@
-(function () {
+(function() {
 // dev note: when updating here, don't forget to add to types.d.ts/global/Env
 
   const
@@ -76,11 +76,11 @@
       existing: Optional<string>,
       override: Optional<string>
     ) {
-      const existingNumber = parseInt(`${existing}`, 10);
-      const overrideNumber = parseInt(`${override}`, 10);
+      const existingNumber = parseInt(`${ existing }`, 10);
+      const overrideNumber = parseInt(`${ override }`, 10);
       if (isNaN(existingNumber) || isNaN(overrideNumber)) {
         throw new ZarroError(
-          `Can't determine if override '${override}' should take precedence over '${existing}'`
+          `Can't determine if override '${ override }' should take precedence over '${ existing }'`
         );
       }
       const result = overrideNumber < existingNumber;
@@ -114,7 +114,7 @@
 
     env.register({
       name: "MAX_NUNIT_AGENTS",
-      default: `${os.cpus().length - 1}`,
+      default: `${ os.cpus().length - 1 }`,
       help: "How many NUNit agents to use for testing (net framework)",
       overriddenBy: "MAX_CONCURRENCY",
       when: overrideWhenSmaller
@@ -128,7 +128,7 @@
 
     env.register({
       name: "BUILD_EXCLUDE",
-      default: `**/node_modules/**/*.sln,./${getToolsFolder(env)}/**/*.sln`,
+      default: `**/node_modules/**/*.sln,./${ getToolsFolder(env) }/**/*.sln`,
       help: "mask to use for specifically omitting solutions from build"
     });
 
@@ -172,28 +172,28 @@
    - globs match dotnet core projects or .net framework built assemblies
    - elements surrounded with () are treated as pure gulp.src masks`,
       defaultTestInclude = "*.Tests,*.Tests.*,Tests,Test,Test.*",
-      defaultTestExclude = `{!**/node_modules/**/*},{!./${getToolsFolder(env)}/**/*}`;
+      defaultTestExclude = `{!**/node_modules/**/*},{!./${ getToolsFolder(env) }/**/*}`;
     env.register({
       name: "TEST_INCLUDE",
-      help: `comma-separated list of test projects to match${extra}`,
+      help: `comma-separated list of test projects to match${ extra }`,
       default: defaultTestInclude
     });
 
     env.register({
       name: "TEST_EXCLUDE",
-      help: `comma-separated list of exclusions for tests${extra}`,
+      help: `comma-separated list of exclusions for tests${ extra }`,
       default: defaultTestExclude
     });
 
     env.register({
       name: "TEST_VERBOSITY",
-      help: `Verbosity of reporting for dotnet core testing: ${msbuildVerbosityOptions}`,
+      help: `Verbosity of reporting for dotnet core testing: ${ msbuildVerbosityOptions }`,
       default: "normal"
     });
 
     env.register({
       name: "PACK_VERBOSITY",
-      help: `Verbosity of reporting when packing: ${msbuildVerbosityOptions}`
+      help: `Verbosity of reporting when packing: ${ msbuildVerbosityOptions }`
     });
 
     env.register({
@@ -210,7 +210,7 @@
 
     env.register({
       name: "BUILD_VERBOSITY",
-      help: `Verbosity of reporting for msbuild building: ${msbuildVerbosityOptions}`,
+      help: `Verbosity of reporting for msbuild building: ${ msbuildVerbosityOptions }`,
       default: "minimal"
     });
 
@@ -353,6 +353,29 @@
     });
 
     env.register({
+      name: "DOTNET_PUBLISH_INCLUDE",
+      default: "*.sln",
+      help: "mask to use for selecting solutions to publish"
+    });
+
+    const testIncludeInverted = env.resolveArray("TEST_INCLUDE")
+      .map(p => `!${ p }`);
+    const ignoreTestProjects = testIncludeInverted.length
+      ? `,${ testIncludeInverted.join(",") }`
+      : "";
+    env.register({
+      name: "DOTNET_PUBLISH_EXCLUDE",
+      default: `**/node_modules/**/*.sln,./${ getToolsFolder(env) }/**/*.sln${ignoreTestProjects}`,
+      help: "mask to use for specifically omitting solutions from publish; to add your own exclusions, it's probably a good idea to rather set DOTNET_PUBLISH_ADDITIONAL_EXCLUDE"
+    });
+
+    env.register({
+      name: "DOTNET_PUBLISH_ADDITIONAL_EXCLUDE",
+      default: "",
+      help: "mask of extra exclusions on top of the default set"
+    });
+
+    env.register({
       name: "DOTNET_PUBLISH_RUNTIMES",
       help: "Runtimes to publish dotnet core targets for, if required"
     });
@@ -414,8 +437,28 @@
 
     env.register({
       name: "DOTNET_PUBLISH_VERBOSITY",
-      help: `Verbosity to use during publish operation: ${msbuildVerbosityOptions}`
+      help: `Verbosity to use during publish operation: ${ msbuildVerbosityOptions }`
     });
+
+    env.register({
+      name: "DOTNET_PUBLISH_CONTAINER",
+      help: `flag: when set, attempt to publish the project as a container, relying on the nuget package Microsoft.NET.Build.Containers being installed in that project`
+    })
+
+    env.register({
+      name: "DOTNET_PUBLISH_CONTAINER_IMAGE_NAME",
+      help: `set the container image name when publishing a container; when omitted, will fall back on ContainerImageName property or the assembly name of the published project`
+    });
+
+    env.register({
+      name: "DOTNET_PUBLISH_CONTAINER_IMAGE_TAG",
+      help: `set the tag(s) on the published container (separate multiple tags with semi-colons); when omitted, the assembly version of your published project will be used`
+    });
+
+    env.register({
+      name: "DOTNET_PUBLISH_CONTAINER_REGISTRY",
+      help: `set the registry to publish the container to (default localhost); you should have already authenticated before attempting to publish.`
+    })
 
     env.register({
       name: "MSBUILD_PROPERTIES",
@@ -645,7 +688,7 @@
     });
 
     function retryMessage(label: string) {
-      return `Retry ${label} again up to this many times on failure (work around transient errors on build host)`;
+      return `Retry ${ label } again up to this many times on failure (work around transient errors on build host)`;
     }
 
     env.register({
@@ -687,7 +730,7 @@
     });
 
     env.register({
-      name: "ZARRO_ALLOW_FILE_CONFIG_RESOLUTION",
+      name: "ZARRO_ALLOW_FILE_RESOLUTION",
       default: "true",
       help: `when enabled, the value provided by an environment variable may be the path
  to a file to use for that configuration; for example MSBUILD_PROPERTIES=foo.json will

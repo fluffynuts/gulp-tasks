@@ -9,6 +9,12 @@
   const { yellow } = requireModule<AnsiColors>("ansi-colors");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
   const parseXml = requireModule<ParseXml>("parse-xml");
+  const {
+    readAssemblyVersion,
+    readCsProjProperty,
+    readAssemblyName
+  } = requireModule<CsProjUtils>("csproj-utils");
+  const env = requireModule<Env>("env");
 
   let defaultNugetSource: string;
 
@@ -633,14 +639,88 @@
     }
   }
 
-  function issueContainerWarnings(
+  async function resolveContainerOptions(
     opts: DotNetPublishOptions
-  ) {
-    // TODO: warnings:
-    // - missing tag: will use file version
-    // - missing registry: will publish local
-    // - missing name: will use assembly name
+  ): Promise<ResolvedContainerOption[]> {
+    const result = [] as ResolvedContainerOption[];
+    await pushResolvedContainerOption(
+      result,
+      opts,
+      "containerImageTag",
+      env.DOTNET_PUBLISH_CONTAINER_IMAGE_TAG,
+      () => findFallbackContainerImageTag(opts.target)
+    );
 
+    await pushResolvedContainerOption(
+      result,
+      opts,
+      "containerRegistry",
+      env.DOTNET_PUBLISH_CONTAINER_REGISTRY,
+      async () => (await readCsProjProperty(
+        opts.target,
+        "ContainerRegistry",
+        "localhost"
+      )) as string
+    );
+
+    await pushResolvedContainerOption(
+      result,
+      opts,
+      "containerImageName",
+      env.DOTNET_PUBLISH_CONTAINER_IMAGE_NAME,
+      () => findFallbackContainerImageName(opts.target)
+    );
+
+    return result;
+  }
+
+  async function findFallbackContainerImageTag(
+    csproj: string
+  ) {
+    const specified = await readCsProjProperty(
+      csproj,
+      "ContainerImageTag"
+    );
+    if (specified) {
+      return specified;
+    }
+    return readAssemblyVersion(csproj);
+  }
+
+  async function findFallbackContainerImageName(
+    csproj: string
+  ) {
+    const specified = await readCsProjProperty(
+      csproj,
+      "ContainerImageName"
+    );
+    if (specified) {
+      return specified;
+    }
+
+    return readAssemblyName(csproj);
+  }
+
+  async function pushResolvedContainerOption(
+    collected: ResolvedContainerOption[],
+    opts: DotNetPublishOptions,
+    option: keyof DotNetPublishContainerOptions,
+    environmentVariable: string,
+    fallback: (() => Promise<string>)
+  ): Promise<void> {
+    let
+      value = opts[option] as string,
+      usingFallback = false;
+    if (value === undefined) {
+      value = await fallback();
+      usingFallback = true
+    }
+    collected.push({
+      option,
+      value,
+      environmentVariable,
+      usingFallback
+    });
   }
 
   module.exports = {
@@ -651,6 +731,6 @@
     nugetPush,
     publish,
     listPackages,
-    issueContainerWarnings
+    resolveContainerOptions
   };
 })();

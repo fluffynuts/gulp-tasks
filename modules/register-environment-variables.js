@@ -285,6 +285,26 @@
             default: ""
         });
         env.register({
+            name: "DOTNET_PUBLISH_INCLUDE",
+            default: "*.sln",
+            help: "mask to use for selecting solutions to publish"
+        });
+        const testIncludeInverted = env.resolveArray("TEST_INCLUDE")
+            .map(p => `!${p}`);
+        const ignoreTestProjects = testIncludeInverted.length
+            ? `,${testIncludeInverted.join(",")}`
+            : "";
+        env.register({
+            name: "DOTNET_PUBLISH_EXCLUDE",
+            default: `**/node_modules/**/*.sln,./${getToolsFolder(env)}/**/*.sln${ignoreTestProjects}`,
+            help: "mask to use for specifically omitting solutions from publish; to add your own exclusions, it's probably a good idea to rather set DOTNET_PUBLISH_ADDITIONAL_EXCLUDE"
+        });
+        env.register({
+            name: "DOTNET_PUBLISH_ADDITIONAL_EXCLUDE",
+            default: "",
+            help: "mask of extra exclusions on top of the default set"
+        });
+        env.register({
             name: "DOTNET_PUBLISH_RUNTIMES",
             help: "Runtimes to publish dotnet core targets for, if required"
         });
@@ -336,6 +356,22 @@
         env.register({
             name: "DOTNET_PUBLISH_VERBOSITY",
             help: `Verbosity to use during publish operation: ${msbuildVerbosityOptions}`
+        });
+        env.register({
+            name: "DOTNET_PUBLISH_CONTAINER",
+            help: `flag: when set, attempt to publish the project as a container, relying on the nuget package Microsoft.NET.Build.Containers being installed in that project`
+        });
+        env.register({
+            name: "DOTNET_PUBLISH_CONTAINER_IMAGE_NAME",
+            help: `set the container image name when publishing a container; when omitted, will fall back on ContainerImageName property or the assembly name of the published project`
+        });
+        env.register({
+            name: "DOTNET_PUBLISH_CONTAINER_IMAGE_TAG",
+            help: `set the tag(s) on the published container (separate multiple tags with semi-colons); when omitted, the assembly version of your published project will be used`
+        });
+        env.register({
+            name: "DOTNET_PUBLISH_CONTAINER_REGISTRY",
+            help: `set the registry to publish the container to (default localhost); you should have already authenticated before attempting to publish.`
         });
         env.register({
             name: "MSBUILD_PROPERTIES",
@@ -564,7 +600,7 @@
             help: "prefix test names by project with a mapping like 'PROJECT:PREFIX;PROJECT:PREFIX'"
         });
         env.register({
-            name: "ZARRO_ALLOW_FILE_CONFIG_RESOLUTION",
+            name: "ZARRO_ALLOW_FILE_RESOLUTION",
             default: "true",
             help: `when enabled, the value provided by an environment variable may be the path
  to a file to use for that configuration; for example MSBUILD_PROPERTIES=foo.json will
