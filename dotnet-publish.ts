@@ -55,6 +55,14 @@
         containerImageName: env.resolve(env.DOTNET_PUBLISH_CONTAINER_IMAGE_NAME),
         containerImageTag: env.resolve(env.DOTNET_PUBLISH_CONTAINER_IMAGE_TAG),
         containerRegistry: env.resolve(env.DOTNET_PUBLISH_CONTAINER_REGISTRY)
+        // TODO: include env drivers for msbuild props:
+        // PublishTrimmed
+        // PublishSingleFile
+        // IncludeNativeLibrariesForSelfExtract
+        // DebugType (perhaps DOTNET_PUBLISH_DEBUG=None?)
+        // DebugSymbols (flag - False)
+        // EnableCompressionInSingleFile (flag - True)
+        // -> perhaps DOTNET_PUBLISH_SELF_CONTAINED should set these appropriately, with opt-out via env vars
       };
 
 
