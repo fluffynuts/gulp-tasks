@@ -113,6 +113,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         }
         const opts = Object.assign(Object.assign({}, defaultOptions), options);
+        const q = opts.disableAutomaticQuoting
+            ? passThrough
+            : quoteIfRequired;
         if (opts.interactive) {
             opts.stderr = undefined;
             opts.stdout = undefined;
@@ -151,8 +154,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         }
         const result = new SpawnResult(executable, args, -1, [], []);
-        executable = quoteIfRequired(executable);
-        const quotedArgs = args.map(s => quoteIfRequired(s));
+        executable = q(executable);
+        const quotedArgs = args.map(s => q(s));
         debug(`spawning: ${executable} ${quotedArgs.join(" ")}`);
         debug({ opts });
         return new Promise((resolve, reject) => {
@@ -259,5 +262,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     spawn.isSpawnResult = function (o) {
         return o instanceof SpawnResult;
     };
+    function passThrough(s) {
+        return s;
+    }
     module.exports = spawn;
 })();

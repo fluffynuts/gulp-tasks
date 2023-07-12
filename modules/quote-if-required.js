@@ -1,15 +1,38 @@
 "use strict";
 (function () {
-    function isAlreadyQuoted(str) {
-        return !!str &&
-            str[0] === "\"" &&
-            str[str.length - 1] === "\"";
-    }
+    const os = require("os");
     module.exports = function quoteIfRequired(arg) {
         arg = arg || "";
-        return (arg.indexOf(" ") > -1 || arg.indexOf(";") > -1) &&
-            arg.match(/^".*"$/) == null
-            ? isAlreadyQuoted(arg) ? arg : `"${arg}"`
-            : arg;
+        const hasSemiColon = arg.indexOf(";") > -1;
+        if (!hasWhitespace(arg) && !hasSemiColon) {
+            return arg;
+        }
+        const alreadyWrapped = arg.match(/^".*"$/);
+        if (alreadyWrapped) {
+            return arg;
+        }
+        if (isWhackyDOSQuoting(arg)) {
+            return arg;
+        }
+        return `"${escapeQuotes(arg)}"`;
     };
+    function escapeQuotes(str) {
+        if (os.platform() === "win32") {
+            return str;
+        }
+        return str.replace(/"/g, `\\"`);
+    }
+    function hasWhitespace(arg) {
+        return !!arg.match(/\s+/);
+    }
+    function isWhackyDOSQuoting(str) {
+        if (os.platform() !== "win32") {
+            return false;
+        }
+        if (str.indexOf(`"`) === -1) {
+            return false;
+        }
+        const parts = str.split('"');
+        return !hasWhitespace(parts[0]);
+    }
 })();

@@ -150,6 +150,9 @@ import { ChildProcess } from "child_process";
       }
     }
     const opts = { ...defaultOptions, ...options };
+    const q = opts.disableAutomaticQuoting
+      ? passThrough
+      : quoteIfRequired;
     if (opts.interactive) {
       opts.stderr = undefined;
       opts.stdout = undefined;
@@ -203,9 +206,9 @@ import { ChildProcess } from "child_process";
       []
     )
 
-    executable = quoteIfRequired(executable);
+    executable = q(executable);
 
-    const quotedArgs = args.map(s => quoteIfRequired(s)) as string[];
+    const quotedArgs = args.map(s => q(s)) as string[];
     debug(`spawning: ${ executable } ${ quotedArgs.join(" ") }`);
     debug({ opts });
 
@@ -334,6 +337,10 @@ import { ChildProcess } from "child_process";
   }
   spawn.isSpawnResult = function(o: any): o is SpawnResult {
     return o instanceof SpawnResult;
+  }
+
+  function passThrough(s: string): string {
+    return s;
   }
 
   module.exports = spawn;
