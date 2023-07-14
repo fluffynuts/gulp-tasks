@@ -26,7 +26,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
         resolveNumber,
         resolveFlag,
         resolveWithFallback,
-        resolveMap
+        resolveMap,
+        resolveRequired
     };
     const positives = new Set(["1", "yes", "true"]);
     if (process.env.POSITIVE_FLAG) {
@@ -220,7 +221,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
         });
         printHelpFor(matchingRequest);
     }
+    function resolveRequired() {
+        const args = Array.from(arguments);
+        const result = resolve.apply(undefined, args);
+        if (result === undefined || result === null || result === "") {
+            const s = args.length === 1 ? "" : "s";
+            throw new ZarroError(`unable to resolve env var${s} ${args}`);
+        }
+        return result;
+    }
     function resolve() {
+        var args = Array.from(arguments);
+        if (args.length === 0) {
+            throw new ZarroError(`invalid operation: resolve(...) requires at least one env var name to resolve`);
+        }
         const names = 
         // horrible hax: ts doesn't recognise the flatMap fallback import
         Array.from(arguments)

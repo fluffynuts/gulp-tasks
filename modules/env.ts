@@ -35,7 +35,8 @@ import { readFileSync } from "fs";
       resolveNumber,
       resolveFlag,
       resolveWithFallback,
-      resolveMap
+      resolveMap,
+      resolveRequired
     } as Dictionary<any>;
 
   const positives = new Set([ "1", "yes", "true" ]);
@@ -144,7 +145,7 @@ import { readFileSync } from "fs";
   }
 
   function update(
-    varName: string,
+    varName: string | keyof Env,
     fallbackValue?: string,
     help?: string | string[],
     tasks?: string | string[],
@@ -184,7 +185,7 @@ import { readFileSync } from "fs";
     if (!a) {
       return [];
     }
-    return a.map(s => `${s}`.trim());
+    return a.map(s => `${ s }`.trim());
   }
 
   function printHelp() {
@@ -279,7 +280,21 @@ import { readFileSync } from "fs";
     printHelpFor(matchingRequest);
   }
 
+  function resolveRequired() {
+    const args = Array.from(arguments);
+    const result = (resolve as Function).apply(undefined, args);
+    if (result === undefined || result === null || result === "") {
+      const s = args.length === 1 ? "" : "s";
+      throw new ZarroError(`unable to resolve env var${s} ${args}`);
+    }
+    return result;
+  }
+
   function resolve() {
+    var args = Array.from(arguments);
+    if (args.length === 0) {
+      throw new ZarroError(`invalid operation: resolve(...) requires at least one env var name to resolve`);
+    }
     const names = (
       // horrible hax: ts doesn't recognise the flatMap fallback import
       Array.from(arguments)
