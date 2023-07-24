@@ -179,8 +179,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 let exited = false;
                 child.on("exit", generateExitHandler("exit"));
                 child.on("close", generateExitHandler("close"));
-                setupIoHandler(stdOutWriter, child.stdout, stdout, opts.lineBuffer);
-                setupIoHandler(stdErrWriter, child.stderr, stderr, opts.lineBuffer);
+                setupIoHandler(stdOutWriter, child.stdout, stdout, opts);
+                setupIoHandler(stdErrWriter, child.stderr, stderr, opts);
                 function generateExitHandler(eventName) {
                     return (code) => {
                         if (exited) {
@@ -209,7 +209,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         });
     }
-    function setupIoHandler(writer, stream, collector, lineBuffer) {
+    function setupIoHandler(writer, stream, collector, opts) {
         if (!stream) {
             return;
         }
@@ -225,9 +225,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 data = data.toString();
             }
             collector.push(data);
+            if (opts.suppressOutput) {
+                return;
+            }
             writer(data);
         }
-        if (lineBuffer) {
+        if (opts.lineBuffer) {
             const rl = readline.createInterface({ input: stream });
             rl.on("line", handle);
         }
