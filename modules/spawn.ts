@@ -189,6 +189,10 @@ import { ChildProcess } from "child_process";
       stdoutFnSpecified = typeof opts.stdout === "function",
       stderrFnSpecified = typeof opts.stderr === "function";
 
+    let
+      suppressStdOut = !!opts.suppressOutput,
+      suppressStdErr = !!opts.suppressOutput;
+
     if (opts.detached) {
       opts.stdio = "ignore";
       opts.stdout = undefined;
@@ -204,12 +208,14 @@ import { ChildProcess } from "child_process";
       if (stdoutFnSpecified) {
         stdOutWriter = opts.stdout as StringConsumer;
         (opts.stdio as string[])[1] = "pipe";
+        suppressStdOut = false;
       } else if (Array.isArray(opts.stdio)) {
         opts.stdio[1] = "inherit";
       }
       if (stderrFnSpecified) {
         stdErrWriter = opts.stderr as StringConsumer;
         (opts.stdio as string[])[2] = "pipe";
+        suppressStdErr = false;
       } else if (Array.isArray(opts.stdio)) {
         opts.stdio[2] = "inherit";
       }
@@ -257,8 +263,8 @@ import { ChildProcess } from "child_process";
         let exited = false;
         child.on("exit", generateExitHandler("exit"));
         child.on("close", generateExitHandler("close"));
-        setupIoHandler(stdOutWriter, child.stdout, stdout, opts);
-        setupIoHandler(stdErrWriter, child.stderr, stderr, opts)
+        setupIoHandler(stdOutWriter, child.stdout, stdout, opts, suppressStdOut);
+        setupIoHandler(stdErrWriter, child.stderr, stderr, opts, suppressStdErr)
 
         function generateExitHandler(eventName: string): (code: number) => void {
           return (code: number) => {
@@ -298,7 +304,8 @@ import { ChildProcess } from "child_process";
     writer: IoConsumer,
     stream: Readable,
     collector: string[],
-    opts: SpawnOptions
+    opts: SpawnOptions,
+    suppress: boolean
   ) {
     if (!stream) {
       return;
@@ -316,7 +323,7 @@ import { ChildProcess } from "child_process";
         data = data.toString();
       }
       collector.push(data);
-      if (opts.suppressOutput) {
+      if (suppress) {
         return;
       }
       writer(data)

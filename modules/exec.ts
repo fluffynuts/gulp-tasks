@@ -271,6 +271,7 @@ stdout:
         args,
         spawnOptions
       )
+      debugger;
       return opts?.mergeIo
         ? merged.join("\n")
         : stdout.join("\n");

@@ -142,6 +142,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             opts.stdio = [...defaultOptions.stdio];
         }
         let stdOutWriter = nullConsumer, stdErrWriter = nullConsumer, stdoutFnSpecified = typeof opts.stdout === "function", stderrFnSpecified = typeof opts.stderr === "function";
+        let suppressStdOut = !!opts.suppressOutput, suppressStdErr = !!opts.suppressOutput;
         if (opts.detached) {
             opts.stdio = "ignore";
             opts.stdout = undefined;
@@ -156,6 +157,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (stdoutFnSpecified) {
                 stdOutWriter = opts.stdout;
                 opts.stdio[1] = "pipe";
+                suppressStdOut = false;
             }
             else if (Array.isArray(opts.stdio)) {
                 opts.stdio[1] = "inherit";
@@ -163,6 +165,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (stderrFnSpecified) {
                 stdErrWriter = opts.stderr;
                 opts.stdio[2] = "pipe";
+                suppressStdErr = false;
             }
             else if (Array.isArray(opts.stdio)) {
                 opts.stdio[2] = "inherit";
@@ -194,8 +197,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 let exited = false;
                 child.on("exit", generateExitHandler("exit"));
                 child.on("close", generateExitHandler("close"));
-                setupIoHandler(stdOutWriter, child.stdout, stdout, opts);
-                setupIoHandler(stdErrWriter, child.stderr, stderr, opts);
+                setupIoHandler(stdOutWriter, child.stdout, stdout, opts, suppressStdOut);
+                setupIoHandler(stdErrWriter, child.stderr, stderr, opts, suppressStdErr);
                 function generateExitHandler(eventName) {
                     return (code) => {
                         if (exited) {
@@ -224,7 +227,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         });
     }
-    function setupIoHandler(writer, stream, collector, opts) {
+    function setupIoHandler(writer, stream, collector, opts, suppress) {
         if (!stream) {
             return;
         }
@@ -240,7 +243,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 data = data.toString();
             }
             collector.push(data);
-            if (opts.suppressOutput) {
+            if (suppress) {
                 return;
             }
             writer(data);

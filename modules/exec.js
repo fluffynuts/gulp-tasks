@@ -190,6 +190,7 @@ stdout:
         const spawnOptions = Object.assign(Object.assign({}, opts), myHandlers);
         try {
             await spawn(cmd, args, spawnOptions);
+            debugger;
             return (opts === null || opts === void 0 ? void 0 : opts.mergeIo)
                 ? merged.join("\n")
                 : stdout.join("\n");
