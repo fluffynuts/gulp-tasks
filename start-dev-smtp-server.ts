@@ -176,7 +176,7 @@
       path = require("path"),
       getToolsFolder = requireModule<GetToolsFolder>("get-tools-folder"),
       target = path.join(getToolsFolder(), "mailpit"),
-      { fetchLatestRelease } = require("./modules/fetch-github-release/src");
+      { fetchLatestRelease } = require("./modules/fetch-github-release");
 
     const existing = await tryFindMailpitUnder(target);
     if (existing) {
