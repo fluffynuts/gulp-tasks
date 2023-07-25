@@ -6,10 +6,12 @@
     gutil = requireModule<GulpUtil>("gulp-util"),
     gitTag = requireModule<GitTag>("git-tag"),
     gitPushTags = requireModule<GitPushTags>("git-push-tags"),
+    { ask } = requireModule<Ask>("ask"),
     gitPush = requireModule<GitPush>("git-push"),
     readGitInfo = requireModule<ReadGitInfo>("read-git-info"),
     env = requireModule<Env>("env"),
     readPackageVersion = requireModule<ReadPackageVersion>("read-package-version"),
+    { runTask } = requireModule<RunTask>("run-task"),
     alterPackageJsonVersion = requireModule<AlterPackageJson>("alter-package-json-version");
 
   async function rollBackPackageJson() {
@@ -23,6 +25,7 @@
       git = gitFactory(),
       version = await readPackageVersion(),
       isBeta = env.resolveFlag("BETA"),
+      releaseTag = env.resolve("TAG"),
       tag = `v${ version }`,
       gitInfo = await readGitInfo();
 
@@ -55,8 +58,15 @@
         const
           access = env.resolve("NPM_PUBLISH_ACCESS"),
           args = ["publish", "--access", access];
-        if (isBeta) {
+        if (!!releaseTag) {
+          args.push("--tag", releaseTag);
+        } else if (isBeta) {
           args.push("--tag", "beta");
+        }
+        if (await npmSupportsOtpSwitch()) {
+          const otp = await ask("Please enter your 2FA OTP");
+          args.push("--otp");
+          args.push(otp);
         }
         await spawn("npm", args, {
           interactive: true
@@ -71,6 +81,8 @@
       gutil.log(gutil.colors.yellow(`would commit all updated files`));
       await rollBackPackageJson();
     } else if (gitInfo.isGitRepository) {
+
+      await runTask("git-tag-and-push");
       await git.add(":/");
       await git.commit(`:bookmark: bump package version to ${ version }`);
       await gitTag({ tag });
@@ -78,5 +90,13 @@
       await gitPushTags(dryRun);
     }
   });
+
+  async function npmSupportsOtpSwitch() {
+    const result = await spawn("npm", ["publish", "--help"], {
+      suppressOutput: true
+    });
+    const allStdOut = result.stdout.join("\n");
+    return allStdOut.indexOf("--otp") > -1;
+  }
 
 })();

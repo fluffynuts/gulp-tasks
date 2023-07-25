@@ -560,6 +560,12 @@
             default: "false"
         });
         env.register({
+            name: "TAG",
+            help: [
+                "Use a custom flag for your release",
+            ]
+        });
+        env.register({
             name: "NPM_PUBLISH_ACCESS",
             help: "Access level to use for package publish",
             default: "public"
@@ -641,6 +647,14 @@
             name: "DEV_SMTP_OPEN_INTERFACE",
             help: "flag: when set true, zarro will open the dev smtp server interface after starting it",
             default: "true"
+        });
+        env.register({
+            name: "GIT_TAG",
+            help: "sets the tag to use when performing a git-tag-and-push"
+        });
+        env.register({
+            name: "GIT_TAG_COMMIT_MESSAGE",
+            help: "sets the commit message for the tag, will default to ':bookmark: bump package version to {whatever your tag is}"
         });
         debug("-- env registration complete --");
     };

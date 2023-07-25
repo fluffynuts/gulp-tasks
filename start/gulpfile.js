@@ -34,7 +34,7 @@ function tryFindGulpTasks() {
 const
   gulpTasksFolder = process.env.GULP_TASKS_FOLDER || tryFindGulpTasks(),
   requireModule = require(path.join(gulpTasksFolder, "modules", "require-module"));
-
+debug(`using gulp tasks from ${gulpTasksFolder}`);
 if (!fs.existsSync(gulpTasksFolder)) {
   console.error("Either clone `gulp-tasks` to the `gulp-tasks` folder or modify this script to avoid sadness");
   process.exit(2);
@@ -74,21 +74,25 @@ function isGulpJs(filePath) {
   return path.basename(filePath) === "gulp.js";
 }
 
-if (!fs.existsSync("package.json")) {
-  pauseWhilstWorking();
-  console.log(
-    "You need to set up a package.json first. I'll run `npm init` for you (:"
-  );
-  initializeNpm().then(() => autoWorking = false);
-} else if (mustInstallDeps()) {
-  pauseWhilstWorking();
-  console.log(
-    "Now we just need to install the dependencies required for gulp-tasks to run (:"
-  );
-  installGulpTaskDependencies().then(() => {
-    console.log("You're good to go with `gulp-tasks`. Try running `npm run gulp build`");
-    autoWorking = false;
-  });
+if (!process.env.RUNNING_AS_ZARRO) {
+  if (!fs.existsSync("package.json")) {
+    pauseWhilstWorking();
+    console.log(
+      "You need to set up a package.json first. I'll run `npm init` for you (:"
+    );
+    initializeNpm().then(() => autoWorking = false);
+  } else if (mustInstallDeps()) {
+    pauseWhilstWorking();
+    console.log(
+      "Now we just need to install the dependencies required for gulp-tasks to run (:"
+    );
+    installGulpTaskDependencies().then(() => {
+      console.log("You're good to go with `gulp-tasks`. Try running `npm run gulp build`");
+      autoWorking = false;
+    });
+  } else {
+    bootstrapGulp();
+  }
 } else {
   bootstrapGulp();
 }

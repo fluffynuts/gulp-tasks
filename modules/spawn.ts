@@ -137,7 +137,25 @@ import { ChildProcess } from "child_process";
     commandlineArgs?: string[],
     options?: SpawnOptions
   ): Promise<SpawnResult> {
-    const args = !commandlineArgs ? [] : commandlineArgs;
+    const isShellExec = commandlineArgs === undefined || commandlineArgs === null;
+    let args = commandlineArgs || [];
+    if (isShellExec) {
+      debug("is shell exec");
+      debug({
+        executable
+      });
+      const
+        os = require("os"),
+        isWindows = os.platform() === "win32",
+        commandLine = executable;
+      executable = isWindows
+        ? "cmd"
+        : "/bin/bash";
+      args = [
+        isWindows ? "/c" : "-c",
+        commandLine
+      ];
+    }
     if (options) {
       // if the provided options have properties with the value
       // undefined, they will overwrite the defaults, which is
@@ -298,7 +316,7 @@ import { ChildProcess } from "child_process";
         data = data.toString();
       }
       collector.push(data);
-      if (opts.suppressOutput){
+      if (opts.suppressOutput) {
         return;
       }
       writer(data)

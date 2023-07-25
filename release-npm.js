@@ -1,11 +1,11 @@
 "use strict";
 (function () {
-    const gitFactory = require("simple-git"), spawn = requireModule("spawn"), gulp = requireModule("gulp"), gutil = requireModule("gulp-util"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), readGitInfo = requireModule("read-git-info"), env = requireModule("env"), readPackageVersion = requireModule("read-package-version"), alterPackageJsonVersion = requireModule("alter-package-json-version");
+    const gitFactory = require("simple-git"), spawn = requireModule("spawn"), gulp = requireModule("gulp"), gutil = requireModule("gulp-util"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), { ask } = requireModule("ask"), gitPush = requireModule("git-push"), readGitInfo = requireModule("read-git-info"), env = requireModule("env"), readPackageVersion = requireModule("read-package-version"), { runTask } = requireModule("run-task"), alterPackageJsonVersion = requireModule("alter-package-json-version");
     async function rollBackPackageJson() {
         await alterPackageJsonVersion({ loadUnsetFromEnvironment: true, incrementBy: -1 });
     }
     gulp.task("release-npm", ["increment-package-json-version"], async () => {
-        const dryRun = env.resolveFlag("DRY_RUN"), git = gitFactory(), version = await readPackageVersion(), isBeta = env.resolveFlag("BETA"), tag = `v${version}`, gitInfo = await readGitInfo();
+        const dryRun = env.resolveFlag("DRY_RUN"), git = gitFactory(), version = await readPackageVersion(), isBeta = env.resolveFlag("BETA"), releaseTag = env.resolve("TAG"), tag = `v${version}`, gitInfo = await readGitInfo();
         try {
             if (gitInfo.isGitRepository) {
                 const branchInfo = await git.branch();
@@ -32,8 +32,16 @@
             }
             else {
                 const access = env.resolve("NPM_PUBLISH_ACCESS"), args = ["publish", "--access", access];
-                if (isBeta) {
+                if (!!releaseTag) {
+                    args.push("--tag", releaseTag);
+                }
+                else if (isBeta) {
                     args.push("--tag", "beta");
+                }
+                if (await npmSupportsOtpSwitch()) {
+                    const otp = await ask("Please enter your 2FA OTP");
+                    args.push("--otp");
+                    args.push(otp);
                 }
                 await spawn("npm", args, {
                     interactive: true
@@ -49,6 +57,7 @@
             await rollBackPackageJson();
         }
         else if (gitInfo.isGitRepository) {
+            await runTask("git-tag-and-push");
             await git.add(":/");
             await git.commit(`:bookmark: bump package version to ${version}`);
             await gitTag({ tag });
@@ -56,4 +65,11 @@
             await gitPushTags(dryRun);
         }
     });
+    async function npmSupportsOtpSwitch() {
+        const result = await spawn("npm", ["publish", "--help"], {
+            suppressOutput: true
+        });
+        const allStdOut = result.stdout.join("\n");
+        return allStdOut.indexOf("--otp") > -1;
+    }
 })();

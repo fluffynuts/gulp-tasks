@@ -100,7 +100,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
         // intentionally left blank
     }
     function spawn(executable, commandlineArgs, options) {
-        const args = !commandlineArgs ? [] : commandlineArgs;
+        const isShellExec = commandlineArgs === undefined || commandlineArgs === null;
+        let args = commandlineArgs || [];
+        if (isShellExec) {
+            debug("is shell exec");
+            debug({
+                executable
+            });
+            const os = require("os"), isWindows = os.platform() === "win32", commandLine = executable;
+            executable = isWindows
+                ? "cmd"
+                : "/bin/bash";
+            args = [
+                isWindows ? "/c" : "-c",
+                commandLine
+            ];
+        }
         if (options) {
             // if the provided options have properties with the value
             // undefined, they will overwrite the defaults, which is

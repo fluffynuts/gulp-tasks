@@ -12,7 +12,8 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
   dryRun: boolean;
   strategy: string;
   zero: boolean;
-  incrementBy: number
+  incrementBy: number;
+  tag?: string;
 }
 
 (function() {
