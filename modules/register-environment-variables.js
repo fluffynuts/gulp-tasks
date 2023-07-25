@@ -570,6 +570,11 @@
             help: "Access level to use for package publish",
             default: "public"
         });
+        env.register({
+            name: "NPM_PUBLISH_SKIP_OTP",
+            help: "by default, an attempt to publish a package to npm will ask you for an OTP before doing so; set this to 1 to skip this if you're, eg, using tokens or prefer the browser-based flow",
+            default: "0"
+        });
         function retryMessage(label) {
             return `Retry ${label} again up to this many times on failure (work around transient errors on build host)`;
         }

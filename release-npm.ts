@@ -66,7 +66,8 @@
         } else if (isBeta) {
           args.push("--tag", "beta");
         }
-        if (await npmSupportsOtpSwitch()) {
+        const skipOTP = env.resolveFlag(env.NPM_PUBLISH_SKIP_OTP);
+        if (!skipOTP && await npmSupportsOtpSwitch()) {
           const otp = await ask("Please enter your 2FA OTP for NPM");
           args.push("--otp");
           args.push(otp);
