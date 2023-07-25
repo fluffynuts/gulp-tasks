@@ -1,0 +1,3 @@
+[submodule "modules/fetch-github-release"]
+	path = modules/fetch-github-release
+	url = https://github.com/fluffynuts/fetch-github-release

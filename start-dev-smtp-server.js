@@ -106,7 +106,7 @@
         }
     }
     async function findOrDownloadMailpit() {
-        const { ExecStepContext } = require("exec-step"), ctx = new ExecStepContext(), path = require("path"), getToolsFolder = requireModule("get-tools-folder"), target = path.join(getToolsFolder(), "mailpit"), { fetchLatestRelease } = require("fetch-github-release");
+        const { ExecStepContext } = require("exec-step"), ctx = new ExecStepContext(), path = require("path"), getToolsFolder = requireModule("get-tools-folder"), target = path.join(getToolsFolder(), "mailpit"), { fetchLatestRelease } = require("./modules/fetch-github-release/src");
         const existing = await tryFindMailpitUnder(target);
         if (existing) {
             return existing;
