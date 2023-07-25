@@ -4,21 +4,20 @@
     spawn = requireModule<Spawn>("spawn"),
     gulp = requireModule<GulpWithHelp>("gulp"),
     gutil = requireModule<GulpUtil>("gulp-util"),
-    gitTag = requireModule<GitTag>("git-tag"),
-    gitPushTags = requireModule<GitPushTags>("git-push-tags"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     { ask } = requireModule<Ask>("ask"),
-    gitPush = requireModule<GitPush>("git-push"),
     readGitInfo = requireModule<ReadGitInfo>("read-git-info"),
     env = requireModule<Env>("env"),
     readPackageVersion = requireModule<ReadPackageVersion>("read-package-version"),
     { runTask } = requireModule<RunTask>("run-task"),
+    { withEnvironment } = requireModule<TemporaryEnvironment>("temporary-environment"),
     alterPackageJsonVersion = requireModule<AlterPackageJson>("alter-package-json-version");
 
   async function rollBackPackageJson() {
     await alterPackageJsonVersion({ loadUnsetFromEnvironment: true, incrementBy: -1 });
   }
 
-  gulp.task("release-npm", ["increment-package-json-version"], async () => {
+  gulp.task("release-npm", [ "increment-package-json-version" ], async () => {
 
     const
       dryRun = env.resolveFlag("DRY_RUN"),
@@ -28,6 +27,9 @@
       releaseTag = env.resolve("TAG"),
       tag = `v${ version }`,
       gitInfo = await readGitInfo();
+    if (version === undefined) {
+      throw new ZarroError(`unable to read version from package.json`);
+    }
 
     try {
       if (gitInfo.isGitRepository) {
@@ -46,6 +48,7 @@
             const e = ex as Error;
             const isNewBranch = (e.message || e.toString()).indexOf("couldn't find remote ref HEAD") > -1;
             if (!isNewBranch) {
+              // noinspection ExceptionCaughtLocallyJS
               throw e;
             }
           }
@@ -57,14 +60,14 @@
       } else {
         const
           access = env.resolve("NPM_PUBLISH_ACCESS"),
-          args = ["publish", "--access", access];
+          args = [ "publish", "--access", access ];
         if (!!releaseTag) {
           args.push("--tag", releaseTag);
         } else if (isBeta) {
           args.push("--tag", "beta");
         }
         if (await npmSupportsOtpSwitch()) {
-          const otp = await ask("Please enter your 2FA OTP");
+          const otp = await ask("Please enter your 2FA OTP for NPM");
           args.push("--otp");
           args.push(otp);
         }
@@ -81,18 +84,27 @@
       gutil.log(gutil.colors.yellow(`would commit all updated files`));
       await rollBackPackageJson();
     } else if (gitInfo.isGitRepository) {
+      const
+        messageTemplate = env.resolve(env.GIT_VERSION_INCREMENT_MESSAGE),
+        message = messageTemplate.replace(/%VERSION%/g, version)
 
-      await runTask("git-tag-and-push");
-      await git.add(":/");
-      await git.commit(`:bookmark: bump package version to ${ version }`);
-      await gitTag({ tag });
-      await gitPush(dryRun);
-      await gitPushTags(dryRun);
+      if (dryRun) {
+        gutil.log(`would have committed all outstanding changes with message: '${message}'`);
+      } else {
+        await git.add(":/");
+        await git.commit(`:bookmark: bump package version to ${ version }`);
+      }
+
+      await withEnvironment({
+        [env.GIT_TAG]: tag
+      }).run(async () => {
+        await runTask("git-tag-and-push");
+      });
     }
   });
 
   async function npmSupportsOtpSwitch() {
-    const result = await spawn("npm", ["publish", "--help"], {
+    const result = await spawn("npm", [ "publish", "--help" ], {
       suppressOutput: true
     });
     const allStdOut = result.stdout.join("\n");

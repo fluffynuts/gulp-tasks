@@ -653,8 +653,9 @@
             help: "sets the tag to use when performing a git-tag-and-push"
         });
         env.register({
-            name: "GIT_TAG_COMMIT_MESSAGE",
-            help: "sets the commit message for the tag, will default to ':bookmark: bump package version to {whatever your tag is}"
+            name: "GIT_VERSION_INCREMENT_MESSAGE",
+            help: "sets the commit message for the tag, leave default and set GIT_TAG to a version number or a string of the format v1.2.3",
+            default: ":bookmark: bump package version to %VERSION%"
         });
         debug("-- env registration complete --");
     };
