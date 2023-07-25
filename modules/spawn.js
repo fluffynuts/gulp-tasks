@@ -138,6 +138,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         if (debug("gulp") > -1) {
             console.log("running gulp", opts);
         }
+        debugger;
         if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
             opts.stdio = [...defaultOptions.stdio];
         }
@@ -157,7 +158,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (stdoutFnSpecified) {
                 stdOutWriter = opts.stdout;
                 opts.stdio[1] = "pipe";
-                suppressStdOut = false;
+                suppressStdOut = opts.stdout === echoStdOut;
             }
             else if (Array.isArray(opts.stdio)) {
                 opts.stdio[1] = "inherit";
@@ -165,7 +166,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (stderrFnSpecified) {
                 stdErrWriter = opts.stderr;
                 opts.stdio[2] = "pipe";
-                suppressStdErr = false;
+                suppressStdErr = opts.stderr === echoStdErr;
             }
             else if (Array.isArray(opts.stdio)) {
                 opts.stdio[2] = "inherit";

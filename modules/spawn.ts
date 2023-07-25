@@ -178,6 +178,7 @@ import { ChildProcess } from "child_process";
     if (debug("gulp") > -1) {
       console.log("running gulp", opts);
     }
+    debugger;
 
     if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
       opts.stdio = [ ...defaultOptions.stdio ];
@@ -208,14 +209,14 @@ import { ChildProcess } from "child_process";
       if (stdoutFnSpecified) {
         stdOutWriter = opts.stdout as StringConsumer;
         (opts.stdio as string[])[1] = "pipe";
-        suppressStdOut = false;
+        suppressStdOut = opts.stdout === echoStdOut;
       } else if (Array.isArray(opts.stdio)) {
         opts.stdio[1] = "inherit";
       }
       if (stderrFnSpecified) {
         stdErrWriter = opts.stderr as StringConsumer;
         (opts.stdio as string[])[2] = "pipe";
-        suppressStdErr = false;
+        suppressStdErr = opts.stderr === echoStdErr;
       } else if (Array.isArray(opts.stdio)) {
         opts.stdio[2] = "inherit";
       }
