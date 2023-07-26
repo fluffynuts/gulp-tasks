@@ -1,5 +1,3 @@
-import { ZarroLogger } from "../../types";
-
 (function() {
   const
     { ZarroError } = requireModule("zarro-error"),

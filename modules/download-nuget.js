@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const { ZarroError } = requireModule("zarro-error"), HttpClient = requireModule("http-client"), nugetUpdateSelf = requireModule("nuget-update-self"), logger = requireModule("./log"), path = require("path"), url = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe";
     function downloadNugetTo(targetFolder) {
