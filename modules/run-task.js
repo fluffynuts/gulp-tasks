@@ -6,7 +6,18 @@
             runSequence(task, resolve);
         });
     }
+    async function runSeries(...tasks) {
+        for (const task of tasks) {
+            await runTask(task);
+        }
+    }
+    async function runParallel(...tasks) {
+        const promises = tasks.map(t => runTask(t));
+        await Promise.all(promises);
+    }
     module.exports = {
-        runTask
+        runTask,
+        runSeries,
+        runParallel
     };
 })();

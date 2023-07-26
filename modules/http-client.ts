@@ -14,6 +14,7 @@ import { RequestResponse, ResponseRequest } from "request";
   class HttpClient {
     public assumeDownloadedIfExistsAndSizeMatches: boolean;
     public aborted: boolean = false;
+    public suppressProgress: boolean = false;
 
     private readonly _info: (s: string) => void;
     private readonly _debug: any;
@@ -82,7 +83,7 @@ import { RequestResponse, ResponseRequest } from "request";
     }
 
     _updateStatus(data: Buffer) {
-      if (process.env.SUPPRESS_DOWNLOAD_PROGRESS || process.env.BUILD_NUMBER /* automatically disable at Jenkins CI */) {
+      if (this.suppressProgress || process.env.SUPPRESS_DOWNLOAD_PROGRESS || process.env.BUILD_NUMBER /* automatically disable at Jenkins CI */) {
         return;
       }
       this._written += data.length;

@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     class HttpClient {
         constructor(infoLogFunction, debugLogFunction) {
             this.aborted = false;
+            this.suppressProgress = false;
             this._downloadSize = -1;
             this._statusSuffix = "";
             this._written = 0;
@@ -55,7 +56,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
         }
         _updateStatus(data) {
-            if (process.env.SUPPRESS_DOWNLOAD_PROGRESS || process.env.BUILD_NUMBER /* automatically disable at Jenkins CI */) {
+            if (this.suppressProgress || process.env.SUPPRESS_DOWNLOAD_PROGRESS || process.env.BUILD_NUMBER /* automatically disable at Jenkins CI */) {
                 return;
             }
             this._written += data.length;

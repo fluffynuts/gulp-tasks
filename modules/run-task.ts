@@ -5,7 +5,19 @@
       runSequence(task, resolve);
     });
   }
+  async function runSeries(...tasks: string[]): Promise<void> {
+    for (const task of tasks) {
+      await runTask(task);
+    }
+  }
+  async function runParallel(...tasks: string[]): Promise<void> {
+    const promises = tasks.map(t => runTask(t));
+    await Promise.all(promises);
+  }
+
   module.exports = {
-    runTask
+    runTask,
+    runSeries,
+    runParallel
   };
 })();
