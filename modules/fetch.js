@@ -3,5 +3,5 @@
     if (global.fetch === undefined) {
         global.fetch = require("cross-fetch");
     }
-    return global.fetch;
+    module.exports = global.fetch;
 })();
