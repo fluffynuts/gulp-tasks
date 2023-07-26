@@ -287,12 +287,10 @@
             "source"
         ];
         const lines = [];
-        await spawn("dotnet", args, {
-            stdout: line => {
-                lines.push(line);
-            }
+        const spawnResult = await spawn("dotnet", args, {
+            suppressOutput: true
         });
-        const enabledSources = lines
+        const enabledSources = spawnResult.stdout
             .join("\n") // can't guarantee we got lines individually
             .split("\n")
             .map(l => l.trim())
