@@ -10,8 +10,16 @@
         const gulp = requireModule("gulp");
         module.exports = function () {
             const args = Array.from(arguments), callback = args.pop(), composite = gulp.series.apply(gulp, args);
+            if (typeof callback !== "function") {
+                throw new Error(`runSequence should be called with any number of arguments, the last of which is a callback for when the sequence is completed`);
+            }
             setTaskName(composite, "(sequence)");
-            composite(callback);
+            composite((err) => {
+                if (err) {
+                    throw err;
+                }
+                callback();
+            });
         };
     }
 })();

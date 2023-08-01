@@ -11,8 +11,16 @@
         args = Array.from(arguments),
         callback = args.pop() as Function,
         composite = gulp.series.apply(gulp, args as string[]);
+      if (typeof callback !== "function") {
+        throw new Error(`runSequence should be called with any number of arguments, the last of which is a callback for when the sequence is completed`);
+      }
       setTaskName(composite, "(sequence)");
-      composite(callback);
+      composite((err: Error) => {
+        if (err) {
+          throw err;
+        }
+        callback();
+      });
     };
   }
 })();
