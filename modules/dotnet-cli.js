@@ -263,7 +263,7 @@
         }
         let lastResult;
         for (const configuration of configurations) {
-            showHeader(`${label} ${q(opts.target)} with configuration ${configuration}`);
+            showHeader(`${label} ${q(opts.target)} with configuration ${configuration} (${opts.os} ${opts.arch} ${opts.framework})`);
             const thisResult = await toRun(configuration);
             if (isSpawnError(thisResult)) {
                 return thisResult;
