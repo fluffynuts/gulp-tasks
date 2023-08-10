@@ -263,7 +263,7 @@
         }
         let lastResult;
         for (const configuration of configurations) {
-            showHeader(`${label} ${q(opts.target)} with configuration ${configuration} (${opts.os} ${opts.arch} ${opts.framework})`);
+            showHeader(`${label} ${q(opts.target)} with configuration ${configuration} (${detailedInfoFor(opts)})`);
             const thisResult = await toRun(configuration);
             if (isSpawnError(thisResult)) {
                 return thisResult;
@@ -276,6 +276,15 @@
             throw new Error(`No build configurations could be determined, which is odd, because there's even a fallback.`);
         }
         return lastResult;
+    }
+    function detailedInfoFor(opts) {
+        const parts = [
+            opts.os,
+            opts.arch,
+            opts.framework,
+            opts.runtime
+        ].filter(o => !!o);
+        return parts.join(" ");
     }
     async function determineDefaultNugetSource() {
         if (defaultNugetSource) {
