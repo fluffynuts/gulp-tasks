@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const PLUGIN_NAME = __filename.replace(/\.js$/, ""), gutil = requireModule("gulp-util"), loadXmlFile = requireModule("load-xml-file"), es = require("event-stream"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), { parseNugetVersion } = requireModule("parse-nuget-version"), { ZarroError } = requireModule("zarro-error"), defaultOptions = {
+    const PLUGIN_NAME = __filename.replace(/\.js$/, ""), gutil = requireModule("gulp-util"), loadXmlFile = requireModule("load-xml-file"), es = require("event-stream"), gitTag = requireModule("git-tag"), gitPushTags = requireModule("git-push-tags"), gitPush = requireModule("git-push"), { parseNugetVersion } = requireModule("parse-nuget-version"), ZarroError = requireModule("zarro-error"), defaultOptions = {
         push: true,
         dryRun: false,
         ignorePreRelease: true

@@ -3,7 +3,7 @@
     path = require("path"),
     env = requireModule<Env>("env"),
     debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     exec = requireModule<Exec>("exec");
 
   module.exports = async function findGitCommitDeltaCount(

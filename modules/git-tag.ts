@@ -1,6 +1,6 @@
 (function() {
   const
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     gitFactory = require("simple-git"),
     env = requireModule<Env>("env"),
     gutil = requireModule<GulpUtil>("gulp-util");

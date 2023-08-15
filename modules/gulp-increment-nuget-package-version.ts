@@ -5,7 +5,7 @@
     debug = require("debug")("gulp-increment-nuget-package-version"),
     editXml = require("gulp-edit-xml"),
     incrementVersion = require("./increment-version"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     xmlOpts = {
       builderOptions: {
         renderOpts: {

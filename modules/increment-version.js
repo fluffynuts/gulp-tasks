@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const { ZarroError } = requireModule("zarro-error");
+    const ZarroError = requireModule("zarro-error");
     const { currentShortSHA } = requireModule("git-sha");
     function zeroFrom(parts, startIndex) {
         for (let i = startIndex; i < parts.length; i++) {

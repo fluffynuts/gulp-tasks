@@ -1,5 +1,5 @@
 (function() {
-  const { ZarroError } = requireModule("zarro-error");
+  const ZarroError = requireModule<ZarroError>("zarro-error");
 
   function env(name: string, fallback?: string): string {
     const value = process.env[name];

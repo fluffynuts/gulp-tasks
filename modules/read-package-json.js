@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const fs = require("./fs"), readTextFile = require("./read-text-file"), { ZarroError } = requireModule("zarro-error"), path = require("path");
+    const fs = require("./fs"), readTextFile = require("./read-text-file"), ZarroError = requireModule("zarro-error"), path = require("path");
     module.exports = async function readPackageJson(at) {
         if (at) {
             if (await fs.isFolder(at)) {

@@ -1,4 +1,4 @@
-const { ZarroError } = requireModule("zarro-error");
+const ZarroError = requireModule("zarro-error");
 
 module.exports = function pad(str, len, isRight, padString) {
   if (isRight === undefined) {

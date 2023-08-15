@@ -1,6 +1,6 @@
 (function() {
   const
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     { log } = requireModule<GulpUtil>("gulp-util"),
     { redBright, yellowBright } = requireModule<AnsiColors>("ansi-colors"),
     env = requireModule<Env>("env"),

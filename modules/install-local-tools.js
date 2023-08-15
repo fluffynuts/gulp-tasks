@@ -9,9 +9,14 @@ const
   getToolsFolder = require("./get-tools-folder"),
   nuget = require("./nuget"),
   ensureFolderExists = require("./ensure-folder-exists"),
-  { ZarroError } = requireModule("zarro-error"),
+  ZarroError = requireModule("zarro-error"),
   env = requireModule("env"),
-  del = require("del");
+  del = require("del"),
+  vars = {
+    SKIP_NUGET_UPDATES: "SKIP_NUGET_UPDATES",
+    NUGET_SOURCES: "NUGET_SOURCES"
+  };
+
 
 function cleanFoldersFrom(toolsFolder) {
   const dirs = fs
@@ -34,7 +39,7 @@ function downloadOrUpdateNuget(targetFolder) {
   const nugetPath = path.join(targetFolder, "nuget.exe");
   const nuget = resolveNuget(nugetPath, false);
   if (nuget && !nuget.match(/dotnet/i)) {
-    if (!process.env.SKIP_NUGET_UPDATES) {
+    if (!env.resolveFlag(vars.SKIP_NUGET_UPDATES)) {
       gutil.log("nuget.exe already exists... attempting self-update");
       console.log(`NUGET: (${nuget})`);
       return nugetUpdateSelf(nuget);
@@ -49,7 +54,7 @@ function generateNugetSourcesOptions(toolSpecifiedSource) {
   if (toolSpecifiedSource) {
     return ["-source", toolSpecifiedSource];
   }
-  return (process.env.NUGET_SOURCES || "")
+  return (env.resolve(vars.NUGET_SOURCES) || "")
     .split(",")
     .reduce((acc, cur) => acc.concat(cur ? ["-source", cur] : []), []);
 }

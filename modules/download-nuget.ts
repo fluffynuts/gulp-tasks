@@ -1,6 +1,6 @@
 (function() {
   const
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     HttpClient = requireModule<HttpClientModule>("http-client"),
     nugetUpdateSelf = requireModule<NugetUpdateSelf>("nuget-update-self"),
     logger = requireModule<ZarroLogger>("./log"),

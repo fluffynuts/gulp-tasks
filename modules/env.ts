@@ -14,7 +14,7 @@ import { readFileSync } from "fs";
     }
   }
   const
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     chalk = requireModule<AnsiColors>("ansi-colors"),
     debug = require("debug")("env"),
     registeredEnvironmentVariables = {} as Dictionary<EnvRegistration>,

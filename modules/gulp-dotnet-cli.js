@@ -2,7 +2,7 @@
 (function () {
     const dotnetCli = requireModule("dotnet-cli");
     const { streamify } = requireModule("streamify");
-    const { ZarroError } = requireModule("zarro-error");
+    const ZarroError = requireModule("zarro-error");
     const { log, colors } = requireModule("gulp-util");
     const { yellowBright, cyanBright } = colors;
     function wrap(fn) {

@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const path = require("path"), env = requireModule("env"), debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")), { ZarroError } = requireModule("zarro-error"), exec = requireModule("exec");
+    const path = require("path"), env = requireModule("env"), debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")), ZarroError = requireModule("zarro-error"), exec = requireModule("exec");
     module.exports = async function findGitCommitDeltaCount(main, branched) {
         const diffLine = `${main}...${branched}`;
         debug(`performing commit diff: ${diffLine}`);

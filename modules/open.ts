@@ -6,7 +6,7 @@
 
   const
     os = require("os"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     spawn = requireModule<Spawn>("spawn");
 
   async function open(url: string): Promise<void> {

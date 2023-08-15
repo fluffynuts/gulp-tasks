@@ -2,7 +2,7 @@
 (function () {
     const spawn = requireModule("spawn");
     const { isSpawnError } = spawn;
-    const { ZarroError } = requireModule("zarro-error");
+    const ZarroError = requireModule("zarro-error");
     const path = require("path");
     const { fileExists, readTextFile } = require("yafs");
     const { yellow } = requireModule("ansi-colors");

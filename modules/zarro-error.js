@@ -4,6 +4,4 @@ class ZarroError extends Error {
   }
 }
 
-module.exports = {
-  ZarroError
-};
+module.exports = ZarroError;

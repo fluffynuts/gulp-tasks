@@ -12,7 +12,7 @@ const
   findNpmBase = require("./find-npm-base"),
   quoteIfRequired = require("./quote-if-required"),
   dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet",
-  { ZarroError } = requireModule("zarro-error"),
+  ZarroError = requireModule("zarro-error"),
   nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
 
 env.associate("USE_SYSTEM_NUGET", [ "install-default-tools", "nuget-restore" ]);

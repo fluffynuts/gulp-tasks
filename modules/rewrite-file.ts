@@ -1,7 +1,7 @@
 (function () {
   const
     es = require("event-stream"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     fs = requireModule<FileSystemUtils>("fs");
 
   function rewriteFile(transform?: ((s: Buffer) => Buffer)) {

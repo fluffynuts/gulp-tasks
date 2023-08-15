@@ -1,14 +1,14 @@
 "use strict";
 (function () {
     class VersionInfo {
+        get isPreRelease() {
+            return !!this.tag;
+        }
         constructor(major, minor, patch, tag) {
             this.major = major;
             this.minor = minor;
             this.patch = patch;
             this.tag = tag;
-        }
-        get isPreRelease() {
-            return !!this.tag;
         }
         toString() {
             const version = `${this.major}.${this.minor}.${this.patch}`;
@@ -22,13 +22,13 @@
         return new PackageVersionInfo(idAndVersion.id, new VersionInfo(idAndVersion.version[0] || 0, idAndVersion.version[1] || 0, idAndVersion.version[2] || 0, packageWithVersionAndTag[1] || ""));
     }
     class PackageVersionInfo {
-        constructor(id, version) {
-            this.id = id;
-            this.version = version;
-        }
         get isPreRelease() {
             var _a, _b;
             return (_b = (_a = this.version) === null || _a === void 0 ? void 0 : _a.isPreRelease) !== null && _b !== void 0 ? _b : true;
+        }
+        constructor(id, version) {
+            this.id = id;
+            this.version = version;
         }
     }
     function collect(stringParts) {

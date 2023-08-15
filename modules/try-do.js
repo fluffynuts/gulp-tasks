@@ -27,7 +27,7 @@
                     console.log(chalk.green(`Retrying (${++retryCount} / ${requestedRetries})`));
                 }
                 else {
-                    if (retries < 1) {
+                    if (requestedRetries < 1) {
                         if (onFinalFailure) {
                             await onFinalFailure();
                         }

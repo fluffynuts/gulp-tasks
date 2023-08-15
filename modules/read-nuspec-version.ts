@@ -1,7 +1,7 @@
 (function() {
   const
     parseXml = requireModule<ParseXml>("parse-xml"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     readTextFile = requireModule<ReadTextFile>("read-text-file");
 
   module.exports = async function readNuspecVersion(pathToNuspec: string) {

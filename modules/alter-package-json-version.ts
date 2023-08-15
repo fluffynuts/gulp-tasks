@@ -18,7 +18,7 @@ interface CompleteOptions extends AlterPackageJsonVersionOptions {
 
 (function() {
   const
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     validVersionStrategies = new Set(["major", "minor", "patch"]),
     gutil = requireModule<GulpUtil>("gulp-util"),
     env = requireModule<Env>("env"),

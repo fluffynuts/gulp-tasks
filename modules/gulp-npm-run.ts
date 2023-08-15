@@ -8,7 +8,7 @@
     exec = require("./exec") as Exec,
     path = require("path"),
     chalk = requireModule<AnsiColors>("ansi-colors"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     findNpmBase = require("./find-npm-base");
 
   function gulpNpmRun(gulp: GulpWithHelp) {

@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const es = require("event-stream"), { ZarroError } = requireModule("zarro-error"), fs = requireModule("fs");
+    const es = require("event-stream"), ZarroError = requireModule("zarro-error"), fs = requireModule("fs");
     function rewriteFile(transform) {
         return es.through(function write(file) {
             const fileName = file.history[0];

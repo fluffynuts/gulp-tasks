@@ -4,14 +4,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
     // use for spawning actual processes.
     // You must use exec if you want to run batch files
     class SpawnError extends Error {
-        constructor(message, exe, args, exitCode, stdout, stderr) {
-            super(message);
-            this._args = args;
-            this._exe = exe;
-            this._exitCode = exitCode;
-            this._stderr = stderr ? [...stderr] : null;
-            this._stdout = stdout ? [...stdout] : null;
-        }
         get args() {
             return this._args;
         }
@@ -26,6 +18,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
         get stderr() {
             return this._stderr ? [...this._stderr] : [];
+        }
+        constructor(message, exe, args, exitCode, stdout, stderr) {
+            super(message);
+            this._args = args;
+            this._exe = exe;
+            this._exitCode = exitCode;
+            this._stderr = stderr ? [...stderr] : null;
+            this._stdout = stdout ? [...stdout] : null;
         }
         toString() {
             const lines = [

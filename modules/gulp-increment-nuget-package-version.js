@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const env = requireModule("env"), gutil = requireModule("gulp-util"), debug = require("debug")("gulp-increment-nuget-package-version"), editXml = require("gulp-edit-xml"), incrementVersion = require("./increment-version"), { ZarroError } = requireModule("zarro-error"), xmlOpts = {
+    const env = requireModule("env"), gutil = requireModule("gulp-util"), debug = require("debug")("gulp-increment-nuget-package-version"), editXml = require("gulp-edit-xml"), incrementVersion = require("./increment-version"), ZarroError = requireModule("zarro-error"), xmlOpts = {
         builderOptions: {
             renderOpts: {
                 pretty: true

@@ -3,7 +3,7 @@
   type PerConfigurationFunction = (configuration: string) => Promise<SpawnResult | SpawnError>;
   const spawn = requireModule<Spawn>("spawn");
   const { isSpawnError } = spawn;
-  const { ZarroError } = requireModule("zarro-error");
+  const ZarroError = requireModule<ZarroError>("zarro-error");
   const path = require("path");
   const { fileExists, readTextFile } = require("yafs");
   const { yellow } = requireModule<AnsiColors>("ansi-colors");

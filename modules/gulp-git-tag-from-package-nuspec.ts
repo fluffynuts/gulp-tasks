@@ -11,7 +11,7 @@ import { Stream } from "stream";
     gitPushTags = requireModule<GitPushTags>("git-push-tags"),
     gitPush = requireModule<GitPush>("git-push"),
     { parseNugetVersion } = requireModule<ParseNugetVersion>("parse-nuget-version"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     defaultOptions = {
       push: true,
       dryRun: false,

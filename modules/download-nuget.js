@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const { ZarroError } = requireModule("zarro-error"), HttpClient = requireModule("http-client"), nugetUpdateSelf = requireModule("nuget-update-self"), logger = requireModule("./log"), path = require("path"), url = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe";
+    const ZarroError = requireModule("zarro-error"), HttpClient = requireModule("http-client"), nugetUpdateSelf = requireModule("nuget-update-self"), logger = requireModule("./log"), path = require("path"), url = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe";
     function downloadNugetTo(targetFolder) {
         logger.debug(`Attempting to download nuget.exe to ${targetFolder}`);
         const downloader = HttpClient.create(), target = path.join(targetFolder, "nuget.exe");

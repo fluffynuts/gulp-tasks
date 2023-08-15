@@ -7,7 +7,7 @@
     logic: AsyncVoidFunc<T>,
     retries: number | string,
     onTransientError: ErrorReporter,
-    onFinalFailure: VoidVoid
+    onFinalFailure: VoidVoid | AsyncVoidVoid
   ): Promise<T> {
     // always attempt at least once
     const requestedRetries = typeof retries === "string"
@@ -33,7 +33,7 @@
           }
           console.log(chalk.green(`Retrying (${ ++retryCount } / ${ requestedRetries })`));
         } else {
-          if (retries < 1) {
+          if (requestedRetries < 1) {
             if (onFinalFailure) {
               await onFinalFailure()
             } else {

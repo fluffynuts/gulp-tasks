@@ -8,7 +8,7 @@ const
   whichLib = require("which"),
   programFilesFolder = process.env["ProgramFiles(x86)"] || process.env["ProgramFiles"],
   getToolsFolder = require("./get-tools-folder"),
-  { ZarroError } = requireModule("zarro-error"),
+  ZarroError = requireModule("zarro-error"),
   localAppDataFolder = process.env["LOCALAPPDATA"];
 
 function which(command) {

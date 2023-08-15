@@ -1,7 +1,7 @@
 "use strict";
 (function () {
     // dev note: when updating here, don't forget to add to types.d.ts/global/Env
-    const debug = require("debug")("env"), { ZarroError } = requireModule("zarro-error"), os = require("os"), path = require("path"), getToolsFolder = requireModule("get-tools-folder");
+    const debug = require("debug")("env"), ZarroError = requireModule("zarro-error"), os = require("os"), path = require("path"), getToolsFolder = requireModule("get-tools-folder");
     module.exports = function _env(env) {
         const msbuildVerbosityOptions = "one of: q[uiet] / m[inimal] / n[ormal] / d[etailed] / diag[nostic]";
         debug("-- start env var registration --");
@@ -661,6 +661,15 @@
             name: "GIT_VERSION_INCREMENT_MESSAGE",
             help: "sets the commit message for the tag, leave default and set GIT_TAG to a version number or a string of the format v1.2.3",
             default: ":bookmark: bump package version to %VERSION%"
+        });
+        env.register({
+            name: "SKIP_NUGET_UPDATES",
+            help: "flag: when set, skip nuget.exe self-updates",
+            default: "false"
+        });
+        env.register({
+            name: "NUGET_SOURCES",
+            help: "comma-delimited list of nuget sources if you don't want to use the defaults"
         });
         debug("-- env registration complete --");
     };

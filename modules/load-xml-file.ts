@@ -1,7 +1,7 @@
 (function () {
   const
     fs = require("./fs"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     parse = requireModule<ParseXmlString>("./parse-xml-string");
 
   module.exports = async function (filePath: string): Promise<any> {

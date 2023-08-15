@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const { ZarroError } = requireModule("zarro-error");
+    const ZarroError = requireModule("zarro-error");
     function env(name, fallback) {
         const value = process.env[name];
         if (value !== undefined) {

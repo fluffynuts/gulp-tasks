@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const { ZarroError } = requireModule("zarro-error"), gitFactory = require("simple-git"), env = requireModule("env"), gutil = requireModule("gulp-util");
+    const ZarroError = requireModule("zarro-error"), gitFactory = require("simple-git"), env = requireModule("env"), gutil = requireModule("gulp-util");
     async function gitTag(tag, comment, where) {
         let dryRun = false;
         if (typeof tag === "object") {

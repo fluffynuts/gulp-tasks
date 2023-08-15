@@ -1,7 +1,7 @@
 const
   debug = require("debug")("promisify-stream"),
   stream = require("stream"),
-  { ZarroError } = requireModule("zarro-error"),
+  ZarroError = requireModule("zarro-error"),
   promisifyFunction = require("./promisify-function");
 
 function isStream(o) {

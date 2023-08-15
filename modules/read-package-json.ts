@@ -2,7 +2,7 @@
   const
     fs = require("./fs"),
     readTextFile = require("./read-text-file"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     path = require("path");
   module.exports = async function readPackageJson(at?: string): Promise<PackageIndex> {
     if (at) {

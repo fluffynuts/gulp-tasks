@@ -12,7 +12,7 @@
     readGitCommitDeltaCount = requireModule<ReadGitCommitDeltaCount>("read-git-commit-delta-count"),
     readLastFetchTime = requireModule<ReadLastFetchTime>("read-last-fetch-time"),
     gulp = requireModule<GulpWithHelp>("gulp"),
-    { ZarroError } = requireModule("zarro-error"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     taskName = "verify-up-to-date";
 
   env.associate([

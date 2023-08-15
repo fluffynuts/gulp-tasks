@@ -1,5 +1,5 @@
 (function() {
-  const { ZarroError } = requireModule("zarro-error");
+  const ZarroError = requireModule<ZarroError>("zarro-error");
   const { currentShortSHA } = requireModule<GitSha>("git-sha");
 
   function zeroFrom(parts: number[], startIndex: number) {

@@ -1,5 +1,5 @@
 const
-  { ZarroError } = requireModule("zarro-error"),
+  ZarroError = requireModule("zarro-error"),
   promisify = require("./promisify-function"),
   path = require("path"),
   fs = require("fs");
