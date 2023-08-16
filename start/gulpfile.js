@@ -185,15 +185,12 @@ function bootstrapGulp() {
   try {
     importNpmTasks();
     const
-      requireDir = require("require-dir"),
-      opts = {
-        extensions: [ ".js", ".ts" ]
-      };
-    requireDir(gulpTasksFolder, opts);
+      requireDir = require("require-dir");
+    requireDir(gulpTasksFolder);
     [ "local-tasks", "override-tasks" ].forEach(function (dirname) {
       const fullPath = path.join(process.cwd(), dirname);
       if (fs.existsSync(fullPath)) {
-        requireDir(fullPath, opts);
+        requireDir(fullPath);
       }
     });
   } catch (e) {
