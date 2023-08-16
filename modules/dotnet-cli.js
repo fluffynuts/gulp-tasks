@@ -263,7 +263,7 @@
         }
         let lastResult;
         for (const configuration of configurations) {
-            showHeader(`${label} ${q(opts.target)} with configuration ${configuration} (${detailedInfoFor(opts)})`);
+            showHeader(`${label} ${q(opts.target)} with configuration ${configuration}${detailedInfoFor(opts)}`);
             const thisResult = await toRun(configuration);
             if (isSpawnError(thisResult)) {
                 return thisResult;
@@ -284,7 +284,10 @@
             opts.framework,
             opts.runtime
         ].filter(o => !!o);
-        return parts.join(" ");
+        if (parts.length === 0) {
+            return "";
+        }
+        return ` (${parts.join(" ")})`;
     }
     async function determineDefaultNugetSource() {
         if (defaultNugetSource) {
