@@ -41,7 +41,7 @@ function downloadOrUpdateNuget(targetFolder) {
   if (nuget && !nuget.match(/dotnet/i)) {
     if (!env.resolveFlag(vars.SKIP_NUGET_UPDATES)) {
       gutil.log("nuget.exe already exists... attempting self-update");
-      console.log(`NUGET: (${nuget})`);
+      debug(`using nuget at: (${nuget})`);
       return nugetUpdateSelf(nuget);
     }
     return nuget;
