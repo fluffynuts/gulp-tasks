@@ -22,25 +22,25 @@
   }
 
   module.exports = function resolveMasks(
-    includeVar: StringEnvVar,
-    excludeVar: StringEnvVar,
+    includeVar: StringEnvVar | StringEnvVar[],
+    excludeVar: StringEnvVar | StringEnvVar[],
     maskModifierFn?: (s: string) => string
   ) {
     const transform = maskModifierFn === undefined
       ? passThrough
       : maskModifierFn;
     return env
-      .resolveArray(includeVar)
+      .resolveMergedArray(includeVar)
       .filter(p => !!p)
       .map(p => (isPureMask(p) ? extractPureMask(p) : makeRecursive(p)))
       .concat(
-        env.resolveArray(excludeVar).map(p => {
+        env.resolveMergedArray(excludeVar).map(p => {
           if (isPureMask(p)) {
             // have path spec, don't do magic!
             return extractPureMask(p);
           }
           if (p.indexOf("!") === 0) {
-            p = p.substr(1);
+            p = p.substring(1);
           }
           return `!${ makeRecursive(p) }`;
         })

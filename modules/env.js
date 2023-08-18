@@ -21,6 +21,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         resolve,
         associate,
         resolveArray,
+        resolveMergedArray,
         explode,
         overrideDefault,
         resolveNumber,
@@ -341,6 +342,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
         const value = resolveInternal(name) || "", valueArray = Array.isArray(value) ? value : explode(value, delimiter);
         logResolved(name, valueArray);
         return valueArray;
+    }
+    function resolveMergedArray(name, delimiter) {
+        if (!Array.isArray(name)) {
+            name = [name];
+        }
+        const result = [];
+        for (const item of name) {
+            const arr = resolveArray(item, delimiter);
+            result.push.apply(result, arr);
+        }
+        return result;
     }
     function resolveNumber(name) {
         const value = resolveInternal(name), asNumber = parseInt(value || "", 10);

@@ -30,6 +30,7 @@ import { readFileSync } from "fs";
       resolve,
       associate,
       resolveArray,
+      resolveMergedArray,
       explode,
       overrideDefault,
       resolveNumber,
@@ -285,7 +286,7 @@ import { readFileSync } from "fs";
     const result = (resolve as Function).apply(undefined, args);
     if (result === undefined || result === null || result === "") {
       const s = args.length === 1 ? "" : "s";
-      throw new ZarroError(`unable to resolve env var${s} ${args}`);
+      throw new ZarroError(`unable to resolve env var${ s } ${ args }`);
     }
     return result;
   }
@@ -434,14 +435,29 @@ import { readFileSync } from "fs";
   }
 
   function resolveArray(
-    name: string,
-    delimiter: string
+    name: string | string[],
+    delimiter?: string
   ): string[] {
     const
       value = resolveInternal(name) || "",
       valueArray = Array.isArray(value) ? value : explode(value, delimiter);
     logResolved(name, valueArray);
     return valueArray;
+  }
+
+  function resolveMergedArray(
+    name: string | string[],
+    delimiter?: string
+  ): string[] {
+    if (!Array.isArray(name)) {
+      name = [ name ];
+    }
+    const result = [] as string[];
+    for (const item of name) {
+      const arr = resolveArray(item, delimiter);
+      result.push.apply(result, arr);
+    }
+    return result;
   }
 
   function resolveNumber(name: string): number {

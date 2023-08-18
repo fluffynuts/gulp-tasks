@@ -14,7 +14,9 @@ const myVars = [
   "BUILD_VERBOSITY",
   "TEST_ARCHITECTURE",
   "TEST_EXCLUDE",
+  "TEST_ADDITIONAL_EXCLUDE",
   "TEST_INCLUDE",
+  "TEST_ADDITIONAL_INCLUDE",
   "COVERAGE_ADDITIONAL_EXCLUDE",
   "COVERAGE_EXCLUDE"
 ];
@@ -27,7 +29,7 @@ function cover() {
     configuration = env.resolve("BUILD_CONFIGURATION"),
     inputMasks = resolveMasks(
       "TEST_INCLUDE",
-      "TEST_EXCLUDE"
+      [ "TEST_EXCLUDE", "TEST_ADDITIONAL_EXCLUDE" ]
     ).map(
       s => `${s}.dll`
     ),
