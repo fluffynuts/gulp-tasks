@@ -134,8 +134,7 @@ function buildAsStream(solutions) {
     nologo: false,
     logCommand: true,
     nodeReuse: env.resolveFlag("BUILD_MSBUILD_NODE_REUSE"),
-    maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT"),
-    msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES")
+    maxcpucount: env.resolveNumber("BUILD_MAX_CPU_COUNT")
   };
 
   if (env.resolveFlag("BUILD_SHOW_INFO")) {
