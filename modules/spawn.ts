@@ -109,11 +109,11 @@ import { ChildProcess } from "child_process";
     child_process = require("child_process");
 
   function echoStdOut(data: string): void {
-    console.log(data);
+    console.log(data.replace(/[\n\r]+$/, ""));
   }
 
   function echoStdErr(data: string): void {
-    console.error(data);
+    console.error(data.replace(/[\n\r]+$/, ""));
   }
 
   const defaultOptions = {
