@@ -56,6 +56,7 @@ const myTasks = [ "test-dotnet", "quick-test-dotnet" ],
     "NUNIT_LABELS",
     "TEST_VERBOSITY",
     "DOTNET_TEST_PARALLEL",
+    "DOTNET_PARALLEL_STAGGER_MS",
     "RETAIN_TEST_DIAGNOSTICS"
   ];
 env.associate(myVars, myTasks);
@@ -198,9 +199,10 @@ async function testAsDotnetCore(configuration, testProjects) {
   const concurrency = testInParallel
       ? env.resolveNumber("MAX_CONCURRENCY")
       : 1,
+    staggerMs = env.resolveNumber("DOTNET_PARALLEL_STAGGER_MS"),
     chains = seed(concurrency).map(async (value, index) => {
       // stagger the startups
-      await sleep(index * 1000);
+      await sleep(index * staggerMs);
       return Promise.resolve();
     });
 

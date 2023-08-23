@@ -65,6 +65,12 @@
     });
 
     env.register({
+      name: "DOTNET_PARALLEL_STAGGER_MS",
+      default: "1000",
+      help: "The number of milliseconds to wait between parallel dotnet core test run spawns, ie to stagger them"
+    });
+
+    env.register({
       name: "BUILD_MAX_CPU_COUNT",
       default: os.cpus().length.toString(),
       help: "Max number of cpus to use whilst building",
