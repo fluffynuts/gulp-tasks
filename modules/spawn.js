@@ -80,10 +80,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
     }, quoteIfRequired = require("./quote-if-required"), debug = tryLoadDebug(), readline = require("readline"), child_process = require("child_process");
     function echoStdOut(data) {
-        console.log(data);
+        console.log(data.replace(/[\n\r]+$/, ""));
     }
     function echoStdErr(data) {
-        console.error(data);
+        console.error(data.replace(/[\n\r]+$/, ""));
     }
     const defaultOptions = {
         stdio: [process.stdin, process.stdout, process.stdin],
