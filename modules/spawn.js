@@ -158,7 +158,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (stdoutFnSpecified) {
                 stdOutWriter = opts.stdout;
                 opts.stdio[1] = "pipe";
-                suppressStdOut = opts.stdout === echoStdOut;
             }
             else if (Array.isArray(opts.stdio)) {
                 opts.stdio[1] = "inherit";
@@ -166,7 +165,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (stderrFnSpecified) {
                 stdErrWriter = opts.stderr;
                 opts.stdio[2] = "pipe";
-                suppressStdErr = opts.stderr === echoStdErr;
             }
             else if (Array.isArray(opts.stdio)) {
                 opts.stdio[2] = "inherit";
