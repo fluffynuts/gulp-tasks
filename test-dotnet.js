@@ -171,6 +171,7 @@ function testWithNunitCli(configuration, source) {
 
 async function testAsDotnetCore(configuration, testProjects) {
   const
+    sleep = requireModule("sleep"),
     testResults = {
       quackersEnabled: false,
       passed: 0,
@@ -197,7 +198,11 @@ async function testAsDotnetCore(configuration, testProjects) {
   const concurrency = testInParallel
       ? env.resolveNumber("MAX_CONCURRENCY")
       : 1,
-    chains = seed(concurrency).map(() => Promise.resolve());
+    chains = seed(concurrency).map(async (value, index) => {
+      // stagger the startups
+      await sleep(index * 1000);
+      return Promise.resolve();
+    });
 
   console.log(`Will run tests for project${testProjectPaths.length === 1 ? "" : "s"}:`);
   for (const projectPath of testProjectPaths) {
