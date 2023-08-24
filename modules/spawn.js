@@ -152,7 +152,6 @@ const ansi_colors_1 = require("ansi-colors");
         if (debug("gulp") > -1) {
             console.log("running gulp", opts);
         }
-        debugger;
         if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
             opts.stdio = [...defaultOptions.stdio];
         }
@@ -184,6 +183,7 @@ const ansi_colors_1 = require("ansi-colors");
                 opts.stdio[2] = "inherit";
             }
         }
+        disableLineBufferWhenUsingInternalLineBuffer(opts);
         const result = new SpawnResult(executable, args, -1, [], []);
         executable = q(executable);
         const quotedArgs = args.map(s => q(s));
@@ -327,6 +327,12 @@ const ansi_colors_1 = require("ansi-colors");
     };
     function passThrough(s) {
         return s;
+    }
+    function disableLineBufferWhenUsingInternalLineBuffer(opts) {
+        const out = opts.stdout, err = opts.stderr;
+        if (!!out.flush || !!err.flush) {
+            opts.lineBuffer = false;
+        }
     }
     module.exports = spawn;
 })();

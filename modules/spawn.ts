@@ -189,7 +189,7 @@ import { reset } from "ansi-colors";
         }
       }
     }
-    const opts = { ...defaultOptions, ...options };
+    const opts = { ...defaultOptions, ...options } as SpawnOptions;
     const q = opts.disableAutomaticQuoting
       ? passThrough
       : quoteIfRequired;
@@ -200,7 +200,6 @@ import { reset } from "ansi-colors";
     if (debug("gulp") > -1) {
       console.log("running gulp", opts);
     }
-    debugger;
 
     if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
       opts.stdio = [ ...defaultOptions.stdio ];
@@ -241,6 +240,8 @@ import { reset } from "ansi-colors";
         opts.stdio[2] = "inherit";
       }
     }
+
+    disableLineBufferWhenUsingInternalLineBuffer(opts);
 
     const result = new SpawnResult(
       executable,
@@ -420,6 +421,17 @@ import { reset } from "ansi-colors";
 
   function passThrough(s: string): string {
     return s;
+  }
+
+  function disableLineBufferWhenUsingInternalLineBuffer(
+    opts: SpawnOptions
+  ): void {
+    const
+      out = opts.stdout as AugmentedLogFunction,
+      err = opts.stderr as AugmentedLogFunction;
+    if (!!out.flush || !!err.flush) {
+      opts.lineBuffer = false;
+    }
   }
 
   module.exports = spawn;
