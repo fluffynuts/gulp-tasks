@@ -216,8 +216,8 @@ const ansi_colors_1 = require("ansi-colors");
                         return;
                     }
                     cleared = true;
-                    process.stdout.write((0, ansi_colors_1.reset)(""));
-                    process.stderr.write((0, ansi_colors_1.reset)(""));
+                    process.stdout.write((0, ansi_colors_1.reset)("\0"));
+                    process.stderr.write((0, ansi_colors_1.reset)("\0"));
                 };
                 const outWriter = (s) => {
                     clearColorsOnce();

@@ -291,8 +291,8 @@ import { reset } from "ansi-colors";
             return;
           }
           cleared = true;
-          process.stdout.write(reset(""));
-          process.stderr.write(reset(""));
+          process.stdout.write(reset("\0"));
+          process.stderr.write(reset("\0"));
         };
         const outWriter = (s: string) => {
           clearColorsOnce();

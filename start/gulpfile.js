@@ -7,7 +7,6 @@
   particular, I highly recommend reading about how to use `local-tasks` to extend
   and / or override the default task-set.
  */
-
 const
   path = require("path"),
   fs = require("fs");
@@ -191,6 +190,7 @@ function bootstrapGulp() {
       const fullPath = path.join(process.cwd(), dirname);
       if (fs.existsSync(fullPath)) {
         requireDir(fullPath);
+      } else {
       }
     });
   } catch (e) {
