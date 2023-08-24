@@ -173,6 +173,7 @@ function testWithNunitCli(configuration, source) {
 async function testAsDotnetCore(configuration, testProjects) {
   const
     sleep = requireModule("sleep"),
+    runInParallel = requireModule("run-in-parallel"),
     testResults = {
       quackersEnabled: false,
       passed: 0,
@@ -211,19 +212,39 @@ async function testAsDotnetCore(configuration, testProjects) {
     console.log(`  ${projectPath}`);
   }
 
-  let p, current = 0;
-  while (p = testProjectPaths.shift()) {
-    const
-      idx = current++ % concurrency,
-      target = p;
-    chains[idx] = chains[idx].then(async () => {
-      debug(`${idx}  start test run: ${target}`);
-      const result = await testOneProject(target, configuration, verbosity, testResults, true);
-      testProcessResults.push(result);
-      return result;
+  // let p, current = 0;
+  // while (p = testProjectPaths.shift()) {
+  //   const
+  //     idx = current++ % concurrency,
+  //     target = p;
+  //   chains[idx] = chains[idx].then(async () => {
+  //     debug(`${idx}  start test run: ${target}`);
+  //     const result = await testOneProject(target, configuration, verbosity, testResults, true);
+  //     testProcessResults.push(result);
+  //     return result;
+  //   });
+  // }
+  // await Promise.all(chains);
+  const tasks = testProjectPaths.map(
+    (path, idx) => {
+      return async () => {
+        debug(`${idx}  start test run ${path}`);
+        const result = await testOneProject(
+          path,
+          configuration,
+          verbosity,
+          testResults,
+          true
+        );
+        testProcessResults.push(result);
+        return result;
+      };
     });
-  }
-  await Promise.all(chains);
+  await runInParallel(
+    concurrency,
+    ...tasks
+  );
+
 
   if (testResults.quackersEnabled) {
     logOverallResults(testResults);
