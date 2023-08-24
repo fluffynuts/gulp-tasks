@@ -1,6 +1,7 @@
 import { IoConsumer } from "./exec";
 import { Readable } from "stream";
 import { ChildProcess } from "child_process";
+import { reset } from "ansi-colors";
 
 (function() {
 // use for spawning actual processes.
@@ -109,13 +110,15 @@ import { ChildProcess } from "child_process";
     child_process = require("child_process");
 
   function echoStdOut(data: string): void {
-    // console.log(data.replace(/[\n\r]+$/, ""));
-    process.stdout.write(data);
+    process.stdout.write(clean(data));
+  }
+
+  function clean(data: string): string {
+    return (data || "").replace(/\s+$/, "");
   }
 
   function echoStdErr(data: string): void {
-    // console.error(data.replace(/[\n\r]+$/, ""));
-    process.stderr.write(data);
+    console.error(clean(data));
   }
 
   const defaultOptions = {
@@ -264,8 +267,24 @@ import { ChildProcess } from "child_process";
         let exited = false;
         child.on("exit", generateExitHandler("exit"));
         child.on("close", generateExitHandler("close"));
-        setupIoHandler(stdOutWriter, child.stdout, stdout, opts, suppressStdOut);
-        setupIoHandler(stdErrWriter, child.stderr, stderr, opts, suppressStdErr)
+        let cleared = false;
+        const clear = () => {
+          if (cleared) {
+            return;
+          }
+          cleared = true;
+          process.stdout.write(reset(""));
+          process.stderr.write(reset(""));
+        };
+        const outWriter = (s: string) => {
+          clear();
+          stdOutWriter(s);
+        };
+        const errWriter = (s: string) => {
+          clear();
+        };
+        setupIoHandler(outWriter, child.stdout, stdout, opts, suppressStdOut);
+        setupIoHandler(errWriter, child.stderr, stderr, opts, suppressStdErr)
 
         function generateExitHandler(eventName: string): (code: number) => void {
           return (code: number) => {

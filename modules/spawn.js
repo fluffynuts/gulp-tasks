@@ -80,12 +80,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
     }, quoteIfRequired = require("./quote-if-required"), debug = tryLoadDebug(), readline = require("readline"), child_process = require("child_process");
     function echoStdOut(data) {
-        // console.log(data.replace(/[\n\r]+$/, ""));
-        process.stdout.write(data);
+        process.stdout.write(clean(data));
+    }
+    function clean(data) {
+        return (data || "").replace(/\s+$/, "");
     }
     function echoStdErr(data) {
-        // console.error(data.replace(/[\n\r]+$/, ""));
-        process.stderr.write(data);
+        console.error(clean(data));
     }
     const defaultOptions = {
         stdio: [process.stdin, process.stdout, process.stdin],
