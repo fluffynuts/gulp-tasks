@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const ansi_colors_1 = require("ansi-colors");
 (function () {
     // use for spawning actual processes.
     // You must use exec if you want to run batch files
@@ -199,8 +200,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 let exited = false;
                 child.on("exit", generateExitHandler("exit"));
                 child.on("close", generateExitHandler("close"));
-                setupIoHandler(stdOutWriter, child.stdout, stdout, opts, suppressStdOut);
-                setupIoHandler(stdErrWriter, child.stderr, stderr, opts, suppressStdErr);
+                let cleared = false;
+                const clear = () => {
+                    if (cleared) {
+                        return;
+                    }
+                    cleared = true;
+                    process.stdout.write((0, ansi_colors_1.reset)(""));
+                    process.stderr.write((0, ansi_colors_1.reset)(""));
+                };
+                const outWriter = (s) => {
+                    clear();
+                    stdOutWriter(s);
+                };
+                const errWriter = (s) => {
+                    clear();
+                };
+                setupIoHandler(outWriter, child.stdout, stdout, opts, suppressStdOut);
+                setupIoHandler(errWriter, child.stderr, stderr, opts, suppressStdErr);
                 function generateExitHandler(eventName) {
                     return (code) => {
                         if (exited) {
