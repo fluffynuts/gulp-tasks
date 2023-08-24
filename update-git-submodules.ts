@@ -14,15 +14,15 @@
         ctx = new ExecStepContext(),
         gitFactory = require("simple-git"),
         git = gitFactory(".");
-      await ctx.run(
+      await ctx.exec(
         "Ensure submodules are initialized...",
         async () => await git.subModule([ "update", "--init" ])
       );
-      await ctx.run(
+      await ctx.exec(
         "Check out master on all submodules...",
         async () => await git.subModule([ "foreach", "git", "checkout", "master" ])
       );
-      await ctx.run(
+      await ctx.exec(
         "Update to latest commit on each submodule...",
         async () => await git.subModule([ "foreach", "git", "pull", "--rebase" ])
       );
