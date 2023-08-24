@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ansi_colors_1 = require("ansi-colors");
 (function () {
+    const LineBuffer = requireModule("line-buffer");
     // use for spawning actual processes.
     // You must use exec if you want to run batch files
     class SpawnError extends Error {
@@ -89,15 +90,24 @@ const ansi_colors_1 = require("ansi-colors");
     function echoStdErr(data) {
         console.error(clean(data));
     }
+    function createEcho(writer) {
+        const buffer = new LineBuffer(writer);
+        const result = ((s) => {
+            buffer.append(s);
+        });
+        result.flush = () => buffer.flush();
+        return result;
+    }
     const defaultOptions = {
         stdio: [process.stdin, process.stdout, process.stdin],
         cwd: process.cwd(),
         shell: true,
         lineBuffer: true,
-        // if no functions are set up, then the child stderr & stdout
-        // are null as they're not being piped to us at all
-        stderr: echoStdErr,
-        stdout: echoStdOut
+        // default is to echo outputs via a LineBuffer instance
+        // -> given captured console.xxx because then we can still
+        //    spy and suppress and so on in tests
+        stderr: createEcho(s => console.log(s)),
+        stdout: createEcho(s => console.error(s)) // echoStdOut as Optional<ProcessIO>
     };
     // noinspection JSUnusedLocalSymbols
     function nullConsumer(str) {
@@ -201,7 +211,7 @@ const ansi_colors_1 = require("ansi-colors");
                 child.on("exit", generateExitHandler("exit"));
                 child.on("close", generateExitHandler("close"));
                 let cleared = false;
-                const clear = () => {
+                const clearColorsOnce = () => {
                     if (cleared) {
                         return;
                     }
@@ -210,14 +220,26 @@ const ansi_colors_1 = require("ansi-colors");
                     process.stderr.write((0, ansi_colors_1.reset)(""));
                 };
                 const outWriter = (s) => {
-                    clear();
+                    clearColorsOnce();
                     stdOutWriter(s);
                 };
                 const errWriter = (s) => {
-                    clear();
+                    clearColorsOnce();
+                    stdErrWriter(s);
                 };
                 setupIoHandler(outWriter, child.stdout, stdout, opts, suppressStdOut);
                 setupIoHandler(errWriter, child.stderr, stderr, opts, suppressStdErr);
+                function flushWriters() {
+                    tryFlush(stdOutWriter);
+                    tryFlush(stdErrWriter);
+                }
+                function tryFlush(writer) {
+                    const asAugmentedLog = writer;
+                    if (!asAugmentedLog.flush) {
+                        return;
+                    }
+                    asAugmentedLog.flush();
+                }
                 function generateExitHandler(eventName) {
                     return (code) => {
                         if (exited) {
@@ -225,6 +247,7 @@ const ansi_colors_1 = require("ansi-colors");
                         }
                         destroyPipesOn(child);
                         exited = true;
+                        flushWriters();
                         debug(`child ${eventName}s: ${code}`);
                         result.exitCode = code;
                         result.stderr = stderr;

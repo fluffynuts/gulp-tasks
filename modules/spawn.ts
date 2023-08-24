@@ -4,6 +4,7 @@ import { ChildProcess } from "child_process";
 import { reset } from "ansi-colors";
 
 (function() {
+  const LineBuffer = requireModule<LineBuffer>("line-buffer");
 // use for spawning actual processes.
 // You must use exec if you want to run batch files
   class SpawnError extends Error {
@@ -121,15 +122,31 @@ import { reset } from "ansi-colors";
     console.error(clean(data));
   }
 
+  interface AugmentedLogFunction extends LogFunction {
+    flush(): void;
+  }
+
+  function createEcho(
+    writer: LogFunction
+  ): AugmentedLogFunction {
+    const buffer = new LineBuffer(writer);
+    const result = ((s: string) => {
+      buffer.append(s);
+    }) as AugmentedLogFunction;
+    result.flush = () => buffer.flush();
+    return result;
+  }
+
   const defaultOptions = {
     stdio: [ process.stdin, process.stdout, process.stdin ] as StdioOptions,
     cwd: process.cwd(),
     shell: true,
     lineBuffer: true,
-    // if no functions are set up, then the child stderr & stdout
-    // are null as they're not being piped to us at all
-    stderr: echoStdErr as Optional<ProcessIO>,
-    stdout: echoStdOut as Optional<ProcessIO>
+    // default is to echo outputs via a LineBuffer instance
+    // -> given captured console.xxx because then we can still
+    //    spy and suppress and so on in tests
+    stderr: createEcho(s => console.log(s)) as Optional<ProcessIO>, //  echoStdErr as Optional<ProcessIO>,
+    stdout: createEcho(s => console.error(s)) as Optional<ProcessIO> // echoStdOut as Optional<ProcessIO>
   };
 
   // noinspection JSUnusedLocalSymbols
@@ -268,7 +285,7 @@ import { reset } from "ansi-colors";
         child.on("exit", generateExitHandler("exit"));
         child.on("close", generateExitHandler("close"));
         let cleared = false;
-        const clear = () => {
+        const clearColorsOnce = () => {
           if (cleared) {
             return;
           }
@@ -277,14 +294,28 @@ import { reset } from "ansi-colors";
           process.stderr.write(reset(""));
         };
         const outWriter = (s: string) => {
-          clear();
+          clearColorsOnce();
           stdOutWriter(s);
         };
         const errWriter = (s: string) => {
-          clear();
+          clearColorsOnce();
+          stdErrWriter(s);
         };
         setupIoHandler(outWriter, child.stdout, stdout, opts, suppressStdOut);
         setupIoHandler(errWriter, child.stderr, stderr, opts, suppressStdErr)
+
+        function flushWriters() {
+          tryFlush(stdOutWriter);
+          tryFlush(stdErrWriter);
+        }
+
+        function tryFlush(writer: any) {
+          const asAugmentedLog = writer as AugmentedLogFunction;
+          if (!asAugmentedLog.flush) {
+            return;
+          }
+          asAugmentedLog.flush();
+        }
 
         function generateExitHandler(eventName: string): (code: number) => void {
           return (code: number) => {
@@ -293,6 +324,7 @@ import { reset } from "ansi-colors";
             }
             destroyPipesOn(child);
             exited = true;
+            flushWriters();
             debug(`child ${ eventName }s: ${ code }`);
             result.exitCode = code;
             result.stderr = stderr;
