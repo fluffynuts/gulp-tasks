@@ -429,6 +429,9 @@ import { reset } from "ansi-colors";
     const
       out = opts.stdout as AugmentedLogFunction,
       err = opts.stderr as AugmentedLogFunction;
+    if (!out || !err) {
+      return;
+    }
     if (!!out.flush || !!err.flush) {
       opts.lineBuffer = false;
     }

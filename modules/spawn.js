@@ -330,6 +330,9 @@ const ansi_colors_1 = require("ansi-colors");
     }
     function disableLineBufferWhenUsingInternalLineBuffer(opts) {
         const out = opts.stdout, err = opts.stderr;
+        if (!out || !err) {
+            return;
+        }
         if (!!out.flush || !!err.flush) {
             opts.lineBuffer = false;
         }
