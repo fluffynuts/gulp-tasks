@@ -11,7 +11,9 @@
     // but the consumers of this can't do async :| so this is
     // as good as it gets, I guess.
     let currentGitSha = "";
-    fetchGitSha().then(result => currentGitSha = result);
+    fetchGitSha()
+        .then(result => currentGitSha = result)
+        .catch(() => { });
     function currentGitSHA() {
         return currentGitSha;
     }

@@ -51,7 +51,7 @@ async function cleanWithDotnet() {
   const
     configuration = env.resolveArray("BUILD_CONFIGURATION"),
     slnMasks = resolveBuildSolutionMasks(),
-    targets = env.resolveArray("BUILD_TARGETS");
+    targets = env.resolveArray("BUILD_TARGETS", "BUILD_INCLUDE");
   debug({
     slnMasks,
     targets,

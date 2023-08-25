@@ -167,7 +167,7 @@
         });
         env.register({
             name: "BUILD_TARGETS",
-            help: "Targets to invoke msbuild with",
+            help: "Targets to invoke msbuild with (deprecated - use BUILD_INCLUDE)",
             default: "Build"
         });
         env.register({
