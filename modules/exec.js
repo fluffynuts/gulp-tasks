@@ -1,14 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const yafs_1 = require("yafs");
 (function () {
     // MUST use for running batch files
     // you can use this for other commands but spawn is better
     // as it handles IO better
-    const quoteIfRequired = require("./quote-if-required"), failAfter = requireModule("fail-after"), os = require("os"), spawn = require("./spawn"), debug = require("debug")("exec"), log = require("./log"), child_process = require("child_process");
+    const path = require("path"), quoteIfRequired = require("./quote-if-required"), failAfter = requireModule("fail-after"), os = require("os"), spawn = requireModule("spawn"), system = requireModule("system"), debug = require("debug")("exec"), log = require("./log"), which = require("which"), ZarroError = requireModule("zarro-error"), child_process = require("child_process");
     function makeDefaultOptions() {
         return {
             cwd: process.cwd(),
-            shell: true
+            shell: true,
+            suppressOutput: true
         };
     }
     function doExecFile(cmd, args, opts, handlers) {
@@ -168,6 +170,73 @@ stdout:
             }
         };
     }
+    async function doSystemWin32(cmd, args, opts, handlers) {
+        if (await isBatchFile(cmd)) {
+            return doSystem("cmd", ["/c", cmd].concat(args), opts, handlers);
+        }
+        return doSystem(cmd, args, opts, handlers);
+    }
+    async function isBatchFile(cmd) {
+        const resolved = await fullPathTo(cmd), ext = path.extname(resolved).toLowerCase();
+        return win32BatchExtensions.has(ext);
+    }
+    const win32BatchExtensions = new Set([
+        ".bat",
+        ".cmd"
+    ]);
+    async function fullPathTo(cmd) {
+        if (await (0, yafs_1.folderExists)(cmd)) {
+            throw new ZarroError(`'${cmd}' is a folder, not a file (required to execute)`);
+        }
+        if (await (0, yafs_1.fileExists)(cmd)) {
+            return cmd;
+        }
+        try {
+            return await which(cmd);
+        }
+        catch (e) {
+            throw new ZarroError(`'${cmd}' not found directly or in the PATH`);
+        }
+    }
+    async function doSystem(cmd, args, opts, handlers) {
+        var _a, _b;
+        const result = [];
+        const stderr = [];
+        const stdout = [];
+        const stderrHandler = (_a = handlers === null || handlers === void 0 ? void 0 : handlers.stderr) !== null && _a !== void 0 ? _a : noop;
+        const stdoutHandler = (_b = handlers === null || handlers === void 0 ? void 0 : handlers.stdout) !== null && _b !== void 0 ? _b : noop;
+        try {
+            await system(cmd, args, {
+                suppressOutput: opts.suppressOutput,
+                stdout: (s) => {
+                    result.push(s);
+                    stdout.push(s);
+                    tryDo(() => stdoutHandler(s));
+                },
+                stderr: (s) => {
+                    result.push(s);
+                    stderr.push(s);
+                    tryDo(() => stderrHandler(s));
+                }
+            });
+            return result.join("\n");
+        }
+        catch (e) {
+            const err = e;
+            // TODO: determine this from the result / error somehow
+            const timedOut = false;
+            attachExecInfo(err, err.exitCode, cmd, args, timedOut, opts, stdout, stderr);
+            throw err;
+        }
+    }
+    function tryDo(action) {
+        try {
+            action();
+        }
+        catch (e) {
+            // suppress
+        }
+    }
     async function doSpawn(cmd, args, opts, handlers) {
         var _a, _b;
         const stderr = [], stdout = [], merged = [], callerStdErr = (_a = handlers === null || handlers === void 0 ? void 0 : handlers.stderr) !== null && _a !== void 0 ? _a : noop, callerStdOut = (_b = handlers === null || handlers === void 0 ? void 0 : handlers.stdout) !== null && _b !== void 0 ? _b : noop, safeCallerStdErr = makeSafe(callerStdErr), safeCallerStdOut = makeSafe(callerStdOut), stdErrPrinter = (opts === null || opts === void 0 ? void 0 : opts.suppressOutput) ? noop : console.error.bind(console), stdOutPrinter = (opts === null || opts === void 0 ? void 0 : opts.suppressOutput) ? noop : console.log.bind(console);
@@ -231,8 +300,8 @@ stdout:
         }
         // noinspection ES6MissingAwait
         const promise = os.platform() === "win32"
-            ? doExec(cmd, args, opts, handlers || {})
-            : doSpawn(cmd, args, Object.assign({}, opts), handlers);
+            ? doSystemWin32(cmd, args, Object.assign({}, opts), handlers || {})
+            : doSystem(cmd, args, Object.assign({}, opts), handlers || {});
         if (!timeout) {
             return promise;
         }

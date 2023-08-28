@@ -1,4 +1,5 @@
 import { ChildProcess } from "child_process";
+import { fileExists, folderExists } from "yafs";
 
 export type IoConsumer = (d: string) => void
 
@@ -24,18 +25,23 @@ export interface ExecError extends Error {
 // you can use this for other commands but spawn is better
 // as it handles IO better
   const
+    path = require("path"),
     quoteIfRequired = require("./quote-if-required"),
     failAfter = requireModule<FailAfter>("fail-after"),
     os = require("os"),
-    spawn = require("./spawn"),
+    spawn = requireModule<Spawn>("spawn"),
+    system = requireModule<System>("system"),
     debug = require("debug")("exec"),
     log = require("./log"),
+    which = require("which"),
+    ZarroError = requireModule<ZarroError>("zarro-error"),
     child_process = require("child_process");
 
   function makeDefaultOptions() {
     return {
       cwd: process.cwd(),
-      shell: true
+      shell: true,
+      suppressOutput: true
     };
   }
 
@@ -108,7 +114,7 @@ export interface ExecError extends Error {
     opts: ExecOpts
   ): ChildProcess {
     if (os.platform() == "win32") {
-      const cmdArgs = ["/c", cmd];
+      const cmdArgs = [ "/c", cmd ];
       cmdArgs.push.apply(cmdArgs, args);
       log.suppressTimeStamps();
       return child_process.spawn("cmd.exe", cmdArgs, opts);
@@ -230,6 +236,104 @@ stdout:
     };
   }
 
+  async function doSystemWin32(
+    cmd: string,
+    args: string[],
+    opts: ExecOpts,
+    handlers?: IoHandlers
+  ): Promise<string> {
+    if (await isBatchFile(cmd)) {
+      return doSystem(
+        "cmd",
+        [ "/c", cmd ].concat(args),
+        opts,
+        handlers
+      )
+    }
+    return doSystem(cmd, args, opts, handlers);
+  }
+
+  async function isBatchFile(cmd: string): Promise<boolean> {
+    const
+      resolved = await fullPathTo(cmd),
+      ext = path.extname(resolved).toLowerCase();
+    return win32BatchExtensions.has(ext);
+  }
+
+  const win32BatchExtensions = new Set<string>([
+    ".bat",
+    ".cmd"
+  ]);
+
+  async function fullPathTo(cmd: string) {
+    if (await folderExists(cmd)) {
+      throw new ZarroError(`'${ cmd }' is a folder, not a file (required to execute)`);
+    }
+    if (await fileExists(cmd)) {
+      return cmd;
+    }
+    try {
+      return await which(cmd);
+    } catch (e) {
+      throw new ZarroError(`'${ cmd }' not found directly or in the PATH`);
+    }
+  }
+
+  async function doSystem(
+    cmd: string,
+    args: string[],
+    opts: ExecOpts,
+    handlers?: IoHandlers
+  ): Promise<string> {
+    const result = [] as string[];
+    const stderr = [] as string[];
+    const stdout = [] as string[];
+    const stderrHandler = handlers?.stderr ?? noop;
+    const stdoutHandler = handlers?.stdout ?? noop;
+    try {
+      await system(
+        cmd,
+        args, {
+          suppressOutput: opts.suppressOutput,
+          stdout: (s: string) => {
+            result.push(s);
+            stdout.push(s);
+            tryDo(() => stdoutHandler(s));
+          },
+          stderr: (s: string) => {
+            result.push(s);
+            stderr.push(s);
+            tryDo(() => stderrHandler(s));
+          }
+        }
+      );
+      return result.join("\n");
+    } catch (e) {
+      const err = e as SpawnError;
+      // TODO: determine this from the result / error somehow
+      const timedOut = false;
+      attachExecInfo(
+        err,
+        err.exitCode,
+        cmd,
+        args,
+        timedOut,
+        opts,
+        stdout,
+        stderr
+      )
+      throw err;
+    }
+  }
+
+  function tryDo(action: (() => void)): void {
+    try {
+      action();
+    } catch (e) {
+      // suppress
+    }
+  }
+
   async function doSpawn(
     cmd: string,
     args: string[],
@@ -318,8 +422,8 @@ stdout:
     }
     // noinspection ES6MissingAwait
     const promise = os.platform() === "win32"
-      ? doExec(cmd, args, opts, handlers || {})
-      : doSpawn(cmd, args, Object.assign({}, opts), handlers);
+      ? doSystemWin32(cmd, args, Object.assign({}, opts), handlers || {})
+      : doSystem(cmd, args, Object.assign({}, opts), handlers || {});
 
     if (!timeout) {
       return promise;

@@ -233,7 +233,6 @@ function bootstrapGulp() {
 function runNpmWith(args) {
   const spawn = requireModule("spawn");
   const os = require("os");
-
   return os.platform() === "win32"
     ? spawn("cmd", [ "/c", "npm" ].concat(args), {
       interactive: true

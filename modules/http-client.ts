@@ -9,8 +9,6 @@ import { RequestResponse, ResponseRequest } from "request";
     request = require("request"),
     debug = require("debug")("http-client");
 
-  type LogFunction = (s: string) => void;
-
   class HttpClient {
     public assumeDownloadedIfExistsAndSizeMatches: boolean;
     public aborted: boolean = false;
