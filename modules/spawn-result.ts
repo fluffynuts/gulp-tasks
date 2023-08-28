@@ -8,6 +8,10 @@
       public stdout: string[]
     ) {
     }
+
+    static isSpawnResult(o: any): o is SpawnResult {
+      return o instanceof SpawnResult
+    }
   }
   module.exports = SpawnResult;
 })();

@@ -195,7 +195,7 @@ ${ tempFileContents }
     };
   }
 
-  function noop(data: string | Buffer) {
+  function noop(_: string | Buffer) {
   }
 
   function destroyPipesOn(child: ChildProcess) {
@@ -216,6 +216,10 @@ ${ tempFileContents }
       }
     }
   }
+
+  debugger;
+  system.isError = SpawnError.isSpawnError;
+  system.isResult = SpawnResult.isSpawnResult;
 
   module.exports = system;
 })();

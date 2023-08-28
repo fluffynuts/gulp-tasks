@@ -8,6 +8,9 @@
             this.stderr = stderr;
             this.stdout = stdout;
         }
+        static isSpawnResult(o) {
+            return o instanceof SpawnResult;
+        }
     }
     module.exports = SpawnResult;
 })();

@@ -1,5 +1,5 @@
 (function() {
-  class SpawnErrorImpl extends Error
+  class SpawnError extends Error
   {
     get args(): string[] {
       return this._args;
@@ -77,6 +77,10 @@
         lines.push(` ${ line }`);
       }
     }
+
+    static isSpawnError(o: any): o is SpawnError {
+      return o instanceof SpawnError;
+    }
   }
-  module.exports = SpawnErrorImpl;
+  module.exports = SpawnError;
 })();

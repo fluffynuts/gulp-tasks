@@ -1,7 +1,7 @@
 "use strict";
 (function () {
-    const spawn = requireModule("spawn");
-    const { isSpawnError } = spawn;
+    const system = requireModule("system");
+    const { isError } = system;
     const ZarroError = requireModule("zarro-error");
     const path = require("path");
     const { fileExists, readTextFile } = require("yafs");
@@ -10,6 +10,7 @@
     const parseXml = requireModule("parse-xml");
     const { readAssemblyVersion, readCsProjProperty, readAssemblyName } = requireModule("csproj-utils");
     const env = requireModule("env");
+    debugger;
     let defaultNugetSource;
     function showHeader(label) {
         console.log(yellow(label));
@@ -265,7 +266,7 @@
         for (const configuration of configurations) {
             showHeader(`${label} ${q(opts.target)} with configuration ${configuration}${detailedInfoFor(opts)}`);
             const thisResult = await toRun(configuration);
-            if (isSpawnError(thisResult)) {
+            if (isError(thisResult)) {
                 return thisResult;
             }
             lastResult = thisResult;
@@ -298,11 +299,10 @@
             "list",
             "source"
         ];
-        const lines = [];
-        const spawnResult = await spawn("dotnet", args, {
+        const systemResult = await system("dotnet", args, {
             suppressOutput: true
         });
-        const enabledSources = spawnResult.stdout
+        const enabledSources = systemResult.stdout
             .join("\n") // can't guarantee we got lines individually
             .split("\n")
             .map(l => l.trim())
@@ -346,7 +346,6 @@
         pushIfSet(args, opts.arch, "--arch");
     }
     function pushConfiguration(args, configuration) {
-        debugger;
         if (!configuration) {
             return;
         }
@@ -397,7 +396,7 @@
     }
     async function runDotNetWith(args, opts) {
         try {
-            return await spawn("dotnet", args, {
+            return await system("dotnet", args, {
                 stdout: opts.stdout,
                 stderr: opts.stderr,
                 suppressStdIoInErrors: opts.suppressStdIoInErrors

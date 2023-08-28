@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    class SpawnErrorImpl extends Error {
+    class SpawnError extends Error {
         get args() {
             return this._args;
         }
@@ -57,6 +57,9 @@
                 lines.push(` ${line}`);
             }
         }
+        static isSpawnError(o) {
+            return o instanceof SpawnError;
+        }
     }
-    module.exports = SpawnErrorImpl;
+    module.exports = SpawnError;
 })();

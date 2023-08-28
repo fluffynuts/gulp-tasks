@@ -1,8 +1,8 @@
 (function() {
   // TODO: perhaps one day, this should become an npm module of its own
   type PerConfigurationFunction = (configuration: string) => Promise<SpawnResult | SpawnError>;
-  const spawn = requireModule<Spawn>("spawn");
-  const { isSpawnError } = spawn;
+  const system = requireModule<System>("system");
+  const { isError } = system;
   const ZarroError = requireModule<ZarroError>("zarro-error");
   const path = require("path");
   const { fileExists, readTextFile } = require("yafs");
@@ -15,6 +15,8 @@
     readAssemblyName
   } = requireModule<CsProjUtils>("csproj-utils");
   const env = requireModule<Env>("env");
+
+  debugger;
 
   let defaultNugetSource: string;
 
@@ -381,7 +383,7 @@
     for (const configuration of configurations) {
       showHeader(`${ label } ${ q(opts.target) } with configuration ${ configuration }${detailedInfoFor(opts)}`)
       const thisResult = await toRun(configuration);
-      if (isSpawnError(thisResult)) {
+      if (isError(thisResult)) {
         return thisResult;
       }
       lastResult = thisResult;
@@ -416,11 +418,10 @@
       "list",
       "source"
     ];
-    const lines = [] as string[];
-    const spawnResult = await spawn("dotnet", args, {
+    const systemResult = await system("dotnet", args, {
       suppressOutput: true
     });
-    const enabledSources = spawnResult.stdout
+    const enabledSources = systemResult.stdout
       .join("\n") // can't guarantee we got lines individually
       .split("\n")
       .map(l => l.trim())
@@ -473,7 +474,6 @@
     args: string[],
     configuration: string
   ) {
-    debugger;
     if (!configuration) {
       return;
     }
@@ -562,7 +562,7 @@
     opts: DotNetBaseOptions
   ): Promise<SpawnResult | SpawnError> {
     try {
-      return await spawn("dotnet", args, {
+      return await system("dotnet", args, {
         stdout: opts.stdout,
         stderr: opts.stderr,
         suppressStdIoInErrors: opts.suppressStdIoInErrors

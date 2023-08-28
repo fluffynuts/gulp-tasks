@@ -125,7 +125,7 @@ ${tempFileContents}
             lineBuffer.append(d);
         };
     }
-    function noop(data) {
+    function noop(_) {
     }
     function destroyPipesOn(child) {
         for (const pipe of [child.stdout, child.stderr, child.stdin]) {
@@ -146,5 +146,8 @@ ${tempFileContents}
             }
         }
     }
+    debugger;
+    system.isError = SpawnError.isSpawnError;
+    system.isResult = SpawnResult.isSpawnResult;
     module.exports = system;
 })();
