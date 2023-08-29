@@ -41,7 +41,7 @@ import { ChildProcess } from "child_process";
       opts.suppressOutput = !!opts.stderr || !!opts.stdout;
     }
     let
-      exe = program as Nullable<string>,
+      exe = program as Optional<string>,
       programArgs = args || [] as string[];
     if (!which(program) && !args) {
       // assume it's a long commandline

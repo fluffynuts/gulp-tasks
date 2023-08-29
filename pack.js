@@ -1,4 +1,5 @@
-const getToolsFolder = requireModule("get-tools-folder"),
+const
+  getToolsFolder = requireModule("get-tools-folder"),
   path = require("path"),
   throwIfNoFiles = requireModule("throw-if-no-files"),
   { incrementPackageVersion } = requireModule(

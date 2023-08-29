@@ -6,7 +6,7 @@
             return _which_.sync(executable);
         }
         catch (e) {
-            return null;
+            return undefined;
         }
     };
 })();

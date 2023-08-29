@@ -818,7 +818,8 @@
 
     env.register({
       name: "NUGET_SOURCES",
-      help: "comma-delimited list of nuget sources if you don't want to use the defaults"
+      help: "comma-delimited list of nuget sources if you don't want to use the defaults",
+      default: "nuget.org"
     });
 
     debug("-- env registration complete --");
