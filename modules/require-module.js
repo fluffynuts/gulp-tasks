@@ -3,6 +3,10 @@
     const path = require("path"), debug = require("debug")(path.basename(__filename.replace(/\.js$/, "")));
     const mocks = {};
     function requireModule(mod) {
+        if (!mod) {
+            throw new Error("NO");
+            // nameof<T>();
+        }
         if (mocks[mod] !== undefined) {
             return mocks[mod];
         }

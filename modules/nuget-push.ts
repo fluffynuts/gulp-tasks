@@ -1,10 +1,10 @@
 (function() {
   const
-    spawn = require("./spawn"),
-    quoteIfRequired = require("./quote-if-required"),
-    { splitPath } = require("./path-utils"),
+    system = requireModule<System>("system"),
+    quoteIfRequired = requireModule<QuoteIfRequired>("quote-if-required"),
+    { splitPath } = requireModule<PathUtils>("path-utils"),
     dotnetCli = requireModule<DotNetCli>("dotnet-cli"),
-    env = require("./env"),
+    env = requireModule<Env>("env"),
     findLocalNuget = require("./find-local-nuget");
 
   function isDotnetCore(binaryPath: string) {
@@ -27,7 +27,9 @@
     sourceName?: string,
     options?: NugetPushOpts
   ): Promise<void> {
-    const apiKey = env.resolve("NUGET_API_KEY");
+    const
+        nugetPushSource = sourceName || env.resolve(env.NUGET_PUSH_SOURCE);
+    const apiKey = env.resolve(env.NUGET_API_KEY);
     options = options || {};
     options.skipDuplicates = options.skipDuplicates === undefined
       ? env.resolveFlag("NUGET_IGNORE_DUPLICATE_PACKAGES")
@@ -36,7 +38,7 @@
     if (isDotnetCore(nuget)) {
       const dotnetOpts = {
         target: packageFile,
-        source: sourceName,
+        source: nugetPushSource,
         skipDuplicates: options && options.skipDuplicates,
         apiKey
       };
@@ -55,7 +57,7 @@
         "push",
         quoteIfRequired(packageFile),
         sourceArg,
-        sourceName || "nuget.org"
+        nugetPushSource || "nuget.org"
       ]),
       apiKeyArg = dnc ? "-k" : "-ApiKey";
     if (options.skipDuplicates && dnc) {
@@ -79,7 +81,7 @@
     }
     console.log(`pushing package ${ packageFile }`);
     try {
-      return await spawn(nuget, args);
+      await system(nuget, args);
     } catch (ex) {
       const e = ex as SpawnError;
       if (Array.isArray(e.stderr)) {

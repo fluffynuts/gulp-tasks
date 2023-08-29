@@ -284,6 +284,12 @@
             help: "api key to use when attempting to publish to nuget (required for dotnet core, can be used for regular nuget.exe too)",
             default: ""
         });
+        const defaultApiKey = env.resolve("NUGET_API_KEY");
+        env.register({
+            name: "NUGET_API_KEYS",
+            help: "JSON for keys per source name",
+            default: `{ "*": "${defaultApiKey}" }`
+        });
         env.register({
             name: "NUGET_PUSH_TIMEOUT",
             help: "timeout, in seconds, for an attempted push of a nuget package; if left undefined, the default for the tool is used (typically 300, ie 5 min)",
@@ -673,9 +679,19 @@
             default: "false"
         });
         env.register({
+            name: "NUGET_SOURCE",
+            help: "single nuget source to use for package restore and publication",
+            default: "nuget.org"
+        });
+        env.register({
             name: "NUGET_SOURCES",
             help: "comma-delimited list of nuget sources if you don't want to use the defaults",
-            default: "nuget.org"
+            default: env.resolve("NUGET_SOURCE")
+        });
+        env.register({
+            name: "NUGET_PUSH_SOURCE",
+            help: "Specifically: nuget source to push to. Will fall back on NUGET_SOURCE or first of NUGET_SOURCES.",
+            default: env.resolve("NUGET_SOURCE")
         });
         debug("-- env registration complete --");
     };

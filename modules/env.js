@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const { readTextFileSync, fileExistsSync } = require("yafs");
     const arrayPrototype = Array.prototype;
@@ -19,6 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         printHelp,
         taskHelp,
         resolve,
+        resolveObject,
         associate,
         resolveArray,
         resolveMergedArray,
@@ -231,8 +231,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
         return result;
     }
-    function resolve() {
-        var args = Array.from(arguments);
+    function resolve(...args) {
         if (args.length === 0) {
             throw new ZarroError(`invalid operation: resolve(...) requires at least one env var name to resolve`);
         }
@@ -243,6 +242,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
         const result = resolveInternal(names);
         logResolved(names, result);
         return result;
+    }
+    function resolveObject(...args) {
+        debugger;
+        const resolvedValue = resolve(...args);
+        return resolvedValue
+            ? tryParse(resolvedValue, args)
+            : undefined;
+    }
+    function tryParse(json, name) {
+        try {
+            return JSON.parse(json);
+        }
+        catch (e) {
+            const varname = name.length === 1
+                ? name[0]
+                : `[ ${name.join(", ")} ]`;
+            throw new ZarroError(`Unable to parse environment variable "${varname}":\n${json}`);
+        }
     }
     function resolveWithFallback(varName, fallback) {
         return resolveInternal(varName, false, fallback);
@@ -301,7 +318,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         const when = target.when;
         if (when === undefined) {
             if (overrideValues.length > 1) {
-                console.warn(`multiple override values found for '${name}' and no strategy for discriminating set; selecting the first`);
+                console.warn(`multiple override values found for "${name}" and no strategy for discriminating set; selecting the first`);
                 debug({
                     when: target.when,
                     overrides,
@@ -335,7 +352,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     }
     function quoteString(val) {
         return typeof val === "string"
-            ? `"${val}"`
+            ?
+                `"${val}"`
             : val;
     }
     function resolveArray(name, delimiter) {
@@ -384,7 +402,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             throw new ZarroError(`environment flag not set and no default registered: ${name}`);
         }
         else {
-            throw new ZarroError(`environmental flag not appropriately set: ${name} (received: '${value}')`);
+            throw new ZarroError(`environmental flag not appropriately set: ${name} (received: "${value}")`);
         }
     }
     function explode(str, delimiter) {
