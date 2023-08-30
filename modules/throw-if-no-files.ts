@@ -1,4 +1,4 @@
-import { Stream } from "stream";
+import { Stream, Transform } from "stream";
 import { BufferFile } from "vinyl";
 
 (function() {
@@ -7,7 +7,7 @@ import { BufferFile } from "vinyl";
 
     module.exports = function(
         msg: string
-    ): Stream {
+    ): Transform {
         const captured = [] as BufferFile[];
         return es.through(function write(this: Stream, file: BufferFile) {
             captured.push(file);
