@@ -1,8 +1,7 @@
 (function () {
   const
-    fs = require("fs"),
     { mkdir, mkdirSync } = require("yafs"),
-    debug = require("debug")("ensure-folder-exists");
+    debug = requireModule<DebugFactory>("debug")(__filename);
 
   async function ensureFolderExists(folder: string) {
     debug(`Ensuring existence of folder "${folder}"`);

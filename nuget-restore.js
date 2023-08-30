@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const chalk = requireModule("ansi-colors"), env = requireModule("env"), gulp = requireModule("gulp"), debug = requireModule("debug")("nuget-restore"), nugetRestore = requireModule("./gulp-nuget-restore"), promisify = requireModule("promisify-stream"), resolveMasks = requireModule("resolve-masks"), tryDo = requireModule("try-do"), findLocalNuget = requireModule("find-local-nuget");
+    const chalk = requireModule("ansi-colors"), env = requireModule("env"), gulp = requireModule("gulp"), debug = requireModule("debug")(__filename), nugetRestore = requireModule("./gulp-nuget-restore"), promisify = requireModule("promisify-stream"), resolveMasks = requireModule("resolve-masks"), tryDo = requireModule("try-do"), findLocalNuget = requireModule("find-local-nuget");
     const myTasks = ["nuget-restore"], myVars = [
         "DOTNET_CORE",
         "BUILD_INCLUDE",

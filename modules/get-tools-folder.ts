@@ -1,6 +1,6 @@
 (function () {
   let env: Env;
-  const debug = require("debug")("get-tools-folder");
+  const debug = requireModule<DebugFactory>("debug")(__filename);
 
   function getToolsFolder(overrideEnv: Env) {
     if (!overrideEnv) {

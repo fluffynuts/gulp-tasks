@@ -11,7 +11,7 @@
             console.error("Array.prototype.flatmap is required -- either use a newer Node or install the npm package array.prototype.flatmap");
         }
     }
-    const ZarroError = requireModule("zarro-error"), chalk = requireModule("ansi-colors"), debug = require("debug")("env"), registeredEnvironmentVariables = {}, longestStringLength = require("./longest-string-length"), padRight = require("./pad-right"), padLeft = require("./pad-left"), toExport = {
+    const ZarroError = requireModule("zarro-error"), chalk = requireModule("ansi-colors"), debug = requireModule("debug")(__filename), registeredEnvironmentVariables = {}, longestStringLength = require("./longest-string-length"), padRight = require("./pad-right"), padLeft = require("./pad-left"), toExport = {
         flag,
         fallback,
         register,

@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const getToolsFolder = requireModule("get-tools-folder"), path = require("path"), throwIfNoFiles = requireModule("throw-if-no-files"), { incrementPackageVersion } = requireModule("gulp-increment-nuget-package-version"), resolveMasks = requireModule("resolve-masks"), env = requireModule("env"), { rewriteFile } = requireModule("rewrite-file"), del = require("del"), debug = require("debug")("pack"), gulp = requireModule("gulp"), { mkdir } = require("yafs");
+    const getToolsFolder = requireModule("get-tools-folder"), path = require("path"), throwIfNoFiles = requireModule("throw-if-no-files"), { incrementPackageVersion } = requireModule("gulp-increment-nuget-package-version"), resolveMasks = requireModule("resolve-masks"), env = requireModule("env"), { rewriteFile } = requireModule("rewrite-file"), del = require("del"), debug = requireModule("debug")(__filename), gulp = requireModule("gulp"), { mkdir } = require("yafs");
     env.associate([
         "PACK_TARGET_FOLDER",
         "DOTNET_CORE",

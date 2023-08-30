@@ -1,4 +1,3 @@
-import { IoConsumer } from "./exec";
 import { Readable } from "stream";
 import { ChildProcess } from "child_process";
 import { reset } from "ansi-colors";

@@ -1,7 +1,7 @@
 "use strict";
 (function () {
     let env;
-    const debug = require("debug")("get-tools-folder");
+    const debug = requireModule("debug")(__filename);
     function getToolsFolder(overrideEnv) {
         if (!overrideEnv) {
             env = env || require("./env");

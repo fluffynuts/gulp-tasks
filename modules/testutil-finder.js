@@ -1,8 +1,8 @@
 "use strict";
 (function () {
     "use strict";
-    const log = require("./log"), fs = require("fs"), path = require("path"), debug = require("debug")("testutil-finder"), lsR = require("./ls-r"), programFilesFolder = process.env["ProgramFiles(x86)"]
-        || process.env["ProgramFiles"], getToolsFolder = require("./get-tools-folder"), ZarroError = requireModule("zarro-error"), which = requireModule("which"), localAppDataFolder = process.env["LOCALAPPDATA"];
+    const log = requireModule("log"), fs = require("fs"), path = require("path"), debug = requireModule("debug")(__filename), lsR = require("./ls-r"), programFilesFolder = process.env["ProgramFiles(x86)"]
+        || process.env["ProgramFiles"], getToolsFolder = requireModule("get-tools-folder"), ZarroError = requireModule("zarro-error"), which = requireModule("which"), localAppDataFolder = process.env["LOCALAPPDATA"];
     function isUnstable(folderName) {
         return folderName.indexOf("alpha") > -1 ||
             folderName.indexOf("beta") > -1;

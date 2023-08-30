@@ -4,7 +4,7 @@
     { log } = requireModule<GulpUtil>("gulp-util"),
     { redBright, yellowBright } = requireModule<AnsiColors>("ansi-colors"),
     env = requireModule<Env>("env"),
-    debug = requireModule<DebugFactory>("debug")("start-smtp-server"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     mailpitAllIps = "[::]",
     gulp = requireModule<Gulp>("gulp");
 

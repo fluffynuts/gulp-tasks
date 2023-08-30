@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const temp = require("temp"), { mkdir } = require("yafs"), Vinyl = require("vinyl"), fs = require("./fs"), path = require("path"), parseXml = requireModule("parse-xml"), isPromise = requireModule("is-promise"), gutil = requireModule("gulp-util"), spawnNuget = requireModule("spawn-nuget"), debug = requireModule("debug")("gulp-nuget-pack"), env = requireModule("env"), es = require("event-stream");
+    const temp = require("temp"), { mkdir } = require("yafs"), Vinyl = require("vinyl"), fs = require("./fs"), path = require("path"), parseXml = requireModule("parse-xml"), isPromise = requireModule("is-promise"), gutil = requireModule("gulp-util"), spawnNuget = requireModule("spawn-nuget"), debug = requireModule("debug")(__filename), env = requireModule("env"), es = require("event-stream");
     env.associate([
         "PACK_BASE_PATH",
         "PACK_VERSION",

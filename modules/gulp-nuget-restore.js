@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const path = require("path"), gutil = requireModule("gulp-util"), es = require("event-stream"), system = requireModule("system"), log = requireModule("log"), resolveNuget = requireModule("resolve-nuget"), env = requireModule("env"), isDotnetCore = env.resolveFlag("DOTNET_CORE"), nugetExe = isDotnetCore ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe", debug = requireModule("debug")("gulp-nuget-restore");
+    const path = require("path"), gutil = requireModule("gulp-util"), es = require("event-stream"), system = requireModule("system"), log = requireModule("log"), resolveNuget = requireModule("resolve-nuget"), env = requireModule("env"), isDotnetCore = env.resolveFlag("DOTNET_CORE"), nugetExe = isDotnetCore ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe", debug = requireModule("debug")(__filename);
     const PLUGIN_NAME = "gulp-nuget-restore";
     let DEBUG = true;
     function nugetRestore(options) {

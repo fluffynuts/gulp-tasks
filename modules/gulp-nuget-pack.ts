@@ -12,7 +12,7 @@ import { Stream } from "stream";
         isPromise = requireModule<IsPromise>("is-promise"),
         gutil = requireModule<GulpUtil>("gulp-util"),
         spawnNuget = requireModule<SpawnNuget>("spawn-nuget"),
-        debug = requireModule<DebugFactory>("debug")("gulp-nuget-pack"),
+        debug = requireModule<DebugFactory>("debug")(__filename),
         env = requireModule<Env>("env"),
         es = require("event-stream");
 

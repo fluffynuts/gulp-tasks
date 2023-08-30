@@ -1,15 +1,17 @@
+import { fi } from "@faker-js/faker";
+
 (function() {
   // replaces the gulp-npm-run node module
   // which relies on ramda -- that keeps on having
   // breaking changes released. NO MORE.
   const
     { readFileSync } = require("fs"),
-    debug = require("debug")("gulp-npm-run"),
-    exec = require("./exec") as Exec,
+    debug = requireModule<DebugFactory>("debug")(__filename),
+    exec = requireModule<Exec>("exec"),
     path = require("path"),
     chalk = requireModule<AnsiColors>("ansi-colors"),
     ZarroError = requireModule<ZarroError>("zarro-error"),
-    findNpmBase = require("./find-npm-base");
+    findNpmBase = requireModule<FindNpmBase>("find-npm-base");
 
   function gulpNpmRun(gulp: GulpWithHelp) {
     const

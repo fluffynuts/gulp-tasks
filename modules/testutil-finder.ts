@@ -1,15 +1,14 @@
 (function() {
   "use strict";
   const
-    log = require("./log"),
+    log = requireModule<Log>("log"),
     fs = require("fs"),
     path = require("path"),
-    debug = require("debug")(
-      "testutil-finder"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     lsR = require("./ls-r"),
     programFilesFolder = process.env["ProgramFiles(x86)"]
       || process.env["ProgramFiles"],
-    getToolsFolder = require("./get-tools-folder"),
+    getToolsFolder = requireModule<GetToolsFolder>("get-tools-folder"),
     ZarroError = requireModule<ZarroError>("zarro-error"),
     which = requireModule<Which>("which"),
     localAppDataFolder = process.env["LOCALAPPDATA"];
@@ -19,12 +18,6 @@
       folderName.indexOf("beta") > -1;
   }
 
-  interface TestUtilFinderOptions {
-    x86?: boolean;
-    platform?: string;
-    architecture?: string;
-    ignoreBetas?: boolean;
-  }
 
   interface TestUtilFolder {
     folder: string;

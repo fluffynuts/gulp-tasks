@@ -1,8 +1,8 @@
 (function() {
     const
         system = requireModule<System>("system"),
-        debug = require("debug")("spawn-nuget"),
-        findLocalNuget = require("./find-local-nuget");
+        debug = requireModule<DebugFactory>("debug")(__filename),
+        findLocalNuget = requireModule<FindLocalNuget>("find-local-nuget");
 
     module.exports = async function(
         args: string[], opts?: SystemOptions

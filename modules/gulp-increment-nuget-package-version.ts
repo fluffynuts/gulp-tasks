@@ -2,7 +2,7 @@
   const
     env = requireModule<Env>("env"),
     gutil = requireModule<GulpUtil>("gulp-util"),
-    debug = require("debug")("gulp-increment-nuget-package-version"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     editXml = require("gulp-edit-xml"),
     incrementVersion = require("./increment-version"),
     ZarroError = requireModule<ZarroError>("zarro-error"),

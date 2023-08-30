@@ -1,42 +1,34 @@
-const
-  fs = require("fs"),
-  path = require("path"),
-  resolveNuget = require("./resolve-nuget"),
-  pathUnquote = require("./path-unquote"),
-  downloadNuget = require("./download-nuget"),
-  env = require("./env");
-
-let startedDownload = false,
-  resolver = null,
-  lastResolution = new Promise(function (resolve) {
-    resolver = resolve;
-  });
-
-function findLocalNuget() {
-  const
-    targetFolder = env.resolve("BUILD_TOOLS_FOLDER"),
-    localNuget = resolveNuget(undefined, false) || path.join(targetFolder, 'nuget.exe');
-  return new Promise(function(resolve, reject) {
-    if (startedDownload && lastResolution) {
-      return resolve(lastResolution);
-    }
-    if (fs.existsSync(pathUnquote(localNuget))) {
-      return resolve(localNuget);
-    }
-    startedDownload = true;
-    downloadNuget(targetFolder).then(function(dl) {
-      resolver(dl); // = dl;
-      resolve(dl);
-    }).catch(function(err) {
-      if (fs.existsSync(localNuget)) {
-        log.info(err);
-        log.info('Falling back on last local nuget.exe');
-        lastResolution = localNuget;
-        return resolve(localNuget);
-      }
-      reject(err);
+"use strict";
+(function () {
+    const path = require("path"), log = requireModule("log"), { fileExistsSync } = require("yafs"), resolveNuget = require("./resolve-nuget"), pathUnquote = require("./path-unquote"), downloadNuget = require("./download-nuget"), env = require("./env");
+    let startedDownload = false, resolver = (_) => {
+    }, lastResolution = new Promise(function (resolve) {
+        resolver = resolve;
     });
-  });
-}
-
-module.exports = findLocalNuget;
+    async function findLocalNuget() {
+        const targetFolder = env.resolve("BUILD_TOOLS_FOLDER"), localNuget = resolveNuget(undefined, false) || path.join(targetFolder, "nuget.exe");
+        if (startedDownload) {
+            return lastResolution;
+        }
+        if (fileExistsSync(pathUnquote(localNuget))) {
+            return localNuget;
+        }
+        startedDownload = true;
+        try {
+            const result = await downloadNuget(targetFolder);
+            resolver(result); // catch up any other code waiting on this
+            return result;
+        }
+        catch (err) {
+            if (fileExistsSync(localNuget)) {
+                log.info(err);
+                log.info("Falling back on last local nuget.exe");
+                lastResolution = localNuget;
+                resolver(localNuget);
+                return localNuget;
+            }
+            throw err;
+        }
+    }
+    module.exports = findLocalNuget;
+})();

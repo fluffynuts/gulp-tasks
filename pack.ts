@@ -10,7 +10,7 @@
         env = requireModule<Env>("env"),
         { rewriteFile } = requireModule<RewriteFile>("rewrite-file"),
         del = require("del"),
-        debug = require("debug")("pack"),
+        debug = requireModule<DebugFactory>("debug")(__filename),
         gulp = requireModule<Gulp>("gulp"),
         { mkdir } = require("yafs");
 

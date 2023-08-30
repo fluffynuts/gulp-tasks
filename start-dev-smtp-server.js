@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const ZarroError = requireModule("zarro-error"), { log } = requireModule("gulp-util"), { redBright, yellowBright } = requireModule("ansi-colors"), env = requireModule("env"), debug = requireModule("debug")("start-smtp-server"), mailpitAllIps = "[::]", gulp = requireModule("gulp");
+    const ZarroError = requireModule("zarro-error"), { log } = requireModule("gulp-util"), { redBright, yellowBright } = requireModule("ansi-colors"), env = requireModule("env"), debug = requireModule("debug")(__filename), mailpitAllIps = "[::]", gulp = requireModule("gulp");
     env.associate([
         env.DEV_SMTP_DETACHED,
         env.DEV_SMTP_PORT,

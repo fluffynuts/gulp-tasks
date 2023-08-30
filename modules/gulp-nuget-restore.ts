@@ -12,7 +12,7 @@ import { Stream } from "stream";
         env = requireModule<Env>("env"),
         isDotnetCore = env.resolveFlag("DOTNET_CORE"),
         nugetExe = isDotnetCore ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe",
-        debug = requireModule<DebugFactory>("debug")("gulp-nuget-restore");
+        debug = requireModule<DebugFactory>("debug")(__filename);
 
     const PLUGIN_NAME = "gulp-nuget-restore";
     let DEBUG = true;

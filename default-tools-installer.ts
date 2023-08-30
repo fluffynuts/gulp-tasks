@@ -1,6 +1,6 @@
 (function () {
   const
-    debug = requireModule<DebugFactory>("debug")("default-tools-installer"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     gulp = requireModule<Gulp>("gulp"),
     env = requireModule<Env>("env"),
     nugetSourceName = process.env.NUGET_SOURCE || "nuget.org",

@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const fs = require("fs"), { mkdir, mkdirSync } = require("yafs"), debug = require("debug")("ensure-folder-exists");
+    const { mkdir, mkdirSync } = require("yafs"), debug = requireModule("debug")(__filename);
     async function ensureFolderExists(folder) {
         debug(`Ensuring existence of folder "${folder}"`);
         await mkdir(folder);

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const chalk = requireModule("ansi-colors"), os = require("os"), env = requireModule("env"), gulp = requireModule("gulp"), debug = requireModule("debug")("build"), promisifyStream = requireModule("promisify-stream"), throwIfNoFiles = requireModule("throw-if-no-files"), xbuild = requireModule("gulp-xbuild"), gutil = requireModule("gulp-util"), log = requireModule("log"), resolveMasks = requireModule("resolve-masks"), logConfig = requireModule("log-config"), tryDo = requireModule("try-do"), msbuild = requireModule("gulp-msbuild");
+    const chalk = requireModule("ansi-colors"), os = require("os"), env = requireModule("env"), gulp = requireModule("gulp"), debug = requireModule("debug")(__filename), promisifyStream = requireModule("promisify-stream"), throwIfNoFiles = requireModule("throw-if-no-files"), xbuild = requireModule("gulp-xbuild"), gutil = requireModule("gulp-util"), log = requireModule("log"), resolveMasks = requireModule("resolve-masks"), logConfig = requireModule("log-config"), tryDo = requireModule("try-do"), msbuild = requireModule("gulp-msbuild");
     gulp.task("prebuild", gulp.series("nuget-restore", "clean"));
     const myTasks = ["build"], myVars = [
         "BUILD_CONFIGURATION",

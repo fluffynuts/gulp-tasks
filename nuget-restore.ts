@@ -3,7 +3,7 @@
     chalk = requireModule<AnsiColors>("ansi-colors"),
     env = requireModule<Env>("env"),
     gulp = requireModule<Env>("gulp"),
-    debug = requireModule<DebugFactory>("debug")("nuget-restore"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     nugetRestore = requireModule<GulpNugetRestore>("./gulp-nuget-restore"),
     promisify = requireModule<PromisifyStream>("promisify-stream"),
     resolveMasks = requireModule<ResolveMasks>("resolve-masks"),

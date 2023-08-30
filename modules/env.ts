@@ -14,7 +14,7 @@
     const
         ZarroError = requireModule<ZarroError>("zarro-error"),
         chalk = requireModule<AnsiColors>("ansi-colors"),
-        debug = require("debug")("env"),
+        debug = requireModule<DebugFactory>("debug")(__filename),
         registeredEnvironmentVariables = {} as Dictionary<EnvRegistration>,
         longestStringLength = require("./longest-string-length"),
         padRight = require("./pad-right"),

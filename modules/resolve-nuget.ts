@@ -1,7 +1,7 @@
 (function() {
     const
         os = require("os"),
-        debug = requireModule<DebugFactory>("debug")("resolve-nuget"),
+        debug = requireModule<DebugFactory>("debug")(__filename),
         env = requireModule<Env>("env"),
         { chmodSync, writeFileSync, lsSync, fileExistsSync, FsEntities } = require("yafs"),
         which = requireModule<Which>("which"),

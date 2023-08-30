@@ -6,7 +6,7 @@ import { Stream, Transform } from "stream";
     os = require("os"),
     env = requireModule<Env>("env"),
     gulp = requireModule<Gulp>("gulp"),
-    debug = requireModule<DebugFactory>("debug")("build"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     promisifyStream = requireModule<PromisifyStream>("promisify-stream"),
     throwIfNoFiles = requireModule<ThrowIfNoFiles>("throw-if-no-files"),
     xbuild = requireModule<GulpXBuild>("gulp-xbuild"),
