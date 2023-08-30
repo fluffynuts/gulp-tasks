@@ -221,10 +221,11 @@
         const args = [
             "nuget",
             "push",
-            opts.target,
-            "--api-key",
-            opts.apiKey
+            opts.target
         ];
+        if (opts.apiKey) {
+            args.push("--api-key", opts.apiKey);
+        }
         if (!opts.source) {
             // dotnet core _demands_ that the source be set.
             opts.source = await determineDefaultNugetSource();
@@ -262,6 +263,7 @@
         if (configurations.length < 1) {
             configurations = [...defaultConfigurations];
         }
+        debugger;
         let lastResult;
         for (const configuration of configurations) {
             showHeader(`${label} ${q(opts.target)} with configuration ${configuration}${detailedInfoFor(opts)}`);
@@ -396,6 +398,7 @@
     }
     async function runDotNetWith(args, opts) {
         try {
+            debugger;
             return await system("dotnet", args, {
                 stdout: opts.stdout,
                 stderr: opts.stderr,

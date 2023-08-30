@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const system = requireModule("system"), quoteIfRequired = requireModule("quote-if-required"), { splitPath } = requireModule("path-utils"), dotnetCli = requireModule("dotnet-cli"), env = requireModule("env"), findLocalNuget = require("./find-local-nuget");
+    const system = requireModule("system"), quoteIfRequired = requireModule("quote-if-required"), { splitPath } = requireModule("path-utils"), dotnetCli = requireModule("dotnet-cli"), env = requireModule("env"), resolveNugetApiKey = requireModule("resolve-nuget-api-key"), findLocalNuget = require("./find-local-nuget");
     function isDotnetCore(binaryPath) {
         const trimmed = binaryPath.replace(/^"/, "")
             .replace(/"$/, ""), parts = splitPath(trimmed), executable = (parts[parts.length - 1] || "");
@@ -10,8 +10,10 @@
         await dotnetCli.nugetPush(opts);
     }
     async function nugetPush(packageFile, sourceName, options) {
-        const nugetPushSource = sourceName || env.resolve(env.NUGET_PUSH_SOURCE);
-        const apiKey = env.resolve(env.NUGET_API_KEY);
+        const nugetPushSource = sourceName ||
+            env.resolve(env.NUGET_PUSH_SOURCE, env.NUGET_SOURCE) ||
+            "nuget.org";
+        const apiKey = resolveNugetApiKey(nugetPushSource);
         options = options || {};
         options.skipDuplicates = options.skipDuplicates === undefined
             ? env.resolveFlag("NUGET_IGNORE_DUPLICATE_PACKAGES")

@@ -6,7 +6,7 @@
 
     module.exports = async function(
         args: string[], opts?: SystemOptions
-    ): Promise<SystemResult> {
+    ): Promise<SystemResult | SystemError> {
         const nuget = await findLocalNuget();
         debug(`spawn nuget: ${ nuget } ${ args.join(" ") }`);
         if (opts && Object.keys(opts).length) {

@@ -4,44 +4,47 @@
     function resolveNugetApiKey(
         source?: string
     ): Optional<string> {
-        debugger;
-        const requestedSource = resolveSource(source);
-        debugger;
+        const
+            allKeys = resolveSourceToKeyLookup(),
+            requestedSource = resolveSource(source);
         if (!requestedSource) {
-            throw new Error(`unable to determine source to resolve nuget api key for`);
+            return findValue(allKeys, "nuget.org") || findValue(allKeys, "*");
         }
         const
-            multiKeys = resolveKeysPerHost(),
-            perSource = findValue(multiKeys, requestedSource),
-            multiKeyFallback = findValue(multiKeys, "*"),
+            perSource = findValue(allKeys, requestedSource),
+            multiKeyFallback = findValue(allKeys, "*"),
+            nugetOrgFallback = findValue(allKeys, "nuget.org"),
             ultimateFallback = env.resolve(env.NUGET_API_KEY);
-        return perSource || multiKeyFallback || ultimateFallback || undefined;
+        debugger;
+        return perSource || multiKeyFallback || nugetOrgFallback || ultimateFallback || undefined;
     }
 
-    function resolveKeysPerHost() {
-        const blob = env.resolve(env.NUGET_API_KEYS);
+    function resolveSourceToKeyLookup(): Dictionary<string> {
+        debugger;
+        const
+            defaultKey = env.resolve(env.NUGET_API_KEY),
+            blob = env.resolve(env.NUGET_API_KEYS);
         if (!blob) {
-            const
-                defaultSource = resolveSource(),
-                defaultKey = env.resolve(env.NUGET_API_KEY);
-            if (defaultKey && defaultSource) {
-                return {
-                    [defaultSource]: defaultKey
-                };
+            const defaultSource = resolveSource();
+            if (!defaultKey) {
+                return {};
             }
-            if(defaultKey) {
-                return generateDefaultKeys(defaultKey);
-            }
-            return {};
+            const result = generateDefaultKeyContainer(defaultKey);
+            return defaultSource
+                ? { ...result, [defaultSource]: defaultKey }
+                : result;
         }
         if (!!blob.match(/{+.*:+/)) {
-            return JSON.parse(blob);
+            return {
+                ...generateDefaultKeyContainer(defaultKey),
+                ...JSON.parse(blob)
+            };
         } else {
-            return generateDefaultKeys(blob);
+            return generateDefaultKeyContainer(blob);
         }
     }
 
-    function generateDefaultKeys(k: string) {
+    function generateDefaultKeyContainer(k: string) {
         return {
             ["*"]: k
         };
@@ -54,6 +57,18 @@
         if (!keys || !seek) {
             return undefined;
         }
+        const exactMatch = keys[seek];
+        if (exactMatch) {
+            return exactMatch;
+        }
+
+        return fuzzyFindValue(keys, seek);
+    }
+
+    function fuzzyFindValue(
+        keys: Dictionary<string>,
+        seek: string
+    ): Optional<string> {
         const keyLookup = Object.keys(keys)
             .reduce(
                 (acc: Dictionary<string>, cur: string) => {
@@ -66,6 +81,7 @@
     }
 
     function resolveSource(source?: string): string {
+        debugger;
         if (source) {
             return source;
         }

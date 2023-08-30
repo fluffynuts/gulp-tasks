@@ -1,6 +1,6 @@
 (function() {
   // TODO: perhaps one day, this should become an npm module of its own
-  type PerConfigurationFunction = (configuration: string) => Promise<SpawnResult | SpawnError>;
+  type PerConfigurationFunction = (configuration: string) => Promise<SystemResult | SystemError>;
   const system = requireModule<System>("system");
   const { isError } = system;
   const ZarroError = requireModule<ZarroError>("zarro-error");
@@ -81,7 +81,7 @@
 
   async function publish(
     opts: DotNetPublishOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     if (opts.publishContainer) {
       const packageRefs = await listPackages(opts.target);
       const match = packageRefs.find(
@@ -184,7 +184,7 @@
 
   async function clean(
     opts: DotNetCleanOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     return runOnAllConfigurations(
       `Cleaning`,
       opts,
@@ -206,7 +206,7 @@
 
   async function build(
     opts: DotNetBuildOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     return runOnAllConfigurations(
       "Building",
       opts,
@@ -231,7 +231,7 @@
 
   async function test(
     opts: DotNetTestOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     return runOnAllConfigurations(
       "Testing",
       opts,
@@ -264,7 +264,7 @@
 
   async function pack(
     opts: DotNetPackOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     return runOnAllConfigurations(
       "Packing",
       opts,
@@ -317,7 +317,7 @@
 
   async function nugetPush(
     opts: DotNetNugetPushOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     validate(opts);
     if (!opts.apiKey) {
       throw new Error("apiKey was not specified");
@@ -325,10 +325,11 @@
     const args = [
       "nuget",
       "push",
-      opts.target,
-      "--api-key",
-      opts.apiKey
+      opts.target
     ];
+    if (opts.apiKey) {
+      args.push("--api-key", opts.apiKey);
+    }
     if (!opts.source) {
       // dotnet core _demands_ that the source be set.
       opts.source = await determineDefaultNugetSource();
@@ -373,13 +374,14 @@
     label: string,
     opts: DotNetCommonBuildOptions,
     toRun: PerConfigurationFunction
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     validate(opts);
     let configurations = resolveConfigurations(opts);
     if (configurations.length < 1) {
       configurations = [ ...defaultConfigurations ]
     }
-    let lastResult: Optional<SpawnResult>;
+    debugger;
+    let lastResult: Optional<SystemResult>;
     for (const configuration of configurations) {
       showHeader(`${ label } ${ q(opts.target) } with configuration ${ configuration }${detailedInfoFor(opts)}`)
       const thisResult = await toRun(configuration);
@@ -560,8 +562,9 @@
   async function runDotNetWith(
     args: string[],
     opts: DotNetBaseOptions
-  ): Promise<SpawnResult | SpawnError> {
+  ): Promise<SystemResult | SystemError> {
     try {
+      debugger;
       return await system("dotnet", args, {
         stdout: opts.stdout,
         stderr: opts.stderr,
@@ -569,7 +572,7 @@
       });
     } catch (e) {
       if (opts.suppressErrors) {
-        return e as SpawnError;
+        return e as SystemError;
       }
       throw e;
     }

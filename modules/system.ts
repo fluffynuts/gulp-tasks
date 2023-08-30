@@ -1,4 +1,4 @@
-import { ChildProcess } from "child_process";
+import { ChildProcess, SpawnOptionsWithoutStdio, SpawnOptionsWithStdioTuple } from "child_process";
 
 (function() {
   const
@@ -7,10 +7,10 @@ import { ChildProcess } from "child_process";
     which = requireModule<Which>("which"),
     createTempFile = requireModule<CreateTempFile>("create-temp-file"),
     quoteIfRequired = requireModule<QuoteIfRequired>("quote-if-required"),
-    SpawnError = requireModule<SpawnError>("spawn-error"),
+    SystemError = requireModule<SystemError>("system-error"),
     LineBuffer = requireModule<LineBuffer>("line-buffer"),
     child_process = require("child_process"),
-    SpawnResult = requireModule<SpawnResult>("spawn-result");
+    SystemResult = requireModule<SystemResult>("system-result");
 
   interface StdIoCollectors {
     stdout: string[];
@@ -34,7 +34,8 @@ import { ChildProcess } from "child_process";
     program: string,
     args?: string[],
     options?: SystemOptions
-  ): Promise<SpawnResult> {
+  ): Promise<SystemResult> {
+    debugger;
     let alreadyExited = false;
     const opts = fillOut(options);
     if (opts.suppressOutput === undefined) {
@@ -50,7 +51,7 @@ import { ChildProcess } from "child_process";
         : "sh";
       exe = which(search);
       if (!exe) {
-        throw new SpawnError(
+        throw new SystemError(
           `Unable to find system shell '${ search }' in path`,
           program,
           args || [],
@@ -71,17 +72,16 @@ ${ pre }
 ${ tempFileContents }
         `.trim()
       );
-      debugger;
       programArgs = isWindows
         ? [ "/c" ]
         : [];
       programArgs.push(tempFile.path);
     }
-    const result = new SpawnResult(`${ exe }`, programArgs, -1, [], []);
-    return new Promise<SpawnResult>((resolve, reject) => {
+    const result = new SystemResult(`${ exe }`, programArgs, -1, [], []);
+    return new Promise<SystemResult>((resolve, reject) => {
       const child = child_process.spawn(
         exe,
-        programArgs, {
+        programArgs as ReadonlyArray<string>, {
           windowsHide: opts.windowsHide,
           windowsVerbatimArguments: opts.windowsVerbatimArguments,
           timeout: opts.timeout,
@@ -97,7 +97,7 @@ ${ tempFileContents }
             opts.interactive ? "inherit" : "pipe",
             opts.interactive ? "inherit" : "pipe"
           ]
-        }
+        } satisfies SpawnOptionsWithStdioTuple<any, any, any>
       );
       child.on("error", handleError);
       child.on("exit", handleExit.bind(null, "exit"));
@@ -121,8 +121,8 @@ ${ tempFileContents }
           }
           console.error(s);
         });
-      child.stdout.on("data", handleStdIo(stdoutLineBuffer, opts));
-      child.stderr.on("data", handleStdIo(stderrLineBuffer, opts));
+      child.stdout.on("data", handleStdIo(stdoutLineBuffer));
+      child.stderr.on("data", handleStdIo(stderrLineBuffer));
 
       function handleError(e: string) {
         if (hasExited()) {
@@ -155,7 +155,7 @@ ${ tempFileContents }
         message: string,
         exitCode?: number
       ) {
-        return new SpawnError(
+        return new SystemError(
           message,
           program,
           args,
@@ -187,8 +187,7 @@ ${ tempFileContents }
   }
 
   function handleStdIo(
-    lineBuffer: LineBuffer,
-    opts: SpawnOptions
+    lineBuffer: LineBuffer
   ): ((data: Buffer) => void) {
     return (d: Buffer) => {
       lineBuffer.append(d);
@@ -217,9 +216,8 @@ ${ tempFileContents }
     }
   }
 
-  debugger;
-  system.isError = SpawnError.isSpawnError;
-  system.isResult = SpawnResult.isSpawnResult;
+  system.isError = SystemError.isError;
+  system.isResult = SystemResult.isResult;
 
   module.exports = system;
 })();

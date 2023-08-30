@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const os = require("os"), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SpawnError = requireModule("spawn-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), SpawnResult = requireModule("spawn-result");
+    const os = require("os"), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SystemError = requireModule("system-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), SystemResult = requireModule("system-result");
     function fillOut(opts) {
         const result = (opts || {});
         result.collectors = {
@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         return result;
     }
     async function system(program, args, options) {
+        debugger;
         let alreadyExited = false;
         const opts = fillOut(options);
         if (opts.suppressOutput === undefined) {
@@ -24,7 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 : "sh";
             exe = which(search);
             if (!exe) {
-                throw new SpawnError(`Unable to find system shell '${search}' in path`, program, args || [], -1, [], []);
+                throw new SystemError(`Unable to find system shell '${search}' in path`, program, args || [], -1, [], []);
             }
             const tempFileContents = [program].concat(programArgs.map(quoteIfRequired)).join(" ");
             const pre = isWindows
@@ -34,13 +35,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 ${pre}
 ${tempFileContents}
         `.trim());
-            debugger;
             programArgs = isWindows
                 ? ["/c"]
                 : [];
             programArgs.push(tempFile.path);
         }
-        const result = new SpawnResult(`${exe}`, programArgs, -1, [], []);
+        const result = new SystemResult(`${exe}`, programArgs, -1, [], []);
         return new Promise((resolve, reject) => {
             const child = child_process.spawn(exe, programArgs, {
                 windowsHide: opts.windowsHide,
@@ -79,8 +79,8 @@ ${tempFileContents}
                 }
                 console.error(s);
             });
-            child.stdout.on("data", handleStdIo(stdoutLineBuffer, opts));
-            child.stderr.on("data", handleStdIo(stderrLineBuffer, opts));
+            child.stdout.on("data", handleStdIo(stdoutLineBuffer));
+            child.stderr.on("data", handleStdIo(stderrLineBuffer));
             function handleError(e) {
                 if (hasExited()) {
                     return;
@@ -99,7 +99,7 @@ ${tempFileContents}
                 return resolve(result);
             }
             function generateError(message, exitCode) {
-                return new SpawnError(message, program, args, exitCode !== null && exitCode !== void 0 ? exitCode : -1, result.stdout, result.stderr);
+                return new SystemError(message, program, args, exitCode !== null && exitCode !== void 0 ? exitCode : -1, result.stdout, result.stderr);
             }
             function hasExited() {
                 if (alreadyExited) {
@@ -120,7 +120,7 @@ ${tempFileContents}
             }
         });
     }
-    function handleStdIo(lineBuffer, opts) {
+    function handleStdIo(lineBuffer) {
         return (d) => {
             lineBuffer.append(d);
         };
@@ -146,8 +146,7 @@ ${tempFileContents}
             }
         }
     }
-    debugger;
-    system.isError = SpawnError.isSpawnError;
-    system.isResult = SpawnResult.isSpawnResult;
+    system.isError = SystemError.isError;
+    system.isResult = SystemResult.isResult;
     module.exports = system;
 })();
