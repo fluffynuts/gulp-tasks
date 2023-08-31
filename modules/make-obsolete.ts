@@ -3,6 +3,7 @@
         module: any,
         data: ObsoleteWarning
     ) {
+        return;
         if (!module) {
             throw new Error(`module not set`);
         }

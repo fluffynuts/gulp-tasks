@@ -1,6 +1,7 @@
 "use strict";
 (function () {
     module.exports = function makeObsolete(module, data) {
+        return;
         if (!module) {
             throw new Error(`module not set`);
         }

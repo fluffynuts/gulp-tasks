@@ -5,6 +5,7 @@
         mod: string,
         module: any
     ) {
+        return;
         const warning = module["__obsolete_warning__"] as ObsoleteWarning;
         if (!warning) {
             return;

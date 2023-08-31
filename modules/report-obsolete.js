@@ -2,6 +2,7 @@
 (function () {
     const { redBright } = require("./ansi-colors");
     module.exports = function reportObsolete(mod, module) {
+        return;
         const warning = module["__obsolete_warning__"];
         if (!warning) {
             return;
