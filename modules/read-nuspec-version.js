@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const parseXml = requireModule("parse-xml"), ZarroError = requireModule("zarro-error"), readTextFile = requireModule("read-text-file");
+    const parseXml = requireModule("parse-xml"), ZarroError = requireModule("zarro-error"), { readTextFile } = require("yafs");
     module.exports = async function readNuspecVersion(pathToNuspec) {
         const contents = await readTextFile(pathToNuspec), doc = await parseXml(contents);
         try {

@@ -3,7 +3,7 @@
     resolveNuget = require("./resolve-nuget"),
     downloadNuget = require("./download-nuget"),
     nugetUpdateSelf = require("./nuget-update-self"),
-    debug = require("debug")("install-local-tools"),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     gutil = requireModule<GulpUtil>("gulp-util"),
     path = require("path"),
     { ls, FsEntities } = require("yafs"),

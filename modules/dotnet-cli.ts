@@ -390,7 +390,7 @@
       }
       lastResult = thisResult;
     }
-    // for simplicity: return the last spawn result (at least for now, until there's a reason to get clever)
+    // for simplicity: return the last system result (at least for now, until there's a reason to get clever)
     if (lastResult === undefined) {
       // this is really here for TS
       throw new Error(`No build configurations could be determined, which is odd, because there's even a fallback.`);

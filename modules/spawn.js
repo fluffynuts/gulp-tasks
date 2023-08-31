@@ -9,21 +9,15 @@ const ansi_colors_1 = require("ansi-colors");
     const SpawnResult = requireModule("spawn-result");
     const tryLoadDebug = function () {
         try {
-            return require("debug")("spawn");
+            return requireModule("debug")(__filename);
         }
         catch (e) {
             return function () {
             };
         }
     }, quoteIfRequired = require("./quote-if-required"), debug = tryLoadDebug(), readline = require("readline"), child_process = require("child_process");
-    function echoStdOut(data) {
-        process.stdout.write(clean(data));
-    }
     function clean(data) {
         return (data || "").replace(/\s+$/, "");
-    }
-    function echoStdErr(data) {
-        console.error(clean(data));
     }
     function createEcho(writer) {
         const buffer = new LineBuffer(writer);
@@ -42,7 +36,7 @@ const ansi_colors_1 = require("ansi-colors");
         // -> given captured console.xxx because then we can still
         //    spy and suppress and so on in tests
         stderr: createEcho(s => console.log(s)),
-        stdout: createEcho(s => console.error(s)) // echoStdOut as Optional<ProcessIO>
+        stdout: createEcho(s => console.error(s))
     };
     // noinspection JSUnusedLocalSymbols
     function nullConsumer(str) {
@@ -84,9 +78,7 @@ const ansi_colors_1 = require("ansi-colors");
             opts.stderr = undefined;
             opts.stdout = undefined;
         }
-        if (debug("gulp") > -1) {
-            console.log("running gulp", opts);
-        }
+        debug("running gulp");
         if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
             opts.stdio = [...defaultOptions.stdio];
         }

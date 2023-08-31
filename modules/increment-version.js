@@ -1,7 +1,6 @@
 "use strict";
 (function () {
-    const ZarroError = requireModule("zarro-error");
-    const { currentShortSHA } = requireModule("git-sha");
+    const ZarroError = requireModule("zarro-error"), generateVersionSuffix = requireModule("generate-version-suffix");
     function zeroFrom(parts, startIndex) {
         for (let i = startIndex; i < parts.length; i++) {
             parts[i] = 0;
@@ -45,20 +44,6 @@
         if (strategy != "prerelease") {
             return result;
         }
-        const sha = currentShortSHA();
-        return `${result}-${timestamp()}.${sha}`;
+        return `${result}-${generateVersionSuffix()}`;
     };
-    function timestamp() {
-        const now = new Date(Date.now()), year = `${now.getFullYear()}`.substring(2), month = zeroPad(now.getMonth() + 1), day = zeroPad(now.getDate()), hour = zeroPad(now.getHours()), minute = zeroPad(now.getMinutes());
-        return [
-            year,
-            month,
-            day,
-            hour,
-            minute
-        ].join("");
-    }
-    function zeroPad(i) {
-        return i < 10 ? `0${i}` : `${i}`;
-    }
 })();

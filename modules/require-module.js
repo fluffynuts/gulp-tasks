@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const path = require("path"), debug = require("debug")(path.basename(__filename.replace(/\.js$/, "")));
+    const path = require("path"), reportObsolete = require("./report-obsolete"), debug = require("debug")(path.basename(__filename.replace(/\.js$/, "")));
     const mocks = {};
     function requireModule(mod) {
         if (!mod) {
@@ -19,7 +19,9 @@
             mod,
             modulePath,
         });
-        return require(modulePath);
+        const result = require(modulePath);
+        reportObsolete(mod, result);
+        return result;
     }
     requireModule.mock = function mock(moduleName, impl) {
         mocks[moduleName] = impl;

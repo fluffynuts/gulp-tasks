@@ -1,12 +1,12 @@
 "use strict";
 (function () {
-    const fs = require("./fs"), readTextFile = require("./read-text-file"), ZarroError = requireModule("zarro-error"), path = require("path");
+    const { folderExists, readTextFile, fileExists } = require("yafs"), ZarroError = requireModule("zarro-error"), path = require("path");
     module.exports = async function readPackageJson(at) {
         if (at) {
-            if (await fs.isFolder(at)) {
+            if (await folderExists(at)) {
                 at = path.join(at, "package.json");
             }
-            if (!(await fs.isFile(at))) {
+            if (!(await fileExists(at))) {
                 throw new ZarroError(`File not found: ${at}`);
             }
         }

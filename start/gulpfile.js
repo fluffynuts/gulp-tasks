@@ -10,7 +10,7 @@
 const
   path = require("path"),
   fs = require("fs");
-  debug = require("debug")("__entry__");
+  debug = require("debug")("zarro::gulpfile");
 
 function tryFindGulpTasks() {
   const attempts = [

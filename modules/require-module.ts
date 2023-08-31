@@ -1,6 +1,7 @@
 (function() {
     const
         path = require("path"),
+        reportObsolete = require("./report-obsolete"),
         debug = require("debug")(path.basename(__filename.replace(/\.js$/, "")));
 
     const mocks = {} as Dictionary<any>;
@@ -21,7 +22,9 @@
                   mod,
                   modulePath,
               });
-        return require(modulePath) as T;
+        const result = require(modulePath);
+        reportObsolete(mod, result);
+        return result as T;
     }
 
     requireModule.mock = function mock(

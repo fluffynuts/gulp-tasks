@@ -1,7 +1,7 @@
 "use strict";
 (function () {
     "use strict";
-    const log = requireModule("log"), fs = require("fs"), path = require("path"), debug = requireModule("debug")(__filename), lsR = require("./ls-r"), programFilesFolder = process.env["ProgramFiles(x86)"]
+    const log = requireModule("log"), fs = require("fs"), path = require("path"), debug = requireModule("debug")(__filename), { lsSync, FsEntities } = require("yafs"), programFilesFolder = process.env["ProgramFiles(x86)"]
         || process.env["ProgramFiles"], getToolsFolder = requireModule("get-tools-folder"), ZarroError = requireModule("zarro-error"), which = requireModule("which"), localAppDataFolder = process.env["LOCALAPPDATA"];
     function isUnstable(folderName) {
         return folderName.indexOf("alpha") > -1 ||
@@ -128,7 +128,7 @@
         }, "nunit-console runner");
     }
     function findTool(exeName, underFolder) {
-        const allResults = lsR(underFolder || getToolsFolder())
+        const allResults = lsSync(underFolder || getToolsFolder(), { recurse: true, entities: FsEntities.files })
             .filter((p) => p.toLowerCase()
             .endsWith(exeName.toLowerCase()))
             .sort();

@@ -40,7 +40,7 @@ ${tempFileContents}
                 : [];
             programArgs.push(tempFile.path);
         }
-        const result = new SystemResult(`${exe}`, programArgs, -1, [], []);
+        const result = new SystemResult(`${exe}`, programArgs, undefined, [], []);
         return new Promise((resolve, reject) => {
             const child = child_process.spawn(exe, programArgs, {
                 windowsHide: opts.windowsHide,

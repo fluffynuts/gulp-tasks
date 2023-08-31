@@ -3,7 +3,7 @@
     constructor(
       public exe: string,
       public args: string[],
-      public exitCode: number,
+      public exitCode: Optional<number>,
       public stderr: string[],
       public stdout: string[]
     ) {

@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const resolveNuget = require("./resolve-nuget"), downloadNuget = require("./download-nuget"), nugetUpdateSelf = require("./nuget-update-self"), debug = require("debug")("install-local-tools"), gutil = requireModule("gulp-util"), path = require("path"), { ls, FsEntities } = require("yafs"), getToolsFolder = require("./get-tools-folder"), nuget = require("./nuget"), ensureFolderExists = require("./ensure-folder-exists"), ZarroError = requireModule("zarro-error"), env = requireModule("env"), del = require("del"), vars = {
+    const resolveNuget = require("./resolve-nuget"), downloadNuget = require("./download-nuget"), nugetUpdateSelf = require("./nuget-update-self"), debug = requireModule("debug")(__filename), gutil = requireModule("gulp-util"), path = require("path"), { ls, FsEntities } = require("yafs"), getToolsFolder = require("./get-tools-folder"), nuget = require("./nuget"), ensureFolderExists = require("./ensure-folder-exists"), ZarroError = requireModule("zarro-error"), env = requireModule("env"), del = require("del"), vars = {
         SKIP_NUGET_UPDATES: "SKIP_NUGET_UPDATES",
         NUGET_SOURCES: "NUGET_SOURCES"
     };

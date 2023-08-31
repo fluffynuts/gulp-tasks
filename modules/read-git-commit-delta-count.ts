@@ -2,7 +2,7 @@
   const
     path = require("path"),
     env = requireModule<Env>("env"),
-    debug = require("debug")(path.basename(__filename).replace(/\.(ts|js)$/, "")),
+    debug = requireModule<DebugFactory>("debug")(__filename),
     ZarroError = requireModule<ZarroError>("zarro-error"),
     exec = requireModule<Exec>("exec");
 

@@ -5,7 +5,7 @@
   const { log, colors } = requireModule<GulpUtil>("gulp-util");
   const { yellowBright, cyanBright } = colors;
 
-  function wrap<T>(fn: (opts: T) => Promise<SpawnResult | SpawnError>): AsyncTVoid<T> {
+  function wrap<T>(fn: (opts: T) => Promise<SystemResult | SystemError>): AsyncTVoid<T> {
     return async (opts: T) => {
       const result = await fn(opts);
       if (result instanceof Error) {

@@ -14,7 +14,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 // -> we'll ignore it unless someone _really_ wants it
                 let ignoredFirstLine = false;
                 await exec("npm", ["run", k], undefined, {
-                    stderr: (d) => console.error(chalk.red(d)),
+                    stderr: (d) => console.error(d),
                     stdout: (d) => {
                         if (!ignoredFirstLine) {
                             debug(`npm diagnostics:\n${d}`);

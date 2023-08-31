@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const fs = require("fs"), path = require("path"), ZarroError = requireModule("zarro-error"), ensureFolderExists = require("./ensure-folder-exists").sync, request = require("request"), debug = require("debug")("http-client");
+    const fs = require("fs"), path = require("path"), ZarroError = requireModule("zarro-error"), ensureFolderExists = require("./ensure-folder-exists").sync, request = require("request"), debug = requireModule("debug")(__filename);
     class HttpClient {
         constructor(infoLogFunction, debugLogFunction) {
             this.aborted = false;

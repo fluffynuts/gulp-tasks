@@ -9,6 +9,6 @@
         return basename.replace(/\.(js|ts)$/i, "");
     }
     module.exports = function debugFactory(label) {
-        return originalDebugFactory(`zarro:${simplifyFilePath(label)}`);
+        return originalDebugFactory(`zarro::${simplifyFilePath(label)}`);
     };
 })();

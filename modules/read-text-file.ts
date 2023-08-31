@@ -1,14 +1,10 @@
-(function () {
-  const fs = require("fs");
-
-  module.exports = async function readTextFile(at: string) {
-    return new Promise<string>((resolve, reject) => {
-      fs.readFile(at, { encoding: "utf8" }, (err: Error, data: string) => {
-        if (err) {
-          return reject(err);
+(function() {
+    const makeObsolete = requireModule<MakeObsolete>("make-obsolete");
+    const { readTextFile } = require("yafs");
+    module.exports = makeObsolete(
+        readTextFile, {
+            reason: "rather use readTextFile from 'yafs' (already installed)",
+            expires: "2024-01-01"
         }
-        resolve(data.toString());
-      });
-    });
-  };
+    )
 })();

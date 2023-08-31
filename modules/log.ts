@@ -74,6 +74,10 @@ import { StyleFunction } from "ansi-colors";
       this._print(args, "yellow");
     }
     warning(...args: any[]) {
+        // just in case someone is still using this
+        this.warn(...args);
+    }
+    warn(...args: any[]) {
       if (this._threshold >= WARNING) {
           return;
       }

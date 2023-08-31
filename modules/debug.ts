@@ -16,6 +16,6 @@
   module.exports = function debugFactory(
     label: string
   ): DebugLogFunction {
-    return originalDebugFactory(`zarro:${simplifyFilePath(label)}`);
+    return originalDebugFactory(`zarro::${simplifyFilePath(label)}`);
   };
 })();

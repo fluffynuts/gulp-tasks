@@ -1,22 +1,22 @@
+
 (function() {
-  const
-    fs = require("./fs"),
-    readTextFile = require("./read-text-file"),
-    ZarroError = requireModule<ZarroError>("zarro-error"),
-    path = require("path");
-  module.exports = async function readPackageJson(at?: string): Promise<PackageIndex> {
-    if (at) {
-      if (await fs.isFolder(at)) {
-        at = path.join(at, "package.json");
-      }
-      if (!(await fs.isFile(at))) {
-        throw new ZarroError(`File not found: ${at}`);
-      }
-    }
     const
-      pkgFile = path.join(at ?? "package.json"),
-      text = await readTextFile(pkgFile);
-    return JSON.parse(text);
-  }
+        { folderExists, readTextFile, fileExists } = require("yafs"),
+        ZarroError = requireModule<ZarroError>("zarro-error"),
+        path = require("path");
+    module.exports = async function readPackageJson(at?: string): Promise<PackageIndex> {
+        if (at) {
+            if (await folderExists(at)) {
+                at = path.join(at, "package.json");
+            }
+            if (!(await fileExists(at))) {
+                throw new ZarroError(`File not found: ${ at }`);
+            }
+        }
+        const
+            pkgFile = path.join(at ?? "package.json"),
+            text = await readTextFile(pkgFile);
+        return JSON.parse(text);
+    }
 })();
 

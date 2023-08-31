@@ -13,7 +13,7 @@ import { fi } from "@faker-js/faker";
     ZarroError = requireModule<ZarroError>("zarro-error"),
     findNpmBase = requireModule<FindNpmBase>("find-npm-base");
 
-  function gulpNpmRun(gulp: GulpWithHelp) {
+  function gulpNpmRun(gulp: Gulp) {
     const
       packageIndex = findPackageIndex(),
       scripts = packageIndex.scripts || {};
@@ -24,7 +24,7 @@ import { fi } from "@faker-js/faker";
         // -> we'll ignore it unless someone _really_ wants it
         let ignoredFirstLine = false;
         await exec("npm", [ "run", k ], undefined, {
-          stderr: (d: string) => console.error(chalk.red(d)),
+          stderr: (d: string) => console.error(d),
           stdout: (d: string) => {
             if (!ignoredFirstLine) {
               debug(`npm diagnostics:\n${d}`);

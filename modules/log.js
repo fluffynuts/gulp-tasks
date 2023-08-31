@@ -63,6 +63,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
             this._print(args, "yellow");
         }
         warning(...args) {
+            // just in case someone is still using this
+            this.warn(...args);
+        }
+        warn(...args) {
             if (this._threshold >= WARNING) {
                 return;
             }

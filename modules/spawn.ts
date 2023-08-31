@@ -10,7 +10,7 @@ import { reset } from "ansi-colors";
   const SpawnResult = requireModule<SpawnResult>("spawn-result");
   const tryLoadDebug = function() {
       try {
-        return require("debug")("spawn");
+        return requireModule<DebugFactory>("debug")(__filename);
       } catch (e) {
         return function() {
         };
@@ -20,19 +20,9 @@ import { reset } from "ansi-colors";
     debug = tryLoadDebug(),
     readline = require("readline"),
     child_process = require("child_process");
-
-  function echoStdOut(data: string): void {
-    process.stdout.write(clean(data));
-  }
-
   function clean(data: string): string {
     return (data || "").replace(/\s+$/, "");
   }
-
-  function echoStdErr(data: string): void {
-    console.error(clean(data));
-  }
-
   interface AugmentedLogFunction extends LogFunction {
     flush(): void;
   }
@@ -56,8 +46,8 @@ import { reset } from "ansi-colors";
     // default is to echo outputs via a LineBuffer instance
     // -> given captured console.xxx because then we can still
     //    spy and suppress and so on in tests
-    stderr: createEcho(s => console.log(s)) as Optional<ProcessIO>, //  echoStdErr as Optional<ProcessIO>,
-    stdout: createEcho(s => console.error(s)) as Optional<ProcessIO> // echoStdOut as Optional<ProcessIO>
+    stderr: createEcho(s => console.log(s)) as Optional<ProcessIO>,
+    stdout: createEcho(s => console.error(s)) as Optional<ProcessIO>
   };
 
   // noinspection JSUnusedLocalSymbols
@@ -108,10 +98,7 @@ import { reset } from "ansi-colors";
       opts.stderr = undefined;
       opts.stdout = undefined;
     }
-    if (debug("gulp") > -1) {
-      console.log("running gulp", opts);
-    }
-
+    debug("running gulp");
     if (!opts.stdio && defaultOptions.stdio /* this is just to make ts happy*/) {
       opts.stdio = [ ...defaultOptions.stdio ];
     }

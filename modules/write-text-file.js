@@ -1,10 +1,9 @@
-const fs = require("fs").promises;
-
-module.exports = async function(
-  path,
-  data,
-  options) {
-  options = options || {};
-  options.encoding = "utf8";
-  return await fs.writeFile(path, data, options)
-};
+"use strict";
+(function () {
+    const makeObsolete = requireModule("make-obsolete");
+    const { writeTextFile } = require("yafs");
+    module.exports = makeObsolete(writeTextFile, {
+        reason: `rather use readTextFile from 'yafs' (already installed)`,
+        expires: "2024-01-01"
+    });
+})();

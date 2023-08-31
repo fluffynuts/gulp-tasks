@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const parseXml = requireModule("parse-xml"), fallbackAssemblyVersion = "1.0.0", path = require("path"), readTextFile = requireModule("read-text-file");
+    const parseXml = requireModule("parse-xml"), fallbackAssemblyVersion = "1.0.0", path = require("path"), { readTextFile } = require("yafs");
     async function readProjectVersion(pathToCsProj) {
         return readCsProjProperty(pathToCsProj, "Version", fallbackAssemblyVersion);
     }

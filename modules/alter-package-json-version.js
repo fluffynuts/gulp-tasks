@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const ZarroError = requireModule("zarro-error"), validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, readTextFile = requireModule("read-text-file"), writeTextFile = requireModule("write-text-file"), incrementVersion = requireModule("increment-version");
+    const ZarroError = requireModule("zarro-error"), validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, { readTextFile, writeTextFile } = require("yafs"), incrementVersion = requireModule("increment-version");
     function validateVersioningStrategy(configuredStrategy) {
         if (validVersionStrategies.has(configuredStrategy)) {
             return;

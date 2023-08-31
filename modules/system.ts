@@ -1,4 +1,4 @@
-import { ChildProcess, SpawnOptionsWithoutStdio, SpawnOptionsWithStdioTuple } from "child_process";
+import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
 
 (function() {
   const
@@ -77,7 +77,7 @@ ${ tempFileContents }
         : [];
       programArgs.push(tempFile.path);
     }
-    const result = new SystemResult(`${ exe }`, programArgs, -1, [], []);
+    const result = new SystemResult(`${ exe }`, programArgs, undefined, [], []);
     return new Promise<SystemResult>((resolve, reject) => {
       const child = child_process.spawn(
         exe,

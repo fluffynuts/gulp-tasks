@@ -13,13 +13,15 @@ import { BufferFile } from "vinyl";
         coverageTarget = process.env.COVERAGE_TARGET || "Debug",
         debug = requireModule<DebugFactory>("debug")(__filename),
         log = requireModule<Log>("log"),
-        { mkdir, fileExistsSync } = require("yafs");
+        { mkdirSync, fileExistsSync } = require("yafs");
 
     const PLUGIN_NAME = "gulp-dotnetcover";
 
     function projectPathFor(p: string): string {
         return path.resolve(p);
     }
+
+    const defaultCoverageOutput = "buildreports/coveragesnapshot";
 
     function dotCover(opts?: GulpDotNetCoverOptions) {
         const options = opts || {} as GulpDotNetCoverOptions;
@@ -46,11 +48,11 @@ import { BufferFile } from "vinyl";
             options.coverageReportBase || "buildreports/coverage"
         );
         options.coverageOutput = projectPathFor(
-            options.coverageOutput || "buildreports/coveragesnapshot"
+            options.coverageOutput || defaultCoverageOutput
         );
         options.agents = options.agents || env.resolveNumber("MAX_NUNIT_AGENTS"); // allow setting max agents via environment variable
-        mkdir(options.coverageReportBase); // because open-cover is too lazy to do it itself :/
-        if (typeof options.testAssemblyFilter !== "function") {
+        mkdirSync(options.coverageReportBase); // because open-cover is too lazy to do it itself :/
+        if (options.testAssemblyFilter && typeof options.testAssemblyFilter !== "function") {
             const regex = options.testAssemblyFilter;
             options.testAssemblyFilter = function(file) {
                 return !!file.match(regex);
@@ -131,7 +133,7 @@ import { BufferFile } from "vinyl";
         options: GulpDotNetCoverOptions,
         what: string | string[],
         deferLocal?: boolean
-    ) {
+    ): string {
         if (!Array.isArray(what)) {
             what = [ what ];
         }
@@ -191,12 +193,13 @@ import { BufferFile } from "vinyl";
             : findExactExecutable(stream, options, [ "openCover", "dotCover" ]);
     }
 
-    function findNunit(stream: Stream, options: GulpDotNetCoverOptions) {
+    function findNunit(stream: Stream, options: GulpDotNetCoverOptions): string {
         return findExactExecutable(stream, options, "nunit");
     }
 
-    function fail(stream: Stream, msg: string) {
+    function fail(stream: Stream, msg: string): string {
         stream.emit("error", new gutil.PluginError(PLUGIN_NAME, msg));
+        return "";
     }
 
     function end(stream: Stream) {
@@ -239,24 +242,32 @@ import { BufferFile } from "vinyl";
         return isNunit3(nunitRunner) ? "" : "/noshadow"; // default to not shadow in nunit3 & /noshadow deprecated
     }
 
-    function generatePlatformSwitchFor(nunitRunner: string, options: GulpDotNetCoverOptions) {
-        const isX86 =
-            options.x86 || (options.platform || options.architecture) === "x86";
+    function generatePlatformSwitchFor(
+        nunitRunner: string,
+        options: GulpDotNetCoverOptions
+    ) {
+        const isX86 = options.x86 ||
+            (options.platform || options.architecture) === "x86";
         return isNunit3(nunitRunner) && isX86 ? "/x86" : ""; // nunit 2 has separate runners; 3 has a switch
     }
 
-    function updateLabelsOptionFor(nunitOptions) {
+    function updateLabelsOptionFor(nunitOptions: Optional<string>) {
+        if (!nunitOptions) {
+            return "";
+        }
         if (nunitOptions.indexOf("labels:") > -1) {
             return nunitOptions; // caller already updated for new labels= syntax
         }
         return nunitOptions.replace(/\/labels/, "/labels:Before");
     }
 
-    function quoted(str) {
-        return /[ "]/.test(str) ? `"${ str.replace(/"/g, "\"\"") }"` : str;
+    function quoted(str: string): string {
+        return /[ "]/.test(str)
+            ? `"${ str.replace(/"/g, "\"\"") }"`
+            : str;
     }
 
-    function generateAgentsLimitFor(nunit, options) {
+    function generateAgentsLimitFor(options: GulpDotNetCoverOptions) {
         const limit = options.agents;
         return `--agents=${ limit }`;
     }
@@ -307,24 +318,34 @@ import { BufferFile } from "vinyl";
             q(generateXmlOutputSwitchFor(nunit, options)),
             q(generateNoShadowFor(nunit)),
             q(generatePlatformSwitchFor(nunit, options)),
-            q(generateAgentsLimitFor(nunit, options)),
+            q(generateAgentsLimitFor(options)),
             testAssemblies.map(quoted).join(" ")
-        ].concat(q(updateLabelsOptionFor(options.nunitOptions).split(" ")));
+        ];
+        if (options.nunitOptions) {
+            const providedOptions =
+                updateLabelsOptionFor(options.nunitOptions)
+                    .split(" ")
+                    .map(s => q(s));
+            nunitOptions.push(...providedOptions);
+        }
         debug("nunit options: ", nunitOptions);
-        const agents = parseInt(options.agents);
+        const agents = parseInt(`${ options.agents }`, 10);
         if (!isNaN(agents)) {
             nunitOptions.push("--agents=" + agents);
         }
-        nunitOptions = nunitOptions.join(" ");
+        const nunitOptionsLine = nunitOptions.join(" ");
 
         const coverageToolName = grokCoverageToolNameFrom(options, coverageToolExe);
+        if (!coverageToolName) {
+            throw new Error(`unable to determine the correct coverage tool to use`);
+        }
         debug(`Running tool: ${ coverageToolName }`);
         const cliOptions = getCliOptionsFor(
             stream,
             coverageToolName,
             options,
             nunit,
-            nunitOptions
+            nunitOptionsLine
         );
         spawnCoverageTool(
             stream,
@@ -345,13 +366,19 @@ import { BufferFile } from "vinyl";
         opencover: spawnOpenCover
     };
 
-    function spawnDotCover(stream, coverageToolExe, cliOptions, globalOptions) {
-        const reportArgsFor = function(reportType) {
+    async function spawnDotCover(
+        stream: Stream,
+        coverageToolExe: string,
+        cliOptions: string[],
+        globalOptions: GulpDotNetCoverOptions
+    ) {
+        const coverageOutput = globalOptions.coverageOutput || defaultCoverageOutput;
+        const reportArgsFor = (reportType: string) => {
                 log.info("creating XML args");
                 return [
                     "report",
                     `/ReportType=${ reportType }`,
-                    `/Source=${ quoted(globalOptions.coverageOutput) }`,
+                    `/Source=${ quoted(coverageOutput) }`,
                     `/Output=${ quoted(
                         globalOptions.coverageReportBase + "." + reportType.toLowerCase()
                     ) }`
@@ -360,22 +387,21 @@ import { BufferFile } from "vinyl";
             xmlArgs = reportArgsFor("XML"),
             htmlArgs = reportArgsFor("HTML");
 
-        return system(coverageToolExe, cliOptions)
-            .then(() => {
-                log.info("creating XML report");
-                return system(coverageToolExe, xmlArgs);
-            })
-            .then(() => {
-                log.info("creating HTML report");
-                return system(coverageToolExe, htmlArgs);
-            })
-            .then(() => {
-                onCoverageComplete(stream);
-            })
-            .catch(err => handleCoverageFailure(stream, err, globalOptions));
+        try {
+            await system(coverageToolExe, cliOptions);
+            log.info("creating XML report");
+            await system(coverageToolExe, xmlArgs);
+
+            log.info("creating HTML report");
+            await system(coverageToolExe, htmlArgs);
+
+            onCoverageComplete(stream);
+        } catch (err) {
+            return handleCoverageFailure(stream, err as Error, globalOptions);
+        }
     }
 
-    function stringify(err) {
+    function stringify(err: string | Error) {
         if (err === undefined || err === null) {
             return `(${ err })`;
         }
@@ -383,7 +409,7 @@ import { BufferFile } from "vinyl";
             return err;
         }
         if (typeof err !== "object") {
-            return err.toString();
+            return `${ err }`
         }
         try {
             return JSON.stringify(err);
@@ -392,7 +418,7 @@ import { BufferFile } from "vinyl";
         }
     }
 
-    function dumpTopLevel(obj) {
+    function dumpTopLevel(obj: Dictionary<any>) {
         const result = [];
         for (let prop in obj) {
             if (obj.hasOwnProperty(prop)) {
@@ -402,17 +428,28 @@ import { BufferFile } from "vinyl";
         return `{\n\t${ result.join("\n\t") }}`;
     }
 
-    function logError(err) {
-        log.error(gutil.colors.red(stringify(err)));
+    function logError(err: string | Error) {
+        log.error(
+            gutil.colors.red(
+                stringify(err)
+            )
+        );
     }
 
-    function handleCoverageFailure(stream, err) {
+    function handleCoverageFailure(
+        stream: Stream,
+        err: string | Error,
+        options: GulpDotNetCoverOptions
+    ) {
         logError(" --- COVERAGE FAILS ---");
         logError(err);
+        logError(`"options:\n${ JSON.stringify(options, null, 2) }`);
         fail(stream, "coverage fails");
     }
 
-    function onCoverageComplete(stream) {
+    function onCoverageComplete(
+        stream: Stream
+    ) {
         log.info("ending coverage successfully");
         end(stream);
     }
@@ -421,29 +458,49 @@ import { BufferFile } from "vinyl";
         // naive: last wins
         return Object.keys(process.env).reduce(
             (acc, cur) => {
-                const existing = Object.keys(acc).find(k => k.toLowerCase() === cur);
-                if (existing) {
-                    acc[existing] = process.env[cur];
+                const envVar = process.env[cur];
+                if (!envVar) {
+                    return acc;
+                }
+                const existing = Object.keys(acc)
+                    .find(k => k.toLowerCase() === cur);
+                if (!!existing) {
+                    acc[existing] = envVar;
                 } else {
-                    acc[cur] = process.env[cur];
+                    acc[cur] = envVar;
                 }
                 return acc;
-            }, {});
+            }, {} as Dictionary<string>);
     }
 
-    function spawnOpenCover(stream, exe, cliOptions, globalOptions) {
+    async function spawnOpenCover(
+        stream: Stream,
+        exe: string,
+        cliOptions: string[],
+        globalOptions: GulpDotNetCoverOptions
+    ) {
         debug(`Running opencover:`);
         debug(`${ exe } ${ cliOptions.join(" ") }`);
         const env = findCaseInsensitiveUniqueEnvironmentVariables();
         debug("setting open-cover env:", {
             env
         });
-        return system(exe, cliOptions, { env })
-            .then(() => onCoverageComplete(stream))
-            .catch(err => handleCoverageFailure(stream, err, globalOptions));
+        try {
+            await system(exe, cliOptions, { env });
+            return onCoverageComplete(stream);
+        } catch (err) {
+            return handleCoverageFailure(
+                stream,
+                err as Error,
+                globalOptions
+            );
+        }
     }
 
-    function generateOpenCoverFilter(prefix, namespaces) {
+    function generateOpenCoverFilter(
+        prefix: string,
+        namespaces: string[]
+    ): string {
         return namespaces
             .reduce((acc, cur) => {
                 if (cur.indexOf("[") > -1) {
@@ -453,7 +510,7 @@ import { BufferFile } from "vinyl";
                     acc.push(`${ prefix }[*]${ cur }`);
                 }
                 return acc;
-            }, [])
+            }, [] as string[])
             .join(" ");
     }
 
@@ -474,13 +531,17 @@ import { BufferFile } from "vinyl";
     function getOpenCoverOptionsFor(
         options: GulpDotNetCoverOptions,
         nunit: string,
-        nunitOptions
+        nunitOptions: string
     ) {
-        const exclude =
-                options.exclude && options.exclude.length ? options.exclude : [ "*.Tests" ],
+        const exclude = options.exclude && options.exclude.length
+                ? options.exclude
+                : [ "*.Tests" ],
             failOnError = shouldFailOnError(options),
-            excludeFilter = generateOpenCoverFilter("-", exclude);
-
+            excludeFilter = generateOpenCoverFilter("-", exclude),
+            testAssemblies = options.testAssemblies;
+        if (!testAssemblies) {
+            throw new Error(`No test assemblies specified`);
+        }
         const result = [
             `"-target:${ nunit }"`,
             `"-targetargs:${ nunitOptions }"`,
@@ -489,7 +550,7 @@ import { BufferFile } from "vinyl";
             `-filter:"+[*]* ${ excludeFilter }"`, // TODO: embetterment
             `-register`,
             `-mergebyhash`,
-            `"-searchdirs:${ getUniqueDirsFrom(options.testAssemblies) }"`
+            `"-searchdirs:${ getUniqueDirsFrom(testAssemblies) }"`
         ];
         if (failOnError) {
             result.push("-returntargetcode:0");
@@ -529,8 +590,9 @@ import { BufferFile } from "vinyl";
             : unsupportedTool(stream, toolName);
     }
 
-    function unsupportedTool(stream: Stream, toolName: string) {
+    function unsupportedTool(stream: Stream, toolName: string): string[] {
         fail(stream, `Coverage tool "${ toolName }" not supported`);
+        return [];
     }
 
     function getCliOptionsFor(
@@ -538,8 +600,8 @@ import { BufferFile } from "vinyl";
         coverageToolName: string,
         options: GulpDotNetCoverOptions,
         nunit: string,
-        nunitOptions: GulpDotNetCoverNunitOptions
-    ) {
+        nunitOptions: string
+    ): string[] {
         const generator = commandLineOptionsGenerators[
             coverageToolName as keyof typeof commandLineOptionsGenerators
             ];
@@ -548,35 +610,62 @@ import { BufferFile } from "vinyl";
             : unsupportedTool(stream, coverageToolName);
     }
 
-    function getToolNameForExe(options, toolExe) {
+    function getToolNameForExe(
+        options: GulpDotNetCoverOptions,
+        toolExe: string
+    ): string {
+        if (!options) {
+            return "";
+        }
+        const exec = options.exec;
+        if (!exec) {
+            return "";
+        }
         return (
-            Object.keys(options.exec).filter(k => toolExe === options.exec[k])[0] || ""
+            Object.keys(exec)
+                .filter(k => toolExe === exec[k as keyof typeof exec])[0] || ""
         ).toLowerCase();
     }
 
-    function grokCoverageToolNameFrom(options, toolExe) {
-        return getToolNameForExe(options, toolExe) || options.coverageTool;
+    function grokCoverageToolNameFrom(
+        options: GulpDotNetCoverOptions,
+        toolExe: string
+    ) {
+        return getToolNameForExe(options, toolExe)
+            || options.coverageTool;
     }
 
-    function getDotCoverOptionsFor(options, nunit, nunitOptions) {
-        const filterJoin = ";-:",
-            scopeAssemblies = options.testAssemblies;
+    function getDotCoverOptionsFor(
+        options: GulpDotNetCoverOptions,
+        nunit: string,
+        nunitOptions: string
+    ) {
+        const
+            filterJoin = ";-:",
+            scopeAssemblies = options.testAssemblies || [];
 
         let filters = options.baseFilters;
-        if (options.exclude.length) {
-            filters = [ filters, options.exclude.join(filterJoin) ].join(filterJoin);
+        const exclude = options.exclude || [];
+        if (exclude.length) {
+            filters = [ filters, exclude.join(filterJoin) ].join(filterJoin);
         }
-
+        const coverageOutput = options.coverageOutput || defaultCoverageOutput;
         const dotCoverOptions = [
             "cover",
             `/TargetExecutable=${ quoted(nunit) }`,
             `/AnalyseTargetArguments=False`,
-            `/Output=${ quoted(options.coverageOutput) }`,
-            `/Filters=${ quoted(filters) }`,
+            `/Output=${ quoted(coverageOutput) }`
+        ];
+        if (filters) {
+            dotCoverOptions.push(
+                `/Filters=${ quoted(filters) }`
+            );
+        }
+        dotCoverOptions.push(
             `/ProcessFilters=-:sqlservr.exe`,
             `/TargetWorkingDir=${ quoted(process.cwd()) }`,
             `/TargetArguments=${ quoted(nunitOptions) }`
-        ];
+        );
         if (scopeAssemblies.length) {
             dotCoverOptions.push(`/Scope=${ quoted(scopeAssemblies.join(";")) }`);
         }

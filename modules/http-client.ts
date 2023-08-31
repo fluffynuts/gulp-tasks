@@ -7,7 +7,7 @@ import { RequestResponse, ResponseRequest } from "request";
     ZarroError = requireModule<ZarroError>("zarro-error"),
     ensureFolderExists = require("./ensure-folder-exists").sync,
     request = require("request"),
-    debug = require("debug")("http-client");
+    debug = requireModule<DebugFactory>("debug")(__filename);
 
   class HttpClient {
     public assumeDownloadedIfExistsAndSizeMatches: boolean;
