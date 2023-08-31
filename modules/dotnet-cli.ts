@@ -16,8 +16,6 @@
   } = requireModule<CsProjUtils>("csproj-utils");
   const env = requireModule<Env>("env");
 
-  debugger;
-
   let defaultNugetSource: string;
 
   function showHeader(label: string) {
@@ -380,7 +378,6 @@
     if (configurations.length < 1) {
       configurations = [ ...defaultConfigurations ]
     }
-    debugger;
     let lastResult: Optional<SystemResult>;
     for (const configuration of configurations) {
       showHeader(`${ label } ${ q(opts.target) } with configuration ${ configuration }${detailedInfoFor(opts)}`)
@@ -564,7 +561,6 @@
     opts: DotNetBaseOptions
   ): Promise<SystemResult | SystemError> {
     try {
-      debugger;
       return await system("dotnet", args, {
         stdout: opts.stdout,
         stderr: opts.stderr,

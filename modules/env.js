@@ -244,7 +244,6 @@
         return result;
     }
     function resolveObject(...args) {
-        debugger;
         const resolvedValue = resolve(...args);
         return resolvedValue
             ? tryParse(resolvedValue, args)

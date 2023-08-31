@@ -15,12 +15,10 @@
             multiKeyFallback = findValue(allKeys, "*"),
             nugetOrgFallback = findValue(allKeys, "nuget.org"),
             ultimateFallback = env.resolve(env.NUGET_API_KEY);
-        debugger;
         return perSource || multiKeyFallback || nugetOrgFallback || ultimateFallback || undefined;
     }
 
     function resolveSourceToKeyLookup(): Dictionary<string> {
-        debugger;
         const
             defaultKey = env.resolve(env.NUGET_API_KEY),
             blob = env.resolve(env.NUGET_API_KEYS);
@@ -81,7 +79,6 @@
     }
 
     function resolveSource(source?: string): string {
-        debugger;
         if (source) {
             return source;
         }

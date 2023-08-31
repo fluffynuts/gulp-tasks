@@ -10,7 +10,6 @@
     const parseXml = requireModule("parse-xml");
     const { readAssemblyVersion, readCsProjProperty, readAssemblyName } = requireModule("csproj-utils");
     const env = requireModule("env");
-    debugger;
     let defaultNugetSource;
     function showHeader(label) {
         console.log(yellow(label));
@@ -263,7 +262,6 @@
         if (configurations.length < 1) {
             configurations = [...defaultConfigurations];
         }
-        debugger;
         let lastResult;
         for (const configuration of configurations) {
             showHeader(`${label} ${q(opts.target)} with configuration ${configuration}${detailedInfoFor(opts)}`);
@@ -398,7 +396,6 @@
     }
     async function runDotNetWith(args, opts) {
         try {
-            debugger;
             return await system("dotnet", args, {
                 stdout: opts.stdout,
                 stderr: opts.stderr,

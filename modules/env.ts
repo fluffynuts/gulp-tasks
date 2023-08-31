@@ -305,7 +305,6 @@
     }
 
     function resolveObject<T>(...args: string[]): Optional<T> {
-        debugger;
         const resolvedValue = resolve(...args);
         return resolvedValue
             ? tryParse<T>(resolvedValue, args)

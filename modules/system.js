@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const os = require("os"), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SystemError = requireModule("system-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), SystemResult = requireModule("system-result");
+    const os = require("os"), debug = requireModule("debug")(__filename), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SystemError = requireModule("system-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), SystemResult = requireModule("system-result");
     function fillOut(opts) {
         const result = (opts || {});
         result.collectors = {
@@ -11,7 +11,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
         return result;
     }
     async function system(program, args, options) {
-        debugger;
         let alreadyExited = false;
         const opts = fillOut(options);
         if (opts.suppressOutput === undefined) {
@@ -40,25 +39,31 @@ ${tempFileContents}
                 : [];
             programArgs.push(tempFile.path);
         }
+        const spawnOptions = {
+            windowsHide: opts.windowsHide,
+            windowsVerbatimArguments: opts.windowsVerbatimArguments,
+            timeout: opts.timeout,
+            cwd: opts.cwd,
+            argv0: opts.argv0,
+            shell: opts.shell,
+            uid: opts.uid,
+            gid: opts.gid,
+            env: opts.env || process.env,
+            detached: opts.detached || false,
+            stdio: [
+                "inherit",
+                opts.interactive ? "inherit" : "pipe",
+                opts.interactive ? "inherit" : "pipe"
+            ]
+        };
+        debug("launching", {
+            exe,
+            programArgs,
+            spawnOptions
+        });
         const result = new SystemResult(`${exe}`, programArgs, undefined, [], []);
         return new Promise((resolve, reject) => {
-            const child = child_process.spawn(exe, programArgs, {
-                windowsHide: opts.windowsHide,
-                windowsVerbatimArguments: opts.windowsVerbatimArguments,
-                timeout: opts.timeout,
-                cwd: opts.cwd,
-                argv0: opts.argv0,
-                shell: opts.shell,
-                uid: opts.uid,
-                gid: opts.gid,
-                env: opts.env || process.env,
-                detached: opts.detached || false,
-                stdio: [
-                    "inherit",
-                    opts.interactive ? "inherit" : "pipe",
-                    opts.interactive ? "inherit" : "pipe"
-                ]
-            });
+            const child = child_process.spawn(exe, programArgs, spawnOptions);
             child.on("error", handleError);
             child.on("exit", handleExit.bind(null, "exit"));
             child.on("close", handleExit.bind(null, "close"));
@@ -85,12 +90,14 @@ ${tempFileContents}
                 if (hasExited()) {
                     return;
                 }
+                debug("child errors", e);
                 return reject(generateError(`Error spawning process: ${e}`));
             }
             function handleExit(ctx, code) {
                 if (hasExited()) {
                     return;
                 }
+                debug(`child exited with code: ${code}`);
                 if (code) {
                     const errResult = generateError(`Process exited (${ctx}) with non-zero code: ${code}`, code);
                     return reject(errResult);
