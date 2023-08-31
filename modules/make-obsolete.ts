@@ -10,4 +10,5 @@
         module["__obsolete_warning__"] = data;
         return module;
     }
+
 })();

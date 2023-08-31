@@ -32,7 +32,7 @@
     const parentOfTasksFolder = path.resolve(path.join(__dirname, "..", ".."));
     let lastResolution;
     function resolveNuget(nugetPath, errorOnMissing) {
-        if (lastResolution !== null) {
+        if (lastResolution) {
             return lastResolution;
         }
         if (errorOnMissing === undefined) {

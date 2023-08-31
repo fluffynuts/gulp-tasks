@@ -53,7 +53,7 @@
         nugetPath: string,
         errorOnMissing?: boolean
     ) {
-        if (lastResolution !== null) {
+        if (lastResolution) {
             return lastResolution;
         }
         if (errorOnMissing === undefined) {

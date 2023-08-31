@@ -1,5 +1,6 @@
 import { BufferFile } from "vinyl";
 import { Stream } from "stream";
+import path from "path";
 
 (function() {
     const
@@ -11,7 +12,10 @@ import { Stream } from "stream";
         resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
         env = requireModule<Env>("env"),
         isDotnetCore = env.resolveFlag("DOTNET_CORE"),
-        nugetExe = isDotnetCore ? (process.platform === "win32" ? "dotnet.exe" : "dotnet") : "nuget.exe",
+        os = require("os"),
+        nugetExe = isDotnetCore
+            ? (os.platform() === "win32" ? "dotnet.exe" : "dotnet")
+            : "nuget.exe",
         debug = requireModule<DebugFactory>("debug")(__filename);
 
     const PLUGIN_NAME = "gulp-nuget-restore";
@@ -31,8 +35,8 @@ import { Stream } from "stream";
             }
             solutionFiles.push(file.path);
             this.emit("data", file);
-        }, function end(this: Stream) {
-            restoreNugetPackagesWith(this, solutionFiles, options);
+        }, async function end(this: Stream) {
+            await restoreNugetPackagesWith(this, solutionFiles, options);
         });
         return stream;
     }
@@ -62,48 +66,46 @@ import { Stream } from "stream";
         }
     }
 
-    function runNuget(
+    async function runNuget(
         restoreCommand: string,
         solutions: string[],
         stream: Stream
-    ) {
+    ): Promise<void> {
         debug(`restoreCmd: ${ restoreCommand }`);
-        const deferred = Promise.resolve();
-        const final = solutions.reduce((promise, item) => {
-            log.info("Restoring packages for: " + item);
-            const pathParts = item.split(/[\\|\/]/g);
-            const sln = pathParts[pathParts.length - 1];
-            const slnFolder = pathParts.slice(0, pathParts.length - 1).join(path.sep);
-            const args = [ "restore", sln ];
-            if (env.resolveFlag("ENABLE_NUGET_PARALLEL_PROCESSING")) {
-                log.warn(
-                    "Processing restore in parallel. If you get strange build errors, unset ENABLE_NUGET_PARALLEL_PROCESSING");
-            } else {
-                if (isDotnetCore) {
-                    args.push("--disable-parallel");
+        let currentItem = "";
+        try {
+            for (const item of solutions) {
+                currentItem = item;
+                log.info("Restoring packages for: " + item);
+                const pathParts = item.split(/[\\|\/]/g);
+                const sln = pathParts[pathParts.length - 1];
+                const slnFolder = pathParts.slice(0, pathParts.length - 1).join(path.sep);
+                const args = [ "restore", sln ];
+                if (env.resolveFlag("ENABLE_NUGET_PARALLEL_PROCESSING")) {
+                    log.warn(
+                        "Processing restore in parallel. If you get strange build errors, unset ENABLE_NUGET_PARALLEL_PROCESSING");
                 } else {
-                    args.push("-DisableParallelProcessing");
+                    if (isDotnetCore) {
+                        args.push("--disable-parallel");
+                    } else {
+                        args.push("-DisableParallelProcessing");
+                    }
                 }
-            }
-            return promise.then(() => system(
-                restoreCommand,
-                args, {
-                    cwd: slnFolder
-                }
-            ).then(function() {
+                await system(
+                    restoreCommand,
+                    args, {
+                        cwd: slnFolder
+                    }
+                );
                 log.info(`Packages restored for: ${ item }`);
-            }).catch(function(err) {
-                throw err;
-            }));
-        }, deferred);
-        final.then(function() {
+            }
             end(stream);
-        }).catch(function(err) {
-            fail(stream, err);
-        });
+        } catch (e) {
+            fail(stream, `Unable to restore packages for ${currentItem}: ${e}`);
+        }
     }
 
-    function restoreNugetPackagesWith(
+    async function restoreNugetPackagesWith(
         stream: Stream,
         solutions: string[],
         options: NugetRestoreOptions
@@ -114,7 +116,7 @@ import { Stream } from "stream";
         const nuget = options.nuget || nugetExe;
         const nugetCmd = determineRestoreCommandFor(nuget, stream);
         if (nugetCmd) {
-            runNuget(nugetCmd, solutions, stream);
+            await runNuget(nugetCmd, solutions, stream);
         } else {
             fail(stream, "Can't determine nuget command");
         }
