@@ -10,13 +10,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
         };
         return result;
     }
+    function trimQuotes(cmd) {
+        if (!cmd) {
+            return cmd;
+        }
+        if (cmd[0] === '"' && cmd[cmd.length - 1] === '"') {
+            return cmd.substring(1, cmd.length - 1);
+        }
+        return cmd;
+    }
     async function system(program, args, options) {
         let alreadyExited = false;
         const opts = fillOut(options);
         if (opts.suppressOutput === undefined) {
             opts.suppressOutput = !!opts.stderr || !!opts.stdout;
         }
-        let exe = program, programArgs = args || [];
+        let exe = trimQuotes(program), programArgs = args || [];
         if (!which(program) && !args) {
             // assume it's a long commandline
             const search = isWindows

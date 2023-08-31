@@ -31,6 +31,16 @@ import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
         return result;
     }
 
+    function trimQuotes(cmd: string) {
+        if (!cmd) {
+            return cmd;
+        }
+        if (cmd[0] === '"' && cmd[cmd.length-1] === '"') {
+            return cmd.substring(1, cmd.length - 1);
+        }
+        return cmd;
+    }
+
     async function system(
         program: string,
         args?: string[],
@@ -42,7 +52,7 @@ import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
             opts.suppressOutput = !!opts.stderr || !!opts.stdout;
         }
         let
-            exe = program as Optional<string>,
+            exe = trimQuotes(program) as Optional<string>,
             programArgs = args || [] as string[];
         if (!which(program) && !args) {
             // assume it's a long commandline
