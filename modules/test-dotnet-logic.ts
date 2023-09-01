@@ -314,17 +314,17 @@ import {StyleFunction} from "ansi-colors";
       yellow = darkerThemeSelected
         ? ansiColors.yellow.bind(ansiColors)
         : ansiColors.yellowBright.bind(ansiColors);
+    logFailures(testResults, red);
+    logSlow(testResults, cyan);
     console.log(yellow(`
 Test Run Summary
   Overall result: ${overallResultFor(testResults)}
-  Test Count: ${total}, Passed: ${testResults.passed}, Failed: ${testResults.failed}, Skipped: ${testResults.skipped}
+  Test Count: ${total}, Passed: ${testResults.passed}, Failed: ${testResults.failed}, Skipped: ${testResults.skipped}, Slow: ${testResults.slowSummary.length}
   Start time: ${dateString(testResults.started)}
     End time: ${dateString(now)}
     Duration: ${runTime}
 `));
     console.log("\n");
-    logFailures(testResults, red);
-    logSlow(testResults, cyan);
   }
 
   function logSlow(
