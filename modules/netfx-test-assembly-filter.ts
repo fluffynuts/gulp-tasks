@@ -1,9 +1,7 @@
-import { Stream, Transform } from "stream";
 import { BufferFile } from "vinyl";
 
 (function() {
     const
-        es = require("event-stream"),
         multiSplit = requireModule<MultiSplit>("multi-split"),
         debug = requireModule<DebugFactory>("debug")(__filename);
 
@@ -21,20 +19,12 @@ import { BufferFile } from "vinyl";
 
     module.exports = function generateFilter(
         configuration: string
-    ): Transform {
-        return es.through(function write(
-            this: Stream,
-            file: BufferFile
-        ) {
-           if (isNetFxAssembly(file.path)) {
-               this.emit("data", file);
-           }
-        }, function end(this: Stream) {
-            this.emit("end");
-        });
+    ): ((f: BufferFile) => boolean) {
 
-        function isNetFxAssembly(file: string): boolean {
-            const parts = multiSplit(file, [ "/", "\\" ]),
+        return function isNetFxAssembly(file: BufferFile): boolean {
+            const
+                fpath = file.path,
+                parts = multiSplit(fpath, [ "/", "\\" ]),
                 isNetCore = !!parts.filter(p => p.match(/^netcore/)).length,
                 assemblyName = parts[parts.length - 1].replace(/\.dll$/gi, ""),
                 isPrimary = !!parts

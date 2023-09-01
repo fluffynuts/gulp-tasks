@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const es = require("event-stream"), multiSplit = requireModule("multi-split"), debug = requireModule("debug")(__filename);
+    const multiSplit = requireModule("multi-split"), debug = requireModule("debug")(__filename);
     function findBuildConfigFrom(pathParts) {
         const oneUp = pathParts[pathParts.length - 2];
         if (oneUp === undefined) {
@@ -14,15 +14,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
         return oneUp;
     }
     module.exports = function generateFilter(configuration) {
-        return es.through(function write(file) {
-            if (isNetFxAssembly(file.path)) {
-                this.emit("data", file);
-            }
-        }, function end() {
-            this.emit("end");
-        });
-        function isNetFxAssembly(file) {
-            const parts = multiSplit(file, ["/", "\\"]), isNetCore = !!parts.filter(p => p.match(/^netcore/)).length, assemblyName = parts[parts.length - 1].replace(/\.dll$/gi, ""), isPrimary = !!parts
+        return function isNetFxAssembly(file) {
+            const fpath = file.path, parts = multiSplit(fpath, ["/", "\\"]), isNetCore = !!parts.filter(p => p.match(/^netcore/)).length, assemblyName = parts[parts.length - 1].replace(/\.dll$/gi, ""), isPrimary = !!parts
                 .slice(0, parts.length - 1)
                 .filter(p => p.toLowerCase() === assemblyName.toLowerCase()).length, isBin = !!parts.filter(p => p.match(/^bin$/i)).length, buildConfig = findBuildConfigFrom(parts), isDebug = buildConfig.toLowerCase() === "debug", isForConfig = buildConfig.toLowerCase() === configuration.toLowerCase(), isAny = (parts[parts.length - 1] || "").toLowerCase() === "bin", include = !isNetCore && isPrimary && isBin && (isDebug || isAny || isForConfig);
             debug({
@@ -38,6 +31,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 include
             });
             return include;
-        }
+        };
     };
 })();
