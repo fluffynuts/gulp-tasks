@@ -64,58 +64,61 @@
             .split(keyDelimiter)
             .sort();
     }
-    module.exports = {
-        install: (required, overrideToolsFolder) => {
-            if (!required) {
-                throw new ZarroError("No required tools set");
-            }
-            const requiredTools = Array.isArray(required)
-                ? required
-                : [required].sort();
-            const target = overrideToolsFolder || getToolsFolder();
-            // TODO: should allow subsequent installations, ie if
-            //       a prior install asked for tools "A" and "B", a subsequent
-            //       request for "C" should just wait and then do the work
-            const key = makeKey(requiredTools);
-            let installingPromise = inProgress[key];
-            if (installingPromise) {
-                debug(`tools installer already running for (${key}})...`);
-                return installingPromise;
-            }
-            const inProgressTools = Object.keys(inProgress)
-                .map(k => new Set(splitKey(k)));
-            const stillRequired = [];
-            for (let tool of requiredTools) {
-                if (!tool) {
-                    continue;
-                }
-                let shouldAdd = false;
-                for (let group of inProgressTools) {
-                    if (group.has(tool.toLowerCase())) {
-                        shouldAdd = true;
-                        break;
-                    }
-                }
-                if (shouldAdd) {
-                    stillRequired.push(tool);
-                }
-            }
-            const inProgressKey = makeKey(stillRequired);
-            return inProgress[inProgressKey] = ensureFolderExists(target)
-                .then(async () => await cleanFoldersFrom(target))
-                .then(() => downloadOrUpdateNuget(target))
-                .then(() => Promise.all((requiredTools || []).map(tool => {
-                debug(`install: ${tool}`);
-                return nuget(generateNugetInstallArgsFor(tool), { cwd: target });
-            })))
-                .then(() => {
-                debug("tool installation complete");
-            });
-        },
-        clean: (overrideToolsFolder) => {
-            debug("cleaning tools folder");
-            const target = overrideToolsFolder || getToolsFolder();
-            return cleanFoldersFrom(target);
+    function install(required, overrideToolsFolder) {
+        if (!required) {
+            throw new ZarroError("No required tools set");
         }
+        const requiredTools = Array.isArray(required)
+            ? required
+            : [required].sort();
+        const target = overrideToolsFolder || getToolsFolder();
+        // TODO: should allow subsequent installations, ie if
+        //       a prior install asked for tools "A" and "B", a subsequent
+        //       request for "C" should just wait and then do the work
+        const key = makeKey(requiredTools);
+        let installingPromise = inProgress[key];
+        if (installingPromise) {
+            debug(`tools installer already running for (${key})...`);
+            return installingPromise;
+        }
+        const inProgressTools = Object.keys(inProgress)
+            .map(k => new Set(splitKey(k)));
+        const stillRequired = [];
+        for (let tool of requiredTools) {
+            if (!tool) {
+                continue;
+            }
+            let shouldAdd = false;
+            for (let group of inProgressTools) {
+                if (group.has(tool.toLowerCase())) {
+                    shouldAdd = true;
+                    break;
+                }
+            }
+            if (shouldAdd) {
+                stillRequired.push(tool);
+            }
+        }
+        const inProgressKey = makeKey(stillRequired);
+        return inProgress[inProgressKey] = ensureFolderExists(target)
+            .then(async () => await cleanFoldersFrom(target))
+            .then(() => downloadOrUpdateNuget(target))
+            .then(() => Promise.all((requiredTools || []).map(tool => {
+            debug(`install: ${tool}`);
+            return nuget(generateNugetInstallArgsFor(tool), { cwd: target });
+        })))
+            .then(() => {
+            debug("tool installation complete");
+        });
+    }
+    function clean(overrideToolsFolder) {
+        const target = overrideToolsFolder || getToolsFolder();
+        debug(`cleaning tools folder: '${target}'`);
+        // we want to leave, eg, nuget.exe in the tools base folder
+        return cleanFoldersFrom(target);
+    }
+    module.exports = {
+        install,
+        clean
     };
 })();
