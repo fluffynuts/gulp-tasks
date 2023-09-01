@@ -1,7 +1,7 @@
 "use strict";
 (function () {
     "use strict";
-    const log = requireModule("log"), fs = require("fs"), path = require("path"), debug = requireModule("debug")(__filename), { lsSync, FsEntities } = require("yafs"), programFilesFolder = process.env["ProgramFiles(x86)"]
+    const Version = requireModule("version"), log = requireModule("log"), fs = require("fs"), path = require("path"), debug = requireModule("debug")(__filename), { lsSync, FsEntities } = require("yafs"), programFilesFolder = process.env["ProgramFiles(x86)"]
         || process.env["ProgramFiles"], getToolsFolder = requireModule("get-tools-folder"), ZarroError = requireModule("zarro-error"), which = requireModule("which"), localAppDataFolder = process.env["LOCALAPPDATA"];
     function isUnstable(folderName) {
         return folderName.indexOf("alpha") > -1 ||
@@ -54,34 +54,14 @@
         return runner;
     }
     function compareVersionArrays(x, y) {
-        const shortest = Math.min(x.length, y.length), compare = [];
-        for (let i = 0; i < shortest; i++) {
-            if (x[i] > y[i]) {
-                compare[i] = ">";
-            }
-            else if (x[i] < y[i]) {
-                compare[i] = "<";
-            }
-            else {
-                compare[i] = "0";
-            }
-        }
-        if (compare.length === 0) {
-            return 0;
-        }
-        const allZero = compare.reduce((acc, cur) => acc && (cur === "0"), true);
-        if (allZero) {
-            return 0;
-        }
-        for (const s of compare) {
-            if (s === ">") {
-                return -1;
-            }
-            else if (s === "<") {
-                return 1;
-            }
-        }
-        return 0;
+        const left = new Version(x), right = new Version(y);
+        const result = left.compareWith(right);
+        // Version::compareWith should compare in natural order (ascending)
+        // and we want descending so we can pick the first one as the top
+        // - but, on the other hand, -0 is a thing :/
+        return result === 0
+            ? 0
+            : -result;
     }
     function findWrapper(func, name) {
         const found = func();
@@ -128,7 +108,10 @@
         }, "nunit-console runner");
     }
     function findTool(exeName, underFolder) {
-        const allResults = lsSync(underFolder || getToolsFolder(), { recurse: true, entities: FsEntities.files })
+        const allResults = lsSync(underFolder || getToolsFolder(), {
+            recurse: true,
+            entities: FsEntities.files
+        })
             .filter((p) => p.toLowerCase()
             .endsWith(exeName.toLowerCase()))
             .sort();

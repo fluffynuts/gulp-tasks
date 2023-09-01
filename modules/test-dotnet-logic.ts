@@ -38,6 +38,7 @@ import {StyleFunction} from "ansi-colors";
     {test} = requireModule<DotNetCli>("dotnet-cli"),
     {resolveTestPrefixFor} = requireModule<TestUtils>("test-utils"),
     buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML")),
+    Version = requireModule<Version>("version"),
     netFrameworkTestAssemblyFilter = requireModule<GulpNetFXTestAssemblyFilter>("netfx-test-assembly-filter"),
     {
       baseName,
@@ -590,10 +591,17 @@ Test Run Summary
       contents = await readTextFile(csproj),
       lines = contents.split("\n").map((l: string) => l.trim());
     for (const line of lines) {
-      if (line.match(/<PackageReference Include="Quackers.TestLogger"/)) {
+      const packageRef = line.match(/<PackageReference\\s+Include="Quackers.TestLogger"\\s+Version="(?<version>[\\d\\.]+)"/);
+      if (packageRef) {
+        const
+          recommendedVersion = "1.0.16",
+          ver = new Version(packageRef.groups["version"]);
+        if (ver.isLessThan(recommendedVersion)) {
+          console.warn(`${csproj}: Quackers.TestLogger is out of date. Please upgrade to at least version ${recommendedVersion}`);
+        }
         return quackersRefCache[csproj] = true;
       }
-      if (line.match(/<ProjectReference Include=.*Quackers.TestLogger.csproj"/)) {
+      if (line.match(/<ProjectReference\sInclude=.*Quackers.TestLogger.csproj"/)) {
         return quackersRefCache[csproj] = true;
       }
     }

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const QUACKERS_LOG_PREFIX = "::", QUACKERS_SUMMARY_START = `::SS::`, QUACKERS_SUMMARY_COMPLETE = `::SC::`, QUACKERS_FAILURES_MARKER = `::SF::`, QUACKERS_FAILURE_INDEX_PLACEHOLDER = "::[#]::", QUACKERS_SLOW_INDEX_PLACEHOLDER = "::[-]::", QUACKERS_SLOW_SUMMARY_START = "::SSS::", QUACKERS_SLOW_SUMMARY_COMPLETE = "::SSC::", quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length, quackersFullSummaryStartMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_START}`, quackersFullSummaryCompleteMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_COMPLETE}`, { rm, ls, FsEntities, readTextFile, mkdir } = require("yafs"), gulp = requireModule("gulp"), log = requireModule("log"), path = require("path"), gulpDebug = require("gulp-debug"), debug = requireModule("debug")(__filename), filter = require("gulp-filter"), ansiColors = requireModule("ansi-colors"), promisifyStream = requireModule("promisify-stream"), nunitRunner = requireModule("gulp-nunit-runner"), testUtilFinder = requireModule("testutil-finder"), env = requireModule("env"), resolveTestMasks = requireModule("resolve-test-masks"), logConfig = requireModule("log-config"), gatherPaths = requireModule("gather-paths"), { test } = requireModule("dotnet-cli"), { resolveTestPrefixFor } = requireModule("test-utils"), buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML")), netFrameworkTestAssemblyFilter = requireModule("netfx-test-assembly-filter"), { baseName, chopExtension } = requireModule("path-utils");
+    const QUACKERS_LOG_PREFIX = "::", QUACKERS_SUMMARY_START = `::SS::`, QUACKERS_SUMMARY_COMPLETE = `::SC::`, QUACKERS_FAILURES_MARKER = `::SF::`, QUACKERS_FAILURE_INDEX_PLACEHOLDER = "::[#]::", QUACKERS_SLOW_INDEX_PLACEHOLDER = "::[-]::", QUACKERS_SLOW_SUMMARY_START = "::SSS::", QUACKERS_SLOW_SUMMARY_COMPLETE = "::SSC::", quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length, quackersFullSummaryStartMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_START}`, quackersFullSummaryCompleteMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_COMPLETE}`, { rm, ls, FsEntities, readTextFile, mkdir } = require("yafs"), gulp = requireModule("gulp"), log = requireModule("log"), path = require("path"), gulpDebug = require("gulp-debug"), debug = requireModule("debug")(__filename), filter = require("gulp-filter"), ansiColors = requireModule("ansi-colors"), promisifyStream = requireModule("promisify-stream"), nunitRunner = requireModule("gulp-nunit-runner"), testUtilFinder = requireModule("testutil-finder"), env = requireModule("env"), resolveTestMasks = requireModule("resolve-test-masks"), logConfig = requireModule("log-config"), gatherPaths = requireModule("gather-paths"), { test } = requireModule("dotnet-cli"), { resolveTestPrefixFor } = requireModule("test-utils"), buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML")), Version = requireModule("version"), netFrameworkTestAssemblyFilter = requireModule("netfx-test-assembly-filter"), { baseName, chopExtension } = requireModule("path-utils");
     async function runTests() {
         await mkdir(buildReportFolder);
         const dotNetCore = env.resolveFlag("DOTNET_CORE");
@@ -418,10 +418,15 @@ Test Run Summary
         }
         const contents = await readTextFile(csproj), lines = contents.split("\n").map((l) => l.trim());
         for (const line of lines) {
-            if (line.match(/<PackageReference Include="Quackers.TestLogger"/)) {
+            const packageRef = line.match(/<PackageReference\\s+Include="Quackers.TestLogger"\\s+Version="(?<version>[\\d\\.]+)"/);
+            if (packageRef) {
+                const recommendedVersion = "1.0.16", ver = new Version(packageRef.groups["version"]);
+                if (ver.isLessThan(recommendedVersion)) {
+                    console.warn(`${csproj}: Quackers.TestLogger is out of date. Please upgrade to at least version ${recommendedVersion}`);
+                }
                 return quackersRefCache[csproj] = true;
             }
-            if (line.match(/<ProjectReference Include=.*Quackers.TestLogger.csproj"/)) {
+            if (line.match(/<ProjectReference\sInclude=.*Quackers.TestLogger.csproj"/)) {
                 return quackersRefCache[csproj] = true;
             }
         }
