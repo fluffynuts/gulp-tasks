@@ -61,17 +61,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             additionalArguments: msbuildArgs
         };
         return promisifyStream(solutions
-            .pipe(
-        // dotnetBuild({
-        //   verbosity: env.resolve("BUILD_VERBOSITY"),
-        //   configuration,
-        //   // msbuild attempts to re-use nodes, which causes issues
-        //   // if you're building unrelated projects on the same machine with,
-        //   // eg, different versions of Microsoft.Net.Compilers
-        //   msbuildArgs,
-        //   echo: true
-        // })
-        build(options)));
+            .pipe(build(options)));
     }
     function buildForNETFramework(solutions) {
         log.info(chalk.yellowBright("Building with MsBuild"));

@@ -1,15 +1,14 @@
 (function () {
   const
-    fs = require("./fs"),
+    { readTextFile, fileExists } = require("yafs"),
     ZarroError = requireModule<ZarroError>("zarro-error"),
     parse = requireModule<ParseXmlString>("./parse-xml-string");
 
   module.exports = async function (filePath: string): Promise<any> {
-    const st = await fs.stat(filePath);
-    if (!st.isFile()) {
+    if (!await fileExists(filePath)) {
       throw new ZarroError(`File not found: ${filePath}`);
     }
-    const data = await fs.readFile(filePath, { encoding: "utf-8" });
+    const data = await readTextFile(filePath);
     return parse(data);
   }
 })();
