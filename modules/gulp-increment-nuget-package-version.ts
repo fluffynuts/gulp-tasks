@@ -4,7 +4,7 @@
     gutil = requireModule<GulpUtil>("gulp-util"),
     debug = requireModule<DebugFactory>("debug")(__filename),
     editXml = require("gulp-edit-xml"),
-    incrementVersion = require("./increment-version"),
+    incrementVersion = requireModule<IncrementVersion>("./increment-version"),
     ZarroError = requireModule<ZarroError>("zarro-error"),
     xmlOpts = {
       builderOptions: {
@@ -90,12 +90,16 @@
     return xml;
   }
 
-  function incrementPackageVersionInNuspec(xml: any, file: any) {
+  async function incrementPackageVersionInNuspec(xml: any, file: any) {
     const meta = xml.package.metadata[0],
       packageName = meta.id[0],
       node = meta.version,
       current = node[0];
-    const newVersion = incrementVersion(current);
+    const newVersion = incrementVersion(
+        current,
+        env.resove("VERSION_INCREMENT_STRATEGY")
+    );
+
     node[0] = newVersion;
     gutil.log(
       gutil.colors.yellow(

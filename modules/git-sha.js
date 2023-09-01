@@ -11,14 +11,24 @@
     // but the consumers of this can't do async :| so this is
     // as good as it gets, I guess.
     let currentGitSha = "";
-    fetchGitSha()
-        .then(result => currentGitSha = result)
-        .catch(() => { });
+    async function init() {
+        try {
+            currentGitSha = await fetchGitSha();
+        }
+        catch (e) {
+            // suppress: this may not be a git repo
+        }
+    }
     function currentGitSHA() {
         return currentGitSha;
     }
     function currentShortSHA() {
         return currentGitSha.substring(0, 7);
     }
-    module.exports = { currentShortSHA, currentGitSHA, fetchGitSha };
+    module.exports = {
+        currentShortSHA,
+        currentGitSHA,
+        fetchGitSha,
+        init
+    };
 })();

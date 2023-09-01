@@ -47,7 +47,7 @@ import { boolean } from "yargs";
                     indent = guessIndent(json),
                     index = JSON.parse(json),
                     currentVersion = index.version || "0.0.0",
-                    incremented = incrementVersion(
+                    incremented = await incrementVersion(
                         currentVersion,
                         opts.strategy,
                         opts.zero,

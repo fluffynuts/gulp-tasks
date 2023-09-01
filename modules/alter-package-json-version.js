@@ -19,7 +19,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
             validateVersioningStrategy(opts.strategy);
             try {
-                const json = await readTextFile(opts.packageJsonPath), indent = guessIndent(json), index = JSON.parse(json), currentVersion = index.version || "0.0.0", incremented = incrementVersion(currentVersion, opts.strategy, opts.zero, opts.incrementBy);
+                const json = await readTextFile(opts.packageJsonPath), indent = guessIndent(json), index = JSON.parse(json), currentVersion = index.version || "0.0.0", incremented = await incrementVersion(currentVersion, opts.strategy, opts.zero, opts.incrementBy);
                 index.version = incremented;
                 const newJson = JSON.stringify(index, null, indent);
                 if (opts.dryRun) {
