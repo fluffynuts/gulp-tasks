@@ -4,10 +4,55 @@
         get version() {
             return [...this._version];
         }
-        constructor(ver) {
-            this._version = Array.isArray(ver)
-                ? ver
-                : ver.split(".").map(s => parseInt(s, 10)).filter(n => !isNaN(n));
+        get major() {
+            return this._version[0] || 0;
+        }
+        get minor() {
+            return this._version[1] || 0;
+        }
+        get patch() {
+            return this._version[2] || 0;
+        }
+        get tag() {
+            return this._tag;
+        }
+        get isPreRelease() {
+            return !!this._tag;
+        }
+        constructor(verOrMajor, minor, patch, tag) {
+            if (Array.isArray(verOrMajor)) {
+                this._version = [...verOrMajor];
+                this._tag = "";
+            }
+            else if (typeof verOrMajor === "object") {
+                this._version = [
+                    verOrMajor.major || 0,
+                    verOrMajor.minor || 0,
+                    verOrMajor.patch || 0
+                ];
+                this._tag = verOrMajor.tag || "";
+            }
+            else if (typeof verOrMajor === "string") {
+                const parts = verOrMajor.split("-");
+                this._version = parts[0].split(".")
+                    .map(s => parseInt(s, 10))
+                    .filter(n => !isNaN(n));
+                this._tag = parts[1] || "";
+                return;
+            }
+            else {
+                this._version = [verOrMajor, minor !== null && minor !== void 0 ? minor : 0, patch !== null && patch !== void 0 ? patch : 0];
+                this._tag = tag !== null && tag !== void 0 ? tag : "";
+            }
+            this.ensureVersionIsThreeNumbers();
+        }
+        ensureVersionIsThreeNumbers() {
+            while (this._version.length < 3) {
+                this._version.push(0);
+            }
+            const dropped = this._version.splice(3);
+            if (dropped.length) {
+            }
         }
         equals(other) {
             return this.compareWith(other) === 0;
@@ -25,7 +70,10 @@
             return compareVersionArrays(this.version, ver.version);
         }
         toString() {
-            return this.version.join(".");
+            const ver = this.version.join(".");
+            return !!this._tag
+                ? `${ver}-${this._tag}`
+                : ver;
         }
     }
     function compareVersionArrays(x, y) {

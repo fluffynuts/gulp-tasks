@@ -1,24 +1,5 @@
 (function() {
-  class VersionInfo implements Version {
-    get isPreRelease() {
-      return !!this.tag;
-    }
-
-    constructor(
-      public major: number,
-      public minor: number,
-      public patch: number,
-      public tag: string
-    ) {
-    }
-
-    toString(): string {
-      const version = `${ this.major }.${ this.minor }.${ this.patch }`;
-      return this.tag
-        ? `${ version }-${ this.tag }`
-        : version;
-    }
-  }
+  const Version = requireModule<Version>("version");
 
   function parseNugetVersion(
     versionStringOrFileName: string
@@ -30,7 +11,7 @@
       idAndVersion = collect(packageWithVersionParts);
     return new PackageVersionInfo(
       idAndVersion.id,
-      new VersionInfo(
+      new Version(
         idAndVersion.version[0] || 0,
         idAndVersion.version[1] || 0,
         idAndVersion.version[2] || 0,
@@ -45,7 +26,7 @@
     }
     constructor(
       public id: string,
-      public version: VersionInfo
+      public version: Version
     ) {
     }
   }

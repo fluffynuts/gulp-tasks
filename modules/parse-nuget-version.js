@@ -1,25 +1,9 @@
 "use strict";
 (function () {
-    class VersionInfo {
-        get isPreRelease() {
-            return !!this.tag;
-        }
-        constructor(major, minor, patch, tag) {
-            this.major = major;
-            this.minor = minor;
-            this.patch = patch;
-            this.tag = tag;
-        }
-        toString() {
-            const version = `${this.major}.${this.minor}.${this.patch}`;
-            return this.tag
-                ? `${version}-${this.tag}`
-                : version;
-        }
-    }
+    const Version = requireModule("version");
     function parseNugetVersion(versionStringOrFileName) {
         const withoutExtension = versionStringOrFileName.replace(/\.nupkg$/, ""), packageWithVersionAndTag = withoutExtension.split("-"), packageWithVersionParts = packageWithVersionAndTag[0].split("."), idAndVersion = collect(packageWithVersionParts);
-        return new PackageVersionInfo(idAndVersion.id, new VersionInfo(idAndVersion.version[0] || 0, idAndVersion.version[1] || 0, idAndVersion.version[2] || 0, packageWithVersionAndTag[1] || ""));
+        return new PackageVersionInfo(idAndVersion.id, new Version(idAndVersion.version[0] || 0, idAndVersion.version[1] || 0, idAndVersion.version[2] || 0, packageWithVersionAndTag[1] || ""));
     }
     class PackageVersionInfo {
         get isPreRelease() {

@@ -4,12 +4,67 @@
       return [...this._version];
     }
 
-    private readonly _version: number[];
+    public get major(): number {
+      return this._version[0] || 0;
+    }
 
-    constructor(ver: string | number[]) {
-      this._version = Array.isArray(ver)
-        ? ver
-        : ver.split(".").map(s => parseInt(s, 10)).filter(n => !isNaN(n));
+    public get minor(): number {
+      return this._version[1] || 0;
+    }
+
+    public get patch(): number {
+      return this._version[2] || 0;
+    }
+
+    public get tag(): string {
+      return this._tag;
+    }
+
+    public get isPreRelease(): boolean {
+      return !!this._tag;
+    }
+
+    private readonly _version: number[];
+    private readonly _tag: string;
+
+    constructor(
+      verOrMajor: string | number[] | number | VersionInfo,
+      minor?: number,
+      patch?: number,
+      tag?: string
+    ) {
+      if (Array.isArray(verOrMajor)) {
+        this._version = [...verOrMajor];
+        this._tag = "";
+      } else if (typeof verOrMajor === "object") {
+        this._version = [
+          verOrMajor.major || 0,
+          verOrMajor.minor || 0,
+          verOrMajor.patch || 0
+        ];
+        this._tag = verOrMajor.tag || "";
+      } else if (typeof verOrMajor === "string") {
+        const parts = verOrMajor.split("-");
+        this._version = parts[0].split(".")
+          .map(s => parseInt(s, 10))
+          .filter(n => !isNaN(n));
+        this._tag = parts[1] || "";
+        return;
+      } else {
+        this._version = [verOrMajor, minor ?? 0, patch ?? 0];
+        this._tag = tag ?? "";
+      }
+      this.ensureVersionIsThreeNumbers();
+    }
+
+    private ensureVersionIsThreeNumbers() {
+      while (this._version.length < 3) {
+        this._version.push(0);
+      }
+      const dropped = this._version.splice(3);
+      if (dropped.length) {
+
+      }
     }
 
     public equals(other: Version | string) {
@@ -35,7 +90,10 @@
     }
 
     public toString() {
-      return this.version.join(".");
+      const ver = this.version.join(".");
+      return !!this._tag
+        ? `${ver}-${this._tag}`
+        : ver;
     }
   }
 
