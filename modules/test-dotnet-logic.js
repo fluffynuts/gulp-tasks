@@ -232,7 +232,7 @@ Test Run Summary
         logResultsSection(testResults.slowSummary, cyan("Slow tests:"), QUACKERS_SLOW_INDEX_PLACEHOLDER);
     }
     function logFailures(testResults, red) {
-        logResultsSection(testResults.failureSummary, red("Failures:"), QUACKERS_FAILURES_MARKER);
+        logResultsSection(testResults.failureSummary, red("Failures:"), QUACKERS_FAILURE_INDEX_PLACEHOLDER);
     }
     function logResultsSection(lines, heading, marker) {
         if (!lines || lines.length == 0) {
@@ -357,6 +357,12 @@ Test Run Summary
             const line = stripQuackersLogPrefix(s);
             if (line.startsWith(QUACKERS_FAILURES_MARKER)) {
                 state.inFailureSummary = true;
+                return;
+            }
+            if (line.toLowerCase().indexOf("test results:") > -1) {
+                // this is the dotnet core test host printing results,
+                // but we're gonna do it better
+                state.inFailureSummary = false;
                 return;
             }
             if (line.startsWith(QUACKERS_SLOW_SUMMARY_START)) {
