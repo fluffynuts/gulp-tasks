@@ -148,7 +148,13 @@
             return nuget(
               generateNugetInstallArgsFor(tool),
               {cwd: target}
-            );
+            ).then(() => {
+              gutil.log(
+                gutil.colors.cyan(
+                  `installed local tool: ${tool}`
+                )
+              );
+            });
           })
         )
       )

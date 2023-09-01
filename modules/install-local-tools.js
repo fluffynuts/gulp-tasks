@@ -105,7 +105,9 @@
             .then(() => downloadOrUpdateNuget(target))
             .then(() => Promise.all((requiredTools || []).map(tool => {
             debug(`install: ${tool}`);
-            return nuget(generateNugetInstallArgsFor(tool), { cwd: target });
+            return nuget(generateNugetInstallArgsFor(tool), { cwd: target }).then(() => {
+                gutil.log(gutil.colors.cyan(`installed local tool: ${tool}`));
+            });
         })))
             .then(() => {
             debug("tool installation complete");
