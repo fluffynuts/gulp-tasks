@@ -275,18 +275,25 @@ Test Run Summary
         await mkdir(buildReportFolder);
         addTrxLoggerTo(loggers, target);
         testResults.quackersEnabled = testResults.quackersEnabled || useQuackers;
-        return await test({
-            target,
-            verbosity,
-            configuration,
-            noBuild: !forceBuild,
-            msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES"),
-            loggers,
-            stderr,
-            stdout,
-            suppressOutput,
-            suppressErrors: true // we want to collect the errors later, not die when one happens
-        });
+        try {
+            return await test({
+                target,
+                verbosity,
+                configuration,
+                noBuild: !forceBuild,
+                msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES"),
+                loggers,
+                stderr,
+                stdout,
+                suppressOutput,
+                suppressErrors: true // we want to collect the errors later, not die when one happens
+            });
+        }
+        catch (e) {
+            debug("WARN: catching SystemError instead of retrieving it");
+            const err = e;
+            return err;
+        }
     }
     function addTrxLoggerTo(loggers, target) {
         const proj = baseName(target), projName = chopExtension(proj), logFileName = path.resolve(path.join(buildReportFolder, `${projName}.trx`));

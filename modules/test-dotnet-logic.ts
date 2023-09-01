@@ -381,6 +381,7 @@ Test Run Summary
         await mkdir(buildReportFolder);
         addTrxLoggerTo(loggers, target);
         testResults.quackersEnabled = testResults.quackersEnabled || useQuackers;
+        try {
         return await test({
                               target,
                               verbosity,
@@ -393,6 +394,11 @@ Test Run Summary
                               suppressOutput,
                               suppressErrors: true // we want to collect the errors later, not die when one happens
                           });
+        } catch (e) {
+            debug("WARN: catching SystemError instead of retrieving it");
+            const err = e as SystemError;
+            return err;
+        }
     }
 
     function addTrxLoggerTo(
