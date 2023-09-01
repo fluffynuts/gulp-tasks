@@ -564,6 +564,7 @@
       return await system("dotnet", args, {
         stdout: opts.stdout,
         stderr: opts.stderr,
+        suppressOutput: opts.suppressOutput,
         suppressStdIoInErrors: opts.suppressStdIoInErrors
       });
     } catch (e) {
@@ -629,7 +630,7 @@
         const value = options[key];
         build.push([ key, value ].join("="));
       }
-      args.push("--logger", `"${ build.join(";") }"`);
+      args.push("--logger", `${ build.join(";") }`);
     }
   }
 

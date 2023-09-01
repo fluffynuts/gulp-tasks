@@ -399,6 +399,7 @@
             return await system("dotnet", args, {
                 stdout: opts.stdout,
                 stderr: opts.stderr,
+                suppressOutput: opts.suppressOutput,
                 suppressStdIoInErrors: opts.suppressStdIoInErrors
             });
         }
@@ -450,7 +451,7 @@
                 const value = options[key];
                 build.push([key, value].join("="));
             }
-            args.push("--logger", `"${build.join(";")}"`);
+            args.push("--logger", `${build.join(";")}`);
         }
     }
     function pushIfSet(args, value, cliSwitch) {

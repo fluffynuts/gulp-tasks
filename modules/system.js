@@ -26,7 +26,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
             opts.suppressOutput = !!opts.stderr || !!opts.stdout;
         }
         let exe = trimQuotes(program), programArgs = args || [];
-        if (!which(program) && !args) {
+        const noArgs = !args || args.length === 0;
+        debugger;
+        if (!which(program) && noArgs) {
             // assume it's a long commandline
             const search = isWindows
                 ? "cmd.exe"
@@ -72,13 +74,12 @@ ${tempFileContents}
         });
         const result = new SystemResult(`${exe}`, programArgs, undefined, [], []);
         return new Promise((resolve, reject) => {
+            debugger;
             const child = child_process.spawn(exe, programArgs, spawnOptions);
-            child.on("error", handleError);
-            child.on("exit", handleExit.bind(null, "exit"));
-            child.on("close", handleExit.bind(null, "close"));
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const stdoutLineBuffer = new LineBuffer(s => {
+                debugger;
                 result.stdout.push(s);
                 stdoutFn(s);
                 if (opts.suppressOutput) {
@@ -86,6 +87,7 @@ ${tempFileContents}
                 }
                 console.log(s);
             }), stderrLineBuffer = new LineBuffer(s => {
+                debugger;
                 result.stderr.push(s);
                 stderrFn(s);
                 if (opts.suppressOutput) {
@@ -95,6 +97,9 @@ ${tempFileContents}
             });
             child.stdout.on("data", handleStdIo(stdoutLineBuffer));
             child.stderr.on("data", handleStdIo(stderrLineBuffer));
+            child.on("error", handleError);
+            child.on("exit", handleExit.bind(null, "exit"));
+            child.on("close", handleExit.bind(null, "close"));
             function handleError(e) {
                 if (hasExited()) {
                     return;
