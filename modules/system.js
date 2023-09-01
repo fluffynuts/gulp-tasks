@@ -27,7 +27,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
         let exe = trimQuotes(program), programArgs = args || [];
         const noArgs = !args || args.length === 0;
-        debugger;
         if (!which(program) && noArgs) {
             // assume it's a long commandline
             const search = isWindows
@@ -74,12 +73,10 @@ ${tempFileContents}
         });
         const result = new SystemResult(`${exe}`, programArgs, undefined, [], []);
         return new Promise((resolve, reject) => {
-            debugger;
             const child = child_process.spawn(exe, programArgs, spawnOptions);
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const stdoutLineBuffer = new LineBuffer(s => {
-                debugger;
                 result.stdout.push(s);
                 stdoutFn(s);
                 if (opts.suppressOutput) {
@@ -87,7 +84,6 @@ ${tempFileContents}
                 }
                 console.log(s);
             }), stderrLineBuffer = new LineBuffer(s => {
-                debugger;
                 result.stderr.push(s);
                 stderrFn(s);
                 if (opts.suppressOutput) {

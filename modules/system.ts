@@ -55,7 +55,6 @@ import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
             exe = trimQuotes(program) as Optional<string>,
             programArgs = args || [] as string[];
         const noArgs = !args || args.length === 0;
-        debugger;
         if (!which(program) && noArgs) {
             // assume it's a long commandline
             const search = isWindows
@@ -113,7 +112,6 @@ ${ tempFileContents }
         });
         const result = new SystemResult(`${ exe }`, programArgs, undefined, [], []);
         return new Promise<SystemResult>((resolve, reject) => {
-            debugger;
             const child = child_process.spawn(
                 exe,
                 programArgs as ReadonlyArray<string>,
@@ -123,7 +121,6 @@ ${ tempFileContents }
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const
                 stdoutLineBuffer = new LineBuffer(s => {
-                    debugger;
                     result.stdout.push(s);
                     stdoutFn(s);
                     if (opts.suppressOutput) {
@@ -132,7 +129,6 @@ ${ tempFileContents }
                     console.log(s);
                 }),
                 stderrLineBuffer = new LineBuffer(s => {
-                    debugger;
                     result.stderr.push(s);
                     stderrFn(s);
                     if (opts.suppressOutput) {

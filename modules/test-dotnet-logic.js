@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const QUACKERS_LOG_PREFIX = "::", QUACKERS_SUMMARY_START = `::SS::`, QUACKERS_SUMMARY_COMPLETE = `::SC::`, QUACKERS_FAILURES_MARKER = `::SF::`, QUACKERS_FAILURE_INDEX_PLACEHOLDER = "::[#]::", quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length, quackersFullSummaryStartMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_START}`, quackersFullSummaryCompleteMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_COMPLETE}`, { rm, ls, FsEntities, readTextFile, mkdir } = require("yafs"), gulp = requireModule("gulp"), log = requireModule("log"), path = require("path"), gulpDebug = require("gulp-debug"), debug = requireModule("debug")(__filename), filter = require("gulp-filter"), ansiColors = requireModule("ansi-colors"), promisifyStream = requireModule("promisify-stream"), nunitRunner = requireModule("gulp-nunit-runner"), testUtilFinder = requireModule("testutil-finder"), env = requireModule("env"), resolveTestMasks = requireModule("resolve-test-masks"), logConfig = requireModule("log-config"), gatherPaths = requireModule("gather-paths"), { test } = requireModule("dotnet-cli"), { resolveTestPrefixFor } = requireModule("test-utils"), buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML")), netFrameworkTestAssemblyFilter = requireModule("netfx-test-assembly-filter"), { baseName, chopExtension } = requireModule("path-utils");
+    const QUACKERS_LOG_PREFIX = "::", QUACKERS_SUMMARY_START = `::SS::`, QUACKERS_SUMMARY_COMPLETE = `::SC::`, QUACKERS_FAILURES_MARKER = `::SF::`, QUACKERS_FAILURE_INDEX_PLACEHOLDER = "::[#]::", QUACKERS_SLOW_INDEX_PLACEHOLDER = "::[-]::", QUACKERS_SLOW_SUMMARY_START = "::SSS::", QUACKERS_SLOW_SUMMARY_COMPLETE = "::SSC::", quackersLogPrefixLength = QUACKERS_LOG_PREFIX.length, quackersFullSummaryStartMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_START}`, quackersFullSummaryCompleteMarker = `${QUACKERS_LOG_PREFIX}${QUACKERS_SUMMARY_COMPLETE}`, { rm, ls, FsEntities, readTextFile, mkdir } = require("yafs"), gulp = requireModule("gulp"), log = requireModule("log"), path = require("path"), gulpDebug = require("gulp-debug"), debug = requireModule("debug")(__filename), filter = require("gulp-filter"), ansiColors = requireModule("ansi-colors"), promisifyStream = requireModule("promisify-stream"), nunitRunner = requireModule("gulp-nunit-runner"), testUtilFinder = requireModule("testutil-finder"), env = requireModule("env"), resolveTestMasks = requireModule("resolve-test-masks"), logConfig = requireModule("log-config"), gatherPaths = requireModule("gather-paths"), { test } = requireModule("dotnet-cli"), { resolveTestPrefixFor } = requireModule("test-utils"), buildReportFolder = path.dirname(env.resolve("BUILD_REPORT_XML")), netFrameworkTestAssemblyFilter = requireModule("netfx-test-assembly-filter"), { baseName, chopExtension } = requireModule("path-utils");
     async function runTests() {
         await mkdir(buildReportFolder);
         const dotNetCore = env.resolveFlag("DOTNET_CORE");
@@ -96,9 +96,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
             read: false
         })
             .pipe(filter(netFrameworkTestAssemblyFilter(configuration)))
-            .pipe(gulpDebug({ title: "before filter", logger: debug }))
+            .pipe(gulpDebug({
+            title: "before filter",
+            logger: debug
+        }))
             .pipe(filter((file) => isDistinctFile(file.path, seenAssemblies)))
-            .pipe(gulpDebug({ title: "after filter", logger: debug }))
+            .pipe(gulpDebug({
+            title: "after filter",
+            logger: debug
+        }))
             .pipe(nunitRunner(config)));
     }
     function logParallelState(testInParallel, parallelFlag) {
@@ -148,6 +154,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             failed: 0,
             skipped: 0,
             failureSummary: [],
+            slowSummary: [],
             started: Date.now()
         }, testProcessResults = [], testProjectPaths = await gatherPaths(testProjects, true), verbosity = env.resolve("BUILD_VERBOSITY");
         const testInParallel = await shouldTestInParallel(testProjectPaths);
@@ -202,11 +209,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
     }
     function logOverallResults(testResults) {
-        const total = testResults.passed + testResults.skipped + testResults.failed, now = Date.now(), runTimeMs = now - testResults.started, runTime = nunitLikeTime(runTimeMs), darkerThemeSelected = (process.env["QUACKERS_THEME"] || "").toLowerCase() === "darker", yellow = darkerThemeSelected
-            ? ansiColors.yellow.bind(ansiColors)
-            : ansiColors.yellowBright.bind(ansiColors), red = darkerThemeSelected
+        const total = testResults.passed + testResults.skipped + testResults.failed, now = Date.now(), runTimeMs = now - testResults.started, runTime = nunitLikeTime(runTimeMs), darkerThemeSelected = (process.env["QUACKERS_THEME"] || "").toLowerCase() === "darker", red = darkerThemeSelected
             ? ansiColors.red.bind(ansiColors)
-            : ansiColors.redBright.bind(ansiColors);
+            : ansiColors.redBright.bind(ansiColors), cyan = darkerThemeSelected
+            ? ansiColors.cyan.bind(ansiColors)
+            : ansiColors.cyanBright.bind(ansiColors), yellow = darkerThemeSelected
+            ? ansiColors.yellow.bind(ansiColors)
+            : ansiColors.yellowBright.bind(ansiColors);
         console.log(yellow(`
 Test Run Summary
   Overall result: ${overallResultFor(testResults)}
@@ -215,12 +224,23 @@ Test Run Summary
     End time: ${dateString(now)}
     Duration: ${runTime}
 `));
-        if (testResults.failureSummary.length == 0) {
+        console.log("\n");
+        logFailures(testResults, red);
+        logSlow(testResults, cyan);
+    }
+    function logSlow(testResults, cyan) {
+        logResultsSection(testResults.slowSummary, cyan("Slow tests:"), QUACKERS_SLOW_INDEX_PLACEHOLDER);
+    }
+    function logFailures(testResults, red) {
+        logResultsSection(testResults.failureSummary, red("Failures:"), QUACKERS_FAILURES_MARKER);
+    }
+    function logResultsSection(lines, heading, marker) {
+        if (!lines || lines.length == 0) {
             return;
         }
-        console.log(`\n${red("Failures:")}`);
+        console.log(`\n${heading}`);
         let blankLines = 0, failIndex = 1;
-        for (let line of testResults.failureSummary) {
+        for (let line of lines) {
             line = line.trim();
             if (!line) {
                 blankLines++;
@@ -231,13 +251,12 @@ Test Run Summary
             if (blankLines > 1) {
                 continue;
             }
-            const substituted = line.replace(QUACKERS_FAILURE_INDEX_PLACEHOLDER, `[${failIndex}]`);
+            const substituted = line.replace(marker, `[${failIndex}]`);
             if (substituted !== line) {
                 failIndex++;
             }
             console.log(substituted);
         }
-        console.log("\n");
     }
     function dateString(ms) {
         return new Date(ms).toISOString().replace(/T/, " ");
@@ -259,6 +278,7 @@ Test Run Summary
         const quackersState = {
             inSummary: false,
             inFailureSummary: false,
+            inSlowSummary: false,
             // there is some valid logging (eg build) before the first quackers log
             // -> suppress when running in parallel (and by default when sequential)
             haveSeenQuackersLog: runningInParallel || env.resolveFlag("DOTNET_TEST_QUIET_QUACKERS"),
@@ -320,14 +340,14 @@ Test Run Summary
         ::quackers log::Failed:  2
         ::quackers log::Skipped: 1
         ::quackers log::Total:   11
-
+      
         ::quackers log::Failures:
-
+      
         ::quackers log::[1] QuackersTestHost.SomeTests.ShouldBeLessThan50(75)
         ::quackers log::  NExpect.Exceptions.UnmetExpectationException : Expected 75 to be less than 50
         ::quackers log::     at QuackersTestHost.SomeTests.ShouldBeLessThan50(Int32 value) in C:\code\opensource\quackers\src\Demo\SomeTests.cs:line 66
         ::quackers log::
-
+      
         ::quackers log::[2] QuackersTestHost.SomeTests.ShouldFail
         ::quackers log::  NExpect.Exceptions.UnmetExpectationException : Expected false but got true
         ::quackers log::     at QuackersTestHost.SomeTests.ShouldFail() in C:\code\opensource\quackers\src\Demo\SomeTests.cs:line 28
@@ -339,9 +359,20 @@ Test Run Summary
                 state.inFailureSummary = true;
                 return;
             }
+            if (line.startsWith(QUACKERS_SLOW_SUMMARY_START)) {
+                state.inSlowSummary = true;
+                return;
+            }
+            if (line.startsWith(QUACKERS_SLOW_SUMMARY_COMPLETE)) {
+                state.inSlowSummary = false;
+                return;
+            }
             if (state.inFailureSummary) {
                 state.testResults.failureSummary.push(line);
                 return;
+            }
+            if (state.inSlowSummary) {
+                state.testResults.slowSummary.push(line);
             }
             incrementTestResultCount(state.testResults, line);
             return;
@@ -403,9 +434,12 @@ Test Run Summary
             summaryStartMarker: QUACKERS_SUMMARY_START,
             summaryCompleteMarker: QUACKERS_SUMMARY_COMPLETE,
             failureStartMarker: QUACKERS_FAILURES_MARKER,
+            slowSummaryStartMarker: QUACKERS_SLOW_SUMMARY_START,
+            slowSummaryCompleteMarker: QUACKERS_SLOW_SUMMARY_COMPLETE,
             verboseSummary: "true",
             outputFailuresInline: "true",
-            failureIndexPlaceholder: QUACKERS_FAILURE_INDEX_PLACEHOLDER
+            failureIndexPlaceholder: QUACKERS_FAILURE_INDEX_PLACEHOLDER,
+            slowIndexPlaceholder: QUACKERS_SLOW_INDEX_PLACEHOLDER
         };
         const prefix = resolveTestPrefixFor(target);
         if (prefix) {
