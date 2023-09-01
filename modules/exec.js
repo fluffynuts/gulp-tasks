@@ -54,25 +54,25 @@
     }
     async function doSystem(cmd, args, opts, handlers) {
         var _a, _b;
+        const originalStdErr = typeof opts.stderr === "function" ? opts.stderr : noop;
+        const originalStdOut = typeof opts.stdout === "function" ? opts.stdout : noop;
         const result = [];
         const stderr = [];
         const stdout = [];
         const stderrHandler = (_a = handlers === null || handlers === void 0 ? void 0 : handlers.stderr) !== null && _a !== void 0 ? _a : noop;
         const stdoutHandler = (_b = handlers === null || handlers === void 0 ? void 0 : handlers.stdout) !== null && _b !== void 0 ? _b : noop;
         try {
-            await system(cmd, args, {
-                suppressOutput: opts.suppressOutput,
-                stdout: (s) => {
+            await system(cmd, args, Object.assign(Object.assign({}, opts), { stdout: (s) => {
                     result.push(s);
                     stdout.push(s);
+                    originalStdOut(s);
                     tryDo(() => stdoutHandler(s));
-                },
-                stderr: (s) => {
+                }, stderr: (s) => {
                     result.push(s);
                     stderr.push(s);
+                    originalStdErr(s);
                     tryDo(() => stderrHandler(s));
-                }
-            });
+                } }));
             return result.join("\n");
         }
         catch (e) {
@@ -94,7 +94,6 @@
     async function exec(cmd, args, opts, handlers) {
         args = args || [];
         opts = Object.assign({}, makeDefaultOptions(), opts);
-        opts.maxBuffer = Number.MAX_SAFE_INTEGER;
         cmd = quoteIfRequired(cmd);
         if (exec.alwaysSuppressOutput) {
             opts.suppressOutput = true;
