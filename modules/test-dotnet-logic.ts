@@ -591,7 +591,7 @@ Test Run Summary
       contents = await readTextFile(csproj),
       lines = contents.split("\n").map((l: string) => l.trim());
     for (const line of lines) {
-      const packageRef = line.match(/<PackageReference\\s+Include="Quackers.TestLogger"\\s+Version="(?<version>[\\d\\.]+)"/);
+      const packageRef = line.match(/<PackageReference\s+Include="Quackers.TestLogger"\s+Version="(?<version>[\d.]+)"/);
       if (packageRef) {
         const
           recommendedVersion = "1.0.16",
