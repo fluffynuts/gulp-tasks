@@ -283,7 +283,7 @@ import path from "path";
           ...opts,
           msbuildProperties: {...opts.msbuildProperties}
         }
-        copy.nuspec = await resolveAbsolutePathToNuspec(copy);
+        copy.nuspec = await tryResolveAbsolutePathToNuspec(copy);
         const args = [
           "pack",
           q(copy.target)
@@ -338,33 +338,27 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     );
   }
 
-  async function resolveAbsolutePathToNuspec(
+  async function tryResolveAbsolutePathToNuspec(
     copy: DotNetPackOptions
   ): Promise<Optional<string>> {
     if (!copy.nuspec) {
       return copy.nuspec;
     }
+    if (path.isAbsolute(copy.nuspec) && await fileExists(copy.nuspec)) {
+      return copy.nuspec;
+    }
     const
       containerDir = path.dirname(copy.target),
-      isRelative = !path.isAbsolute(copy.nuspec),
-      seek = path.join(containerDir, copy.nuspec);
-    if (isRelative && await fileExists(seek)) {
-      const absolutePath = path.resolve(
-        seek
-      );
-      if (!await fileExists(absolutePath)) {
-        return seek;
-      }
-      const
-        absoluteContents = await readTextFile(absolutePath),
-        relativeContents = await readTextFile(seek);
-      return absoluteContents === relativeContents
-        ? copy.nuspec
-        : absolutePath;
+      resolvedRelativeToProjectPath = path.resolve(path.join(containerDir, copy.nuspec));
+    if (await fileExists(resolvedRelativeToProjectPath)) {
+      return copy.nuspec;
     }
-    return await fileExists(seek)
-      ? seek
-      : copy.nuspec;
+
+    const resolvedRelativeToCwd = path.join(process.cwd(), copy.nuspec);
+    if (await fileExists(resolvedRelativeToCwd)) {
+      return resolvedRelativeToCwd;
+    }
+    return copy.nuspec;
   }
 
   interface RevertVersion {
