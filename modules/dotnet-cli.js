@@ -182,6 +182,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     async function pack(opts) {
         return runOnAllConfigurations("Packing", opts, async (configuration) => {
             const copy = Object.assign(Object.assign({}, opts), { msbuildProperties: Object.assign({}, opts.msbuildProperties) });
+            copy.nuspec = await resolveAbsolutePathToNuspec(copy);
             const args = [
                 "pack",
                 q(copy.target)
@@ -230,6 +231,25 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
                 }
             }
         });
+    }
+    async function resolveAbsolutePathToNuspec(copy) {
+        if (!copy.nuspec) {
+            return copy.nuspec;
+        }
+        const containerDir = path.dirname(copy.target), isRelative = !path.isAbsolute(copy.nuspec), seek = path.join(containerDir, copy.nuspec);
+        if (isRelative && await fileExists(seek)) {
+            const absolutePath = path.resolve(path.join(containerDir, copy.nuspec));
+            if (!await fileExists(absolutePath)) {
+                return copy.nuspec;
+            }
+            const absoluteContents = await readTextFile(absolutePath), relativeContents = await readTextFile(seek);
+            return absoluteContents === relativeContents
+                ? copy.nuspec
+                : absolutePath;
+        }
+        return await fileExists(seek)
+            ? seek
+            : copy.nuspec;
     }
     async function shouldIncludeNuspec(opts, target) {
         debugger;
