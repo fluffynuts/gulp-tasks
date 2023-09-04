@@ -238,9 +238,9 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         }
         const containerDir = path.dirname(copy.target), isRelative = !path.isAbsolute(copy.nuspec), seek = path.join(containerDir, copy.nuspec);
         if (isRelative && await fileExists(seek)) {
-            const absolutePath = path.resolve(path.join(containerDir, copy.nuspec));
+            const absolutePath = path.resolve(seek);
             if (!await fileExists(absolutePath)) {
-                return copy.nuspec;
+                return seek;
             }
             const absoluteContents = await readTextFile(absolutePath), relativeContents = await readTextFile(seek);
             return absoluteContents === relativeContents

@@ -350,10 +350,10 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
       seek = path.join(containerDir, copy.nuspec);
     if (isRelative && await fileExists(seek)) {
       const absolutePath = path.resolve(
-        path.join(containerDir, copy.nuspec)
+        seek
       );
       if (!await fileExists(absolutePath)) {
-        return copy.nuspec;
+        return seek;
       }
       const
         absoluteContents = await readTextFile(absolutePath),
