@@ -283,7 +283,7 @@ import path from "path";
           ...opts,
           msbuildProperties: {...opts.msbuildProperties}
         }
-        copy.nuspec = await resolveAbsolutePathToNuspec(copy);
+        copy.nuspec = await tryResolveValidPathToNuspec(copy);
         const args = [
           "pack",
           q(copy.target)
@@ -298,9 +298,10 @@ import path from "path";
         pushNoRestore(args, copy);
         let revert = undefined as Optional<RevertVersion>;
 
+        debugger;
         try {
-          const nuspecPath = copy.nuspec;
-          if (nuspecPath && await shouldIncludeNuspec(copy, copy.target)) {
+          if (opts.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
+            const nuspecPath = await resolveNuspecPath(opts);
             copy.msbuildProperties = copy.msbuildProperties || {};
             copy.msbuildProperties["NuspecFile"] = nuspecPath;
 
@@ -338,34 +339,51 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     );
   }
 
-  async function resolveAbsolutePathToNuspec(
-    copy: DotNetPackOptions
+  async function tryResolveValidPathToNuspec(
+    opts: DotNetPackOptions
   ): Promise<Optional<string>> {
-    if (!copy.nuspec) {
-      return copy.nuspec;
+    if (!opts.nuspec) {
+      return opts.nuspec;
+    }
+    if (path.isAbsolute(opts.nuspec) && await fileExists(opts.nuspec)) {
+      return opts.nuspec;
     }
     const
-      containerDir = path.dirname(copy.target),
-      isRelative = !path.isAbsolute(copy.nuspec),
-      seek = path.join(containerDir, copy.nuspec);
-    if (isRelative && await fileExists(seek)) {
-      const absolutePath = path.resolve(
-        seek
-      );
-      if (!await fileExists(absolutePath)) {
-        return seek;
-      }
-      const
-        absoluteContents = await readTextFile(absolutePath),
-        relativeContents = await readTextFile(seek);
-      return absoluteContents === relativeContents
-        ? copy.nuspec
-        : absolutePath;
+      containerDir = path.dirname(opts.target),
+      resolvedRelativeToProjectPath = path.resolve(path.join(containerDir, opts.nuspec));
+    if (await fileExists(resolvedRelativeToProjectPath)) {
+      return opts.nuspec;
     }
-    return await fileExists(seek)
-      ? seek
-      : copy.nuspec;
+
+    const resolvedRelativeToCwd = path.join(process.cwd(), opts.nuspec);
+    if (await fileExists(resolvedRelativeToCwd)) {
+      return resolvedRelativeToCwd;
+    }
+    return opts.nuspec;
   }
+
+  async function resolveNuspecPath(
+    opts: DotNetPackOptions
+  ): Promise<string> {
+    const nuspec = opts.nuspec as string;
+    if (!nuspec) {
+      throw new ZarroError(`unable to resolve path to nuspec: no nuspec provided`);
+    }
+    return path.isAbsolute(nuspec)
+      ? nuspec
+      : await resolveNuspecRelativeToProject();
+
+    async function resolveNuspecRelativeToProject(): Promise<string> {
+      const
+        containerDir = path.dirname(opts.target);
+      const test = path.resolve(path.join(containerDir, nuspec));
+      if (await fileExists(test)) {
+        return nuspec;
+      }
+      throw new Error(`Unable to resolve '${nuspec}' relative to '${containerDir}'`);
+    }
+  }
+
 
   interface RevertVersion {
     path: string;
