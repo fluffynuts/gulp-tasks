@@ -27,13 +27,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
     }
     async function resolveContents(fileOrXml) {
         if (!fileOrXml) {
-            throw new Error(`fileOrXml not set`);
+            throw new ZarroError(`fileOrXml not set`);
         }
         if (await fileExists(fileOrXml)) {
             return await readTextFile(fileOrXml);
         }
         if (fileOrXml.indexOf("<") === -1) {
-            throw new Error(`input is not an existing file, and doesn't seem to be xml either`);
+            throw new ZarroError(`input is not an existing file, and doesn't seem to be xml either`);
         }
         return fileOrXml;
     }

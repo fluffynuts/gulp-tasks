@@ -1,12 +1,17 @@
-(function() {
+import {writeTextFile} from "yafs";
+
+(function () {
   // TODO: perhaps one day, this should become an npm module of its own
   type PerConfigurationFunction = (configuration: string) => Promise<SystemResult | SystemError>;
   const system = requireModule<System>("system");
-  const { isError } = system;
+  const {isError} = system;
   const ZarroError = requireModule<ZarroError>("zarro-error");
   const path = require("path");
-  const { fileExists, readTextFile } = require("yafs");
-  const { yellow } = requireModule<AnsiColors>("ansi-colors");
+  const {
+    fileExists,
+    readTextFile
+  } = require("yafs");
+  const {yellow} = requireModule<AnsiColors>("ansi-colors");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
   const parseXml = requireModule<ParseXml>("parse-xml");
   const {
@@ -14,6 +19,9 @@
     readCsProjProperty,
     readAssemblyName
   } = requireModule<CsProjUtils>("csproj-utils");
+  const updateNuspecVersion = requireModule<UpdateNuspecVersion>("update-nuspec-version");
+  const readNuspecVersion = requireModule<ReadNuspecVersion>("read-nuspec-version");
+  const log = requireModule<Log>("log");
   const env = requireModule<Env>("env");
 
   let defaultNugetSource: string;
@@ -71,7 +79,8 @@
     return result;
   }
 
-  interface XmlNode extends Dictionary<XmlNode[] | Dictionary<string>> {
+  interface XmlNode
+    extends Dictionary<XmlNode[] | Dictionary<string>> {
     $: Dictionary<string>
   }
 
@@ -89,7 +98,7 @@
       );
       if (!match) {
         throw new ZarroError(
-          `container publish logic requires a nuget package reference for '${ requiredContainerPackage }' on project '${ opts.target }'`
+          `container publish logic requires a nuget package reference for '${requiredContainerPackage}' on project '${opts.target}'`
         )
       }
     }
@@ -224,7 +233,8 @@
         pushAdditionalArgs(args, opts);
 
         return runDotNetWith(args, opts);
-      });
+      }
+    );
   }
 
   async function test(
@@ -257,7 +267,8 @@
         // the test handler wrt quackers output handling
         opts.suppressStdIoInErrors = true;
         return runDotNetWith(args, opts);
-      });
+      }
+    );
   }
 
   async function pack(
@@ -267,7 +278,10 @@
       "Packing",
       opts,
       async configuration => {
-        const copy = { ...opts, msbuildProperties: { ...opts.msbuildProperties } }
+        const copy = {
+          ...opts,
+          msbuildProperties: {...opts.msbuildProperties}
+        }
         const args = [
           "pack",
           q(copy.target)
@@ -280,21 +294,58 @@
         pushFlag(args, copy.includeSymbols, "--include-symbols");
         pushFlag(args, copy.includeSource, "--include-source");
         pushNoRestore(args, copy);
-        pushVersionSuffix(args, copy);
-        if (copy.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
-          copy.msbuildProperties = copy.msbuildProperties || {};
-          copy.msbuildProperties["NuspecFile"] = copy.nuspec;
+        let revert = undefined as Optional<RevertVersion>;
+
+        try {
+          const nuspecPath = copy.nuspec;
+          if (nuspecPath && await shouldIncludeNuspec(copy, copy.target)) {
+            copy.msbuildProperties = copy.msbuildProperties || {};
+            copy.msbuildProperties["NuspecFile"] = nuspecPath;
+
+            if (opts.versionSuffix !== undefined) {
+              revert = {
+                path: nuspecPath,
+                version: await readNuspecVersion(nuspecPath)
+              }
+
+              log.warn(`
+WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
+          The version in '${copy.nuspec}' will be temporarily set to ${opts.versionSuffix} whilst
+          packing and reverted later.
+`.trim());
+
+              await updateNuspecVersion(nuspecPath, opts.versionSuffix);
+              // TODO: hook into "after dotnet run" to revert
+            }
+          }
+          if (!revert) {
+            pushVersionSuffix(args, copy);
+          }
+          pushMsbuildProperties(args, copy)
+          pushAdditionalArgs(args, copy);
+          return await runDotNetWith(args, copy);
+        } catch (e) {
+          throw e;
+        } finally {
+          debugger;
+          if (revert && revert.version !== undefined) {
+            await updateNuspecVersion(revert.path, revert.version);
+          }
         }
-        pushMsbuildProperties(args, copy)
-        pushAdditionalArgs(args, copy);
-        return runDotNetWith(args, copy);
-      });
+      }
+    );
+  }
+
+  interface RevertVersion {
+    path: string;
+    version: Optional<string>;
   }
 
   async function shouldIncludeNuspec(
     opts: DotNetPackOptions,
     target: string
   ): Promise<boolean> {
+    debugger;
     if (!opts.nuspec) {
       return false;
     }
@@ -310,7 +361,12 @@
       return true;
     }
 
-    return opts.ignoreMissingNuspec === false;
+    if (opts.ignoreMissingNuspec) {
+      return false;
+    }
+    throw new ZarroError(
+      `nuspec file not found at '${opts.nuspec}' (from cwd: '${process.cwd()}`
+    );
   }
 
   async function nugetPush(
@@ -376,11 +432,11 @@
     validate(opts);
     let configurations = resolveConfigurations(opts);
     if (configurations.length < 1) {
-      configurations = [ ...defaultConfigurations ]
+      configurations = [...defaultConfigurations]
     }
     let lastResult: Optional<SystemResult>;
     for (const configuration of configurations) {
-      showHeader(`${ label } ${ q(opts.target) } with configuration ${ configuration }${detailedInfoFor(opts)}`)
+      showHeader(`${label} ${q(opts.target)} with configuration ${configuration}${detailedInfoFor(opts)}`)
       const thisResult = await toRun(configuration);
       if (isError(thisResult)) {
         return thisResult;
@@ -446,7 +502,7 @@
 
   // this is actually a viable configuration... but we're going to use
   // it as a flag to not put in -c at all
-  const defaultConfigurations = [ "default" ];
+  const defaultConfigurations = ["default"];
 
   function resolveConfigurations(opts: { configuration?: string | string[] }): string[] {
     if (!opts.configuration) {
@@ -454,7 +510,7 @@
     }
     return Array.isArray(opts.configuration)
       ? opts.configuration
-      : [ opts.configuration ];
+      : [opts.configuration];
   }
 
   function pushFramework(args: string[], opts: DotNetTestOptions) {
@@ -599,7 +655,7 @@
     value: string
   ) {
     args.push(
-      `-p:${ q(key) }=${ q(value) }`
+      `-p:${q(key)}=${q(value)}`
     )
   }
 
@@ -614,7 +670,7 @@
     for (const key of Object.keys(env)) {
       args.push("-e");
       args.push(
-        `${ q(key) }=${ q(env[key]) }`
+        `${q(key)}=${q(env[key])}`
       )
     }
   }
@@ -624,13 +680,13 @@
       return;
     }
     for (const loggerName of Object.keys(loggers)) {
-      const build = [ loggerName ];
+      const build = [loggerName];
       const options = loggers[loggerName];
       for (const key of Object.keys(options)) {
         const value = options[key];
-        build.push([ key, value ].join("="));
+        build.push([key, value].join("="));
       }
-      args.push("--logger", `${ build.join(";") }`);
+      args.push("--logger", `${build.join(";")}`);
     }
   }
 
@@ -640,7 +696,7 @@
     cliSwitch: string
   ) {
     if (value) {
-      args.push(cliSwitch, q(`${ value }`));
+      args.push(cliSwitch, q(`${value}`));
     }
   }
 

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const system = requireModule("system");
     const { isError } = system;
@@ -9,6 +10,9 @@
     const q = requireModule("quote-if-required");
     const parseXml = requireModule("parse-xml");
     const { readAssemblyVersion, readCsProjProperty, readAssemblyName } = requireModule("csproj-utils");
+    const updateNuspecVersion = requireModule("update-nuspec-version");
+    const readNuspecVersion = requireModule("read-nuspec-version");
+    const log = requireModule("log");
     const env = requireModule("env");
     let defaultNugetSource;
     function showHeader(label) {
@@ -189,17 +193,46 @@
             pushFlag(args, copy.includeSymbols, "--include-symbols");
             pushFlag(args, copy.includeSource, "--include-source");
             pushNoRestore(args, copy);
-            pushVersionSuffix(args, copy);
-            if (copy.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
-                copy.msbuildProperties = copy.msbuildProperties || {};
-                copy.msbuildProperties["NuspecFile"] = copy.nuspec;
+            let revert = undefined;
+            try {
+                const nuspecPath = copy.nuspec;
+                if (nuspecPath && await shouldIncludeNuspec(copy, copy.target)) {
+                    copy.msbuildProperties = copy.msbuildProperties || {};
+                    copy.msbuildProperties["NuspecFile"] = nuspecPath;
+                    if (opts.versionSuffix !== undefined) {
+                        revert = {
+                            path: nuspecPath,
+                            version: await readNuspecVersion(nuspecPath)
+                        };
+                        log.warn(`
+WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
+          The version in '${copy.nuspec}' will be temporarily set to ${opts.versionSuffix} whilst
+          packing and reverted later.
+`.trim());
+                        await updateNuspecVersion(nuspecPath, opts.versionSuffix);
+                        // TODO: hook into "after dotnet run" to revert
+                    }
+                }
+                if (!revert) {
+                    pushVersionSuffix(args, copy);
+                }
+                pushMsbuildProperties(args, copy);
+                pushAdditionalArgs(args, copy);
+                return await runDotNetWith(args, copy);
             }
-            pushMsbuildProperties(args, copy);
-            pushAdditionalArgs(args, copy);
-            return runDotNetWith(args, copy);
+            catch (e) {
+                throw e;
+            }
+            finally {
+                debugger;
+                if (revert && revert.version !== undefined) {
+                    await updateNuspecVersion(revert.path, revert.version);
+                }
+            }
         });
     }
     async function shouldIncludeNuspec(opts, target) {
+        debugger;
         if (!opts.nuspec) {
             return false;
         }
@@ -210,7 +243,10 @@
         if (await fileExists(resolved)) {
             return true;
         }
-        return opts.ignoreMissingNuspec === false;
+        if (opts.ignoreMissingNuspec) {
+            return false;
+        }
+        throw new ZarroError(`nuspec file not found at '${opts.nuspec}' (from cwd: '${process.cwd()}`);
     }
     async function nugetPush(opts) {
         validate(opts);
