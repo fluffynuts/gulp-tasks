@@ -272,6 +272,90 @@ import path from "path";
     );
   }
 
+  async function listNugetSources(): Promise<NugetSource[]> {
+    debugger;
+    const raw = await runDotNetWith(
+      ["nuget", "list", "source"], {
+        suppressOutput: true
+      });
+    let current = undefined as Optional<NugetSource>;
+    const result = [] as NugetSource[];
+    for (const line of raw.stdout) {
+      const
+        firstLine = line.match(firstLineOfPackageSource),
+        secondLine = line.match(secondLineOfPackageSource);
+      if (firstLine && firstLine.groups) {
+        current = {
+          name: `${(firstLine.groups["name"] || "(not set)").trim()}`,
+          url: "(not set)",
+          enabled: `${firstLine.groups["enabled"]}`.toLowerCase() === "enabled"
+        };
+        result.push(current);
+      } else if (current && secondLine && secondLine.groups) {
+        current.url = secondLine.groups["url"];
+      }
+    }
+    return result;
+  }
+
+  const
+    firstLineOfPackageSource = /\s*(?<index>[\d+])\.\s*(?<name>[^\[\]]+)\[(?<enabled>[^\[\]]+)]/,
+    secondLineOfPackageSource = /\s*(?<url>.*)/;
+
+  async function addNugetSource(
+    opts: DotNetNugetAddSourceOptions
+  ): Promise<void> {
+    validateConfig(
+      opts,
+      o => !!o ? undefined : "no options provided",
+      o => !!o.name ? undefined : "name not provided",
+      o => !!o.url ? undefined : "url not provided"
+    );
+    const args = [] as string[];
+    pushIfSet(args, opts.name, "--name");
+    args.push(opts.url);
+    const systemArgs = ["nuget", "add", "source"].concat(args);
+    const systemResult = await runDotNetWith(
+      systemArgs,
+      {suppressOutput: true}
+    );
+    const foo = systemResult;
+    debugger;
+  }
+
+  async function removeNugetSource(
+    nameOrUrlOrFragment: string
+  ): Promise<void> {
+    const allSources = await listNugetSources();
+    const matchByName = allSources.find(o => o.name.toLowerCase() === nameOrUrlOrFragment.toLowerCase());
+    if (matchByName) {
+      await removeNugetSourceByName(matchByName.name);
+    }
+  }
+
+  async function removeNugetSourceByName(name: string): Promise<SystemResult | SystemError> {
+    const result = await runDotNetWith(
+      ["nuget", "remove", "source", name],
+      {suppressOutput: true}
+    );
+    if (system.isError(result)) {
+      throw result;
+    }
+    return result;
+  }
+
+  function validateConfig<T>(
+    opts: T,
+    ...validators: ((o: T) => Optional<string>)[]
+  ) {
+    for (const validator of validators) {
+      const result = validator(opts);
+      if (result) {
+        throw new ZarroError(result);
+      }
+    }
+  }
+
   async function pack(
     opts: DotNetPackOptions
   ): Promise<SystemResult | SystemError> {
@@ -421,7 +505,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
   async function nugetPush(
     opts: DotNetNugetPushOptions
   ): Promise<SystemResult | SystemError> {
-    validate(opts);
+    validateCommonBuildOptions(opts);
     if (!opts.apiKey) {
       throw new Error("apiKey was not specified");
     }
@@ -478,7 +562,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     opts: DotNetCommonBuildOptions,
     toRun: PerConfigurationFunction
   ): Promise<SystemResult | SystemError> {
-    validate(opts);
+    validateCommonBuildOptions(opts);
     let configurations = resolveConfigurations(opts);
     if (configurations.length < 1) {
       configurations = [...defaultConfigurations]
@@ -627,15 +711,14 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     pushFlag(args, opts.noBuild, "--no-build");
   }
 
-  function validate(
+  function validateCommonBuildOptions(
     opts: DotNetCommonBuildOptions
   ) {
-    if (!opts) {
-      throw new Error("no options provided");
-    }
-    if (!opts.target) {
-      throw new Error("target not set");
-    }
+    validateConfig(
+      opts,
+      o => !!o ? undefined : "no options provided",
+      o => !!o.target ? undefined : "target not set"
+    );
   }
 
   function pushOutput(
@@ -847,6 +930,9 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     nugetPush,
     publish,
     listPackages,
-    resolveContainerOptions
+    resolveContainerOptions,
+    listNugetSources,
+    addNugetSource,
+    removeNugetSource
   };
 })();
