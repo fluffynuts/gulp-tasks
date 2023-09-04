@@ -301,14 +301,14 @@ import path from "path";
         debugger;
         try {
           if (opts.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
-            const nuspecPath = await resolveNuspecPath(opts);
+            const absoluteNuspecPath = await resolveAbsoluteNuspecPath(opts);
             copy.msbuildProperties = copy.msbuildProperties || {};
-            copy.msbuildProperties["NuspecFile"] = nuspecPath;
+            copy.msbuildProperties["NuspecFile"] = `${copy.nuspec}`;
 
             if (opts.versionSuffix !== undefined) {
               revert = {
-                path: nuspecPath,
-                version: await readNuspecVersion(nuspecPath)
+                path: absoluteNuspecPath,
+                version: await readNuspecVersion(absoluteNuspecPath)
               }
 
               log.warn(`
@@ -317,7 +317,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
           packing and reverted later.
 `.trim());
 
-              await updateNuspecVersion(nuspecPath, opts.versionSuffix);
+              await updateNuspecVersion(absoluteNuspecPath, opts.versionSuffix);
               // TODO: hook into "after dotnet run" to revert
             }
           }
@@ -362,7 +362,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     return opts.nuspec;
   }
 
-  async function resolveNuspecPath(
+  async function resolveAbsoluteNuspecPath(
     opts: DotNetPackOptions
   ): Promise<string> {
     const nuspec = opts.nuspec as string;
@@ -378,7 +378,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         containerDir = path.dirname(opts.target);
       const test = path.resolve(path.join(containerDir, nuspec));
       if (await fileExists(test)) {
-        return nuspec;
+        return test;
       }
       throw new Error(`Unable to resolve '${nuspec}' relative to '${containerDir}'`);
     }

@@ -198,20 +198,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
             debugger;
             try {
                 if (opts.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
-                    const nuspecPath = await resolveNuspecPath(opts);
+                    const absoluteNuspecPath = await resolveAbsoluteNuspecPath(opts);
                     copy.msbuildProperties = copy.msbuildProperties || {};
-                    copy.msbuildProperties["NuspecFile"] = nuspecPath;
+                    copy.msbuildProperties["NuspecFile"] = `${copy.nuspec}`;
                     if (opts.versionSuffix !== undefined) {
                         revert = {
-                            path: nuspecPath,
-                            version: await readNuspecVersion(nuspecPath)
+                            path: absoluteNuspecPath,
+                            version: await readNuspecVersion(absoluteNuspecPath)
                         };
                         log.warn(`
 WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
           The version in '${copy.nuspec}' will be temporarily set to ${opts.versionSuffix} whilst
           packing and reverted later.
 `.trim());
-                        await updateNuspecVersion(nuspecPath, opts.versionSuffix);
+                        await updateNuspecVersion(absoluteNuspecPath, opts.versionSuffix);
                         // TODO: hook into "after dotnet run" to revert
                     }
                 }
@@ -250,7 +250,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         }
         return opts.nuspec;
     }
-    async function resolveNuspecPath(opts) {
+    async function resolveAbsoluteNuspecPath(opts) {
         const nuspec = opts.nuspec;
         if (!nuspec) {
             throw new ZarroError(`unable to resolve path to nuspec: no nuspec provided`);
@@ -262,7 +262,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
             const containerDir = path.dirname(opts.target);
             const test = path.resolve(path.join(containerDir, nuspec));
             if (await fileExists(test)) {
-                return nuspec;
+                return test;
             }
             throw new Error(`Unable to resolve '${nuspec}' relative to '${containerDir}'`);
         }
