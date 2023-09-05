@@ -8,8 +8,8 @@
             this.stderr = stderr;
             this.stdout = stdout;
         }
-        static isSystemResult(o) {
-            return o instanceof SystemResult;
+        isResult() {
+            return true;
         }
         static isResult(o) {
             return o instanceof SystemResult;

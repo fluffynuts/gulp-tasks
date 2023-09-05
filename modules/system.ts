@@ -149,7 +149,7 @@ ${ tempFileContents }
                 }
                 debug("child errors", e);
                 return reject(generateError(
-                    `Error spawning process: ${ e }`
+                    `Error spawning process: ${ e }\n${exe} ${programArgs.map(q)}`
                 ));
             }
 

@@ -9,9 +9,10 @@
     ) {
     }
 
-    static isSystemResult(o: any): o is SystemResult {
-      return o instanceof SystemResult;
+    isResult(): this is SystemResult {
+      return true;
     }
+
     static isResult(o: any): o is SystemResult {
       return o instanceof SystemResult;
     }

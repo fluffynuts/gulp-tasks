@@ -57,6 +57,9 @@
                 lines.push(` ${line}`);
             }
         }
+        isError() {
+            return true;
+        }
         static isSystemError(o) {
             return o instanceof SystemError;
         }

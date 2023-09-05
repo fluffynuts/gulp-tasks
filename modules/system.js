@@ -101,7 +101,7 @@ ${tempFileContents}
                     return;
                 }
                 debug("child errors", e);
-                return reject(generateError(`Error spawning process: ${e}`));
+                return reject(generateError(`Error spawning process: ${e}\n${exe} ${programArgs.map(q)}`));
             }
             function handleExit(ctx, code) {
                 if (hasExited()) {

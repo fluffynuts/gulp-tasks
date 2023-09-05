@@ -78,6 +78,10 @@
       }
     }
 
+    isError(): this is SystemError {
+      return true;
+    }
+
     static isSystemError(o: any): o is SystemError {
       return o instanceof SystemError;
     }
