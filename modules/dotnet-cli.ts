@@ -1,18 +1,18 @@
-import {writeTextFile} from "yafs";
+import { writeTextFile } from "yafs";
 import path from "path";
 
 (function () {
   // TODO: perhaps one day, this should become an npm module of its own
   type PerConfigurationFunction = (configuration: string) => Promise<SystemResult | SystemError>;
   const system = requireModule<System>("system");
-  const {isError} = system;
+  const { isError } = system;
   const ZarroError = requireModule<ZarroError>("zarro-error");
   const path = require("path");
   const {
     fileExists,
     readTextFile
   } = require("yafs");
-  const {yellow} = requireModule<AnsiColors>("ansi-colors");
+  const { yellow } = requireModule<AnsiColors>("ansi-colors");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
   const parseXml = requireModule<ParseXml>("parse-xml");
   const {
@@ -99,7 +99,7 @@ import path from "path";
       );
       if (!match) {
         throw new ZarroError(
-          `container publish logic requires a nuget package reference for '${requiredContainerPackage}' on project '${opts.target}'`
+          `container publish logic requires a nuget package reference for '${ requiredContainerPackage }' on project '${ opts.target }'`
         )
       }
     }
@@ -273,22 +273,24 @@ import path from "path";
   }
 
   async function listNugetSources(): Promise<NugetSource[]> {
-    debugger;
     const raw = await runDotNetWith(
-      ["nuget", "list", "source"], {
+      [ "nuget", "list", "source" ], {
         suppressOutput: true
       });
+    if (system.isError(raw)) {
+      throw raw;
+    }
     let current = undefined as Optional<NugetSource>;
     const result = [] as NugetSource[];
-    for (const line of raw.stdout) {
+    for (const line of raw.stdout || []) {
       const
         firstLine = line.match(firstLineOfPackageSource),
         secondLine = line.match(secondLineOfPackageSource);
       if (firstLine && firstLine.groups) {
         current = {
-          name: `${(firstLine.groups["name"] || "(not set)").trim()}`,
+          name: `${ (firstLine.groups["name"] || "(not set)").trim() }`,
           url: "(not set)",
-          enabled: `${firstLine.groups["enabled"]}`.toLowerCase() === "enabled"
+          enabled: `${ firstLine.groups["enabled"] }`.toLowerCase() === "enabled"
         };
         result.push(current);
       } else if (current && secondLine && secondLine.groups) {
@@ -313,30 +315,145 @@ import path from "path";
     );
     const args = [] as string[];
     pushIfSet(args, opts.name, "--name");
+    pushIfSet(args, opts.username, "--username");
+    pushIfSet(args, opts.password, "--password");
+    pushFlag(args, opts.storePasswordInClearText, "--store-password-in-clear-text");
+    pushIfSet(args, opts.validAuthenticationTypes, "--valid-authentication-types");
+    pushIfSet(args, opts.configFile, "--configfile");
     args.push(opts.url);
-    const systemArgs = ["nuget", "add", "source"].concat(args);
-    const systemResult = await runDotNetWith(
+    const systemArgs = [ "nuget", "add", "source" ].concat(args);
+    await runDotNetWith(
       systemArgs,
-      {suppressOutput: true}
+      { suppressOutput: true }
     );
-    const foo = systemResult;
-    debugger;
-  }
-
-  async function removeNugetSource(
-    nameOrUrlOrFragment: string
-  ): Promise<void> {
-    const allSources = await listNugetSources();
-    const matchByName = allSources.find(o => o.name.toLowerCase() === nameOrUrlOrFragment.toLowerCase());
-    if (matchByName) {
-      await removeNugetSourceByName(matchByName.name);
+    if (opts.enabled === false) {
+      await disableNugetSource(opts.name);
     }
   }
 
-  async function removeNugetSourceByName(name: string): Promise<SystemResult | SystemError> {
+  async function removeNugetSource(
+    source: string | NugetSource
+  ): Promise<void> {
+    if (!source) {
+      return;
+    }
+    const toRemove = await tryFindSingleRegisteredNugetSource(source);
+    if (!toRemove) {
+      return;
+    }
+    await removeNugetSourceByName(toRemove.name);
+  }
+
+  async function enableNugetSource(
+    source: string | NugetSource
+  ): Promise<void> {
+    const toEnable = await tryFindSingleRegisteredNugetSource(source);
+    if (!toEnable) {
+      throw new Error(`unable to find source matching: ${ JSON.stringify(source) }`);
+    }
+    await runDotNetWith(
+      [ "dotnet", "nuget", "enable", "source", toEnable.name ], {
+        suppressOutput: true
+      }
+    );
+  }
+
+  async function disableNugetSource(
+    source: string | NugetSource
+  ): Promise<void> {
+    const toDisable = await tryFindSingleRegisteredNugetSource(source);
+    if (!toDisable) {
+      throw new Error(`unable to find source matching: ${ JSON.stringify(source) }`);
+    }
+    await runDotNetWith(
+      [ "dotnet", "nuget", "disable", "source", toDisable.name ], {
+        suppressOutput: true
+      }
+    );
+  }
+
+  async function tryFindSingleRegisteredNugetSource(
+    find: string | NugetSource
+  ): Promise<Optional<NugetSource>> {
+    const
+      allSources = await listNugetSources(),
+      name = isNugetSource(find) ? find.name : find,
+      url = isNugetSource(find) ? find.url : find;
+
+    const matchByName = allSources.filter(
+      o => o.name.toLowerCase() === name.toLowerCase()
+    );
+    if (matchByName.length === 1) {
+      return matchByName[0];
+    }
+    const matchByUrl = allSources.filter(
+      o => o.url.toLowerCase() === url.toLowerCase()
+    );
+    if (matchByUrl.length === 1) {
+      return matchByUrl[0];
+    }
+
+    let matchByHost = [] as NugetSource[];
+    try {
+      const host = hostFor(url);
+      matchByHost = allSources.filter(
+        o => {
+          try {
+          const sourceUrl = new URL(o.url);
+          return sourceUrl.host === host
+          } catch (e) {
+            debugger;
+            return false;
+          }
+        }
+      );
+      if (matchByHost.length === 1) {
+        return matchByHost[0];
+      }
+    } catch (e) {
+      // suppress: we probably get here when url is not a valid url
+    }
+
+    validateEmpty(matchByName, find);
+    validateEmpty(matchByUrl, find);
+    validateEmpty(matchByHost, find);
+
+  }
+
+  function hostFor(urlOrHost: string): string {
+    try {
+      const url = new URL(urlOrHost);
+      return url.host;
+    } catch (e) {
+      return urlOrHost;
+    }
+  }
+
+  function validateEmpty(
+    sources: NugetSource[],
+    search: string | NugetSource
+  ) {
+    if (sources.length !== 0) {
+      throw new Error(`multiple matches for nuget source by name / url / host: ${JSON.stringify(search)}`);
+    }
+  }
+
+  function isNugetSource(obj: any): obj is NugetSource {
+    return typeof obj === "object" &&
+           typeof obj.name === "string" &&
+           typeof obj.url === "string";
+  }
+
+  async function removeNugetSourceByName(
+    name: string
+  ): Promise<SystemResult | SystemError> {
+    const source = await tryFindSingleRegisteredNugetSource(name);
+    if (!source) {
+      throw new Error(`Can't find source with '${ name }'`);
+    }
     const result = await runDotNetWith(
-      ["nuget", "remove", "source", name],
-      {suppressOutput: true}
+      [ "nuget", "remove", "source", source.name ],
+      { suppressOutput: true }
     );
     if (system.isError(result)) {
       throw result;
@@ -365,7 +482,7 @@ import path from "path";
       async configuration => {
         const copy = {
           ...opts,
-          msbuildProperties: {...opts.msbuildProperties}
+          msbuildProperties: { ...opts.msbuildProperties }
         }
         copy.nuspec = await tryResolveValidPathToNuspec(copy);
         const args = [
@@ -382,12 +499,11 @@ import path from "path";
         pushNoRestore(args, copy);
         let revert = undefined as Optional<RevertVersion>;
 
-        debugger;
         try {
           if (opts.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
             const absoluteNuspecPath = await resolveAbsoluteNuspecPath(opts);
             copy.msbuildProperties = copy.msbuildProperties || {};
-            copy.msbuildProperties["NuspecFile"] = `${copy.nuspec}`;
+            copy.msbuildProperties["NuspecFile"] = `${ copy.nuspec }`;
 
             if (opts.versionSuffix !== undefined) {
               revert = {
@@ -397,7 +513,7 @@ import path from "path";
 
               log.warn(`
 WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
-          The version in '${copy.nuspec}' will be temporarily set to ${opts.versionSuffix} whilst
+          The version in '${ copy.nuspec }' will be temporarily set to ${ opts.versionSuffix } whilst
           packing and reverted later.
 `.trim());
 
@@ -414,7 +530,6 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         } catch (e) {
           throw e;
         } finally {
-          debugger;
           if (revert && revert.version !== undefined) {
             await updateNuspecVersion(revert.path, revert.version);
           }
@@ -464,7 +579,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
       if (await fileExists(test)) {
         return test;
       }
-      throw new Error(`Unable to resolve '${nuspec}' relative to '${containerDir}'`);
+      throw new Error(`Unable to resolve '${ nuspec }' relative to '${ containerDir }'`);
     }
   }
 
@@ -478,7 +593,6 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     opts: DotNetPackOptions,
     target: string
   ): Promise<boolean> {
-    debugger;
     if (!opts.nuspec) {
       return false;
     }
@@ -498,7 +612,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
       return false;
     }
     throw new ZarroError(
-      `nuspec file not found at '${opts.nuspec}' (from cwd: '${process.cwd()}`
+      `nuspec file not found at '${ opts.nuspec }' (from cwd: '${ process.cwd() }`
     );
   }
 
@@ -565,11 +679,11 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     validateCommonBuildOptions(opts);
     let configurations = resolveConfigurations(opts);
     if (configurations.length < 1) {
-      configurations = [...defaultConfigurations]
+      configurations = [ ...defaultConfigurations ]
     }
     let lastResult: Optional<SystemResult>;
     for (const configuration of configurations) {
-      showHeader(`${label} ${q(opts.target)} with configuration ${configuration}${detailedInfoFor(opts)}`)
+      showHeader(`${ label } ${ q(opts.target) } with configuration ${ configuration }${ detailedInfoFor(opts) }`)
       const thisResult = await toRun(configuration);
       if (isError(thisResult)) {
         return thisResult;
@@ -594,7 +708,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     if (parts.length === 0) {
       return "";
     }
-    return ` (${parts.join(" ")})`;
+    return ` (${ parts.join(" ") })`;
   }
 
   async function determineDefaultNugetSource() {
@@ -635,7 +749,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
 
   // this is actually a viable configuration... but we're going to use
   // it as a flag to not put in -c at all
-  const defaultConfigurations = ["default"];
+  const defaultConfigurations = [ "default" ];
 
   function resolveConfigurations(opts: { configuration?: string | string[] }): string[] {
     if (!opts.configuration) {
@@ -643,7 +757,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     }
     return Array.isArray(opts.configuration)
       ? opts.configuration
-      : [opts.configuration];
+      : [ opts.configuration ];
   }
 
   function pushFramework(args: string[], opts: DotNetTestOptions) {
@@ -749,13 +863,15 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     opts: DotNetBaseOptions
   ): Promise<SystemResult | SystemError> {
     try {
-      return await system("dotnet", args, {
+      const result = await system("dotnet", args, {
         stdout: opts.stdout,
         stderr: opts.stderr,
         suppressOutput: opts.suppressOutput,
         suppressStdIoInErrors: opts.suppressStdIoInErrors
       });
+      return result;
     } catch (e) {
+      console.error(`system error: ${e}`);
       if (opts.suppressErrors) {
         return e as SystemError;
       }
@@ -787,7 +903,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     value: string
   ) {
     args.push(
-      `-p:${q(key)}=${q(value)}`
+      `-p:${ q(key) }=${ q(value) }`
     )
   }
 
@@ -802,7 +918,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     for (const key of Object.keys(env)) {
       args.push("-e");
       args.push(
-        `${q(key)}=${q(env[key])}`
+        `${ q(key) }=${ q(env[key]) }`
       )
     }
   }
@@ -812,13 +928,13 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
       return;
     }
     for (const loggerName of Object.keys(loggers)) {
-      const build = [loggerName];
+      const build = [ loggerName ];
       const options = loggers[loggerName];
       for (const key of Object.keys(options)) {
         const value = options[key];
-        build.push([key, value].join("="));
+        build.push([ key, value ].join("="));
       }
-      args.push("--logger", `${build.join(";")}`);
+      args.push("--logger", `${ build.join(";") }`);
     }
   }
 
@@ -828,7 +944,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     cliSwitch: string
   ) {
     if (value) {
-      args.push(cliSwitch, q(`${value}`));
+      args.push(cliSwitch, q(`${ value }`));
     }
   }
 
@@ -933,6 +1049,8 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     resolveContainerOptions,
     listNugetSources,
     addNugetSource,
-    removeNugetSource
+    removeNugetSource,
+    disableNugetSource,
+    enableNugetSource
   };
 })();

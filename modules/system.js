@@ -116,7 +116,27 @@ ${tempFileContents}
                 return resolve(result);
             }
             function generateError(message, exitCode) {
+                if (system.isError(result)) {
+                    const errorDetails = gatherErrorDetails(result);
+                    if (errorDetails) {
+                        message = `${message}\n${errorDetails}`;
+                    }
+                }
                 return new SystemError(message, program, args, exitCode !== null && exitCode !== void 0 ? exitCode : -1, result.stdout, result.stderr);
+            }
+            const q = requireModule("quote-if-required");
+            function gatherErrorDetails(err) {
+                const parts = [];
+                if (err) {
+                    parts.push(`(cmd: ${err.exe} ${err.args.map(q).join(" ")})`);
+                }
+                if (err && err.stderr && err.stderr.length > 0) {
+                    parts.push(err.stderr[err.stderr.length - 1]);
+                }
+                if (err && err.stdout && err.stdout.length > 0) {
+                    parts.push(err.stdout[err.stdout.length - 1]);
+                }
+                return parts.join("\n");
             }
             function hasExited() {
                 if (alreadyExited) {
