@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const path = require("path"), log = requireModule("log"), { fileExists, writeTextFile, chmod } = require("yafs"), os = require("os"), resolveNuget = require("./resolve-nuget"), pathUnquote = require("./path-unquote"), downloadNuget = require("./download-nuget"), env = require("./env");
+    const path = require("path"), log = requireModule("log"), { fileExists, writeTextFile, chmod } = require("yafs"), resolveNuget = require("./resolve-nuget"), shimNuget = requireModule("shim-nuget"), pathUnquote = require("./path-unquote"), downloadNuget = require("./download-nuget"), env = require("./env");
     let startedDownload = false, resolver = (_) => {
     }, lastResolution = new Promise(function (resolve) {
         resolver = resolve;
@@ -11,7 +11,7 @@
             return lastResolution;
         }
         if (await fileExists(pathUnquote(localNuget))) {
-            return localNuget;
+            return shimNuget(localNuget);
         }
         startedDownload = true;
         try {
@@ -23,23 +23,11 @@
             if (await fileExists(localNuget)) {
                 log.info(err);
                 log.info("Falling back on last local nuget.exe");
-                const result = await resolveShimIfRequired(localNuget);
-                resolver(result);
-                return result;
+                resolver(localNuget);
+                return localNuget;
             }
             throw err;
         }
-    }
-    async function resolveShimIfRequired(nuget) {
-        if (os.platform() === "win32") {
-            return nuget;
-        }
-        const folder = path.dirname(nuget), shim = path.join(folder, "nuget");
-        await writeTextFile(shim, `#!/bin/sh
-mono $(dirname $0)/nuget.exe $*
-`);
-        await chmod(shim, "777");
-        return shim;
     }
     module.exports = findLocalNuget;
 })();

@@ -1,20 +1,26 @@
 (function() {
   const
+    retry = requireModule<Retry<string>>("retry"),
     ZarroError = requireModule<ZarroError>("zarro-error"),
     HttpClient = requireModule<HttpClientModule>("http-client"),
     nugetUpdateSelf = requireModule<NugetUpdateSelf>("nuget-update-self"),
     logger = requireModule<ZarroLogger>("./log"),
     path = require("path"),
+    shimNuget = requireModule<ShimNuget>("shim-nuget"),
     url = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe";
 
-  function downloadNugetTo(targetFolder: string) {
+  async function downloadNugetTo(targetFolder: string): Promise<string> {
     logger.debug(`Attempting to download nuget.exe to ${ targetFolder }`);
     const
-      downloader = HttpClient.create(),
-      target = path.join(targetFolder, "nuget.exe");
-    return downloader
-      .download(url, path.join(targetFolder, "nuget.exe"))
-      .then(() => validateCanRunExe(target));
+      downloader = HttpClient.create();
+    const downloaded = shimNuget(
+      await downloader.download(
+        url,
+        path.join(targetFolder, "nuget.exe")
+      )
+    );
+    await validateCanRunExe(downloaded);
+    return downloaded;
   }
 
   const
@@ -29,74 +35,34 @@
     if (shouldLog) {
       logger.debug(`validating exe at: ${ exePath }`);
     }
-    return validators[exePath] = new Promise((resolve, reject) => {
-      let lastMessage = "unknown error",
+    return validators[exePath] = new Promise(async (resolve, reject) => {
+      let
+        lastError = "unknown error",
         attempts = 0;
-      setTimeout(function testExe() {
-        if (cached[exePath]) {
+
+      if (cached[exePath]) {
+        return resolve(exePath);
+      }
+      do {
+        try {
+          await nugetUpdateSelf(exePath);
           return resolve(exePath);
-        }
-        if (attempts === 10) {
-          return reject(`Unable to run executable at ${ exePath }: ${ lastMessage }`);
-        }
-        attempts++;
-        if (shouldLog) {
-          logger.debug(`attempt #${ attempts } to run ${ exePath }`);
-        }
-        const a = attempts;
-        nugetUpdateSelf(exePath).then(() => {
-          if (shouldLog) {
-            const sub = a > 1 ? ` (${ a })` : "";
-            logger.info(`nuget.exe appears to be valid!${ sub }`);
-          }
-          cached[exePath] = true;
-          return resolve(exePath);
-        }).catch(e => {
-          lastMessage = e.message || lastMessage;
+        } catch (e) {
+          const err = e as Error;
+          lastError = err.message || `${ e }`;
           if (shouldLog) {
             logger.debug(`failed to run executable (${
-              e.message
+              err.message
             }); ${
               attempts < 9
                 ? "will try again"
                 : "giving up"
             }`);
           }
-          setTimeout(testExe, 1000);
-        });
-      }, 1000);
-    });
-  }
+        }
+      } while (attempts++ < 9);
 
-  function retry<T>(
-    fn: (() => Promise<T>),
-    attempt?: number,
-    maxAttempts?: number,
-    wait?: number
-  ): Promise<T> {
-    let thisAttempt = attempt ?? 0;
-    const max = maxAttempts ?? 10;
-    let waitMs = wait ?? 5000;
-    if (waitMs < 1000) {
-      waitMs *= 1000;
-    }
-    return fn().catch(e => {
-      if (thisAttempt >= max) {
-        throw new ZarroError(`${ e } (giving up after ${ attempt } attempts)`);
-      } else {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => {
-              console.warn(e);
-              console.log(`trying again in ${ waitMs / 1000 }s (${ ++thisAttempt } / ${ max })`);
-              retry(fn, attempt, maxAttempts, wait).then(function() {
-                resolve(Array.from(arguments)[0]);
-              }).catch(function() {
-                reject(Array.from(arguments));
-              });
-            }, wait
-          );
-        });
-      }
+      reject(new ZarroError(`Unable to download nuget.exe: ${ lastError }`));
     });
   }
 

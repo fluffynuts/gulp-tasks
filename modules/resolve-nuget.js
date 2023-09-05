@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const os = require("os"), debug = requireModule("debug")(__filename), env = requireModule("env"), { chmodSync, writeFileSync, lsSync, fileExistsSync, FsEntities } = require("yafs"), which = requireModule("which"), path = require("path"), configGenerator = requireModule("resolve-nuget-config-generator"), toolsDir = requireModule("get-tools-folder")(), log = requireModule("log"), findNpmBase = requireModule("find-npm-base"), quoteIfRequired = requireModule("quote-if-required"), dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet", ZarroError = requireModule("zarro-error"), nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
+    const os = require("os"), debug = requireModule("debug")(__filename), env = requireModule("env"), { chmodSync, writeFileSync, lsSync, fileExistsSync, FsEntities } = require("yafs"), which = requireModule("which"), path = require("path"), configGenerator = requireModule("resolve-nuget-config-generator"), shimNuget = requireModule("shim-nuget"), toolsDir = requireModule("get-tools-folder")(), log = requireModule("log"), findNpmBase = requireModule("find-npm-base"), quoteIfRequired = requireModule("quote-if-required"), dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet", ZarroError = requireModule("zarro-error"), nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
     env.associate("USE_SYSTEM_NUGET", ["install-default-tools", "nuget-restore"]);
     function findNugetInPath() {
         try {
@@ -68,7 +68,7 @@
         }, null);
         if (resolved) {
             log.info(`using restore tool: ${resolved}`);
-            return (lastResolution = quoteIfRequired(resolveMonoScriptIfRequiredFor(resolved)));
+            return (lastResolution = quoteIfRequired(shimNuget(resolved)));
         }
         if (!errorOnMissing) {
             return undefined;
