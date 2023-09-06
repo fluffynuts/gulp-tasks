@@ -76,7 +76,7 @@ import { SpawnOptions } from "child_process";
     args: string[],
     opts: SystemOptions,
     handlers?: IoHandlers
-  ) {
+  ): Promise<string> {
     return doSystem(
       "cmd",
       [ "/c", cmd ].concat(args),

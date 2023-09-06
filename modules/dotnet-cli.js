@@ -8,6 +8,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     const { fileExists, readTextFile } = require("yafs");
     const { yellow } = requireModule("ansi-colors");
     const q = requireModule("quote-if-required");
+    const { pushIfSet, pushFlag } = requireModule("cli-support");
     const parseXml = requireModule("parse-xml");
     const { readAssemblyVersion, readCsProjProperty, readAssemblyName } = requireModule("csproj-utils");
     const updateNuspecVersion = requireModule("update-nuspec-version");
@@ -659,16 +660,6 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
                 build.push([key, value].join("="));
             }
             args.push("--logger", `${build.join(";")}`);
-        }
-    }
-    function pushIfSet(args, value, cliSwitch) {
-        if (value) {
-            args.push(cliSwitch, q(`${value}`));
-        }
-    }
-    function pushFlag(args, value, cliSwitch) {
-        if (value) {
-            args.push(cliSwitch);
         }
     }
     async function resolveContainerOptions(opts) {

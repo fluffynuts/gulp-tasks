@@ -14,6 +14,10 @@ import path from "path";
   } = require("yafs");
   const { yellow } = requireModule<AnsiColors>("ansi-colors");
   const q = requireModule<QuoteIfRequired>("quote-if-required");
+  const {
+    pushIfSet,
+    pushFlag
+  } = requireModule<CliSupport>("cli-support");
   const parseXml = requireModule<ParseXml>("parse-xml");
   const {
     readAssemblyVersion,
@@ -934,22 +938,6 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         build.push([ key, value ].join("="));
       }
       args.push("--logger", `${ build.join(";") }`);
-    }
-  }
-
-  function pushIfSet(
-    args: string[],
-    value: Optional<string | number>,
-    cliSwitch: string
-  ) {
-    if (value) {
-      args.push(cliSwitch, q(`${ value }`));
-    }
-  }
-
-  function pushFlag(args: string[], value: Optional<boolean>, cliSwitch: string) {
-    if (value) {
-      args.push(cliSwitch);
     }
   }
 

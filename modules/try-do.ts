@@ -20,9 +20,14 @@
 
     let retryCount = 0;
 
+    debugger;
     while (totalAttempts-- > 0) {
       try {
-        return await logic();
+        debugger;
+        const result = await logic();
+        debugger;
+        console.log("tryDo returning", result);
+        return result;
       } catch (ex) {
         const e = ex as Error;
         if (totalAttempts > 0) {
