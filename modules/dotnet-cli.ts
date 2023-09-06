@@ -341,7 +341,7 @@ import path from "path";
     if (!source) {
       return;
     }
-    const toRemove = await tryFindSingleRegisteredNugetSource(source);
+    const toRemove = await tryFindConfiguredNugetSource(source);
     if (!toRemove) {
       return;
     }
@@ -351,7 +351,7 @@ import path from "path";
   async function enableNugetSource(
     source: string | NugetSource
   ): Promise<void> {
-    const toEnable = await tryFindSingleRegisteredNugetSource(source);
+    const toEnable = await tryFindConfiguredNugetSource(source);
     if (!toEnable) {
       throw new Error(`unable to find source matching: ${ JSON.stringify(source) }`);
     }
@@ -365,7 +365,7 @@ import path from "path";
   async function disableNugetSource(
     source: string | NugetSource
   ): Promise<void> {
-    const toDisable = await tryFindSingleRegisteredNugetSource(source);
+    const toDisable = await tryFindConfiguredNugetSource(source);
     if (!toDisable) {
       throw new Error(`unable to find source matching: ${ JSON.stringify(source) }`);
     }
@@ -376,13 +376,13 @@ import path from "path";
     );
   }
 
-  async function tryFindSingleRegisteredNugetSource(
-    find: string | NugetSource
+  async function tryFindConfiguredNugetSource(
+    find: string | Partial<NugetSource>
   ): Promise<Optional<NugetSource>> {
     const
       allSources = await listNugetSources(),
-      name = isNugetSource(find) ? find.name : find,
-      url = isNugetSource(find) ? find.url : find;
+      name = isNugetSource(find) ? find.name : find as string,
+      url = isNugetSource(find) ? find.url : find as string;
 
     const matchByName = allSources.filter(
       o => o.name.toLowerCase() === name.toLowerCase()
@@ -434,7 +434,7 @@ import path from "path";
 
   function validateEmpty(
     sources: NugetSource[],
-    search: string | NugetSource
+    search: string | Partial<NugetSource>
   ) {
     if (sources.length !== 0) {
       throw new Error(`multiple matches for nuget source by name / url / host: ${ JSON.stringify(search) }`);
@@ -450,7 +450,7 @@ import path from "path";
   async function removeNugetSourceByName(
     name: string
   ): Promise<SystemResult | SystemError> {
-    const source = await tryFindSingleRegisteredNugetSource(name);
+    const source = await tryFindConfiguredNugetSource(name);
     if (!source) {
       throw new Error(`Can't find source with '${ name }'`);
     }
@@ -1038,6 +1038,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     addNugetSource,
     removeNugetSource,
     disableNugetSource,
-    enableNugetSource
+    enableNugetSource,
+    tryFindConfiguredNugetSource
   };
 })();
