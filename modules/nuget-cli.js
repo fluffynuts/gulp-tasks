@@ -43,6 +43,16 @@
             : systemOpts.suppressOutput;
         await runNugetWith(`Installing ${prettyPackageName(opts)}`, args, systemOpts);
     }
+    async function clearAllCache() {
+        await runNugetWith("Clearing all nuget caches", ["locals", "-clear"], {
+            suppressOutput: true
+        });
+    }
+    async function clearHttpCache() {
+        await runNugetWith("Clearing all nuget caches", ["locals", "http-cache", "-clear"], {
+            suppressOutput: true
+        });
+    }
     function prettyPackageName(opts) {
         return opts.version === undefined
             ? opts.packageId
@@ -54,6 +64,8 @@
         await system(nuget, args, opts);
     }
     module.exports = {
-        install
+        install,
+        clearAllCache,
+        clearHttpCache
     };
 })();

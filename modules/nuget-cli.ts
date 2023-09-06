@@ -66,6 +66,22 @@
     );
   }
 
+  async function clearAllCache(): Promise<void> {
+    await runNugetWith(
+      "Clearing all nuget caches",
+      [ "locals", "-clear" ], {
+        suppressOutput: true
+      });
+  }
+
+  async function clearHttpCache(): Promise<void> {
+    await runNugetWith(
+      "Clearing all nuget caches",
+      [ "locals", "http-cache", "-clear" ], {
+        suppressOutput: true
+      });
+  }
+
   function prettyPackageName(opts: NugetInstallOptions) {
     return opts.version === undefined
       ? opts.packageId
@@ -87,6 +103,8 @@
   }
 
   module.exports = {
-    install
+    install,
+    clearAllCache,
+    clearHttpCache
   };
 })();
