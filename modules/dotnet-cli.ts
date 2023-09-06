@@ -1,10 +1,9 @@
-import { writeTextFile } from "yafs";
-import path from "path";
-
-(function() {
+(function () {
   // TODO: perhaps one day, this should become an npm module of its own
   type PerConfigurationFunction = (configuration: string) => Promise<SystemResult | SystemError>;
   const system = requireModule<System>("system");
+  const { types } = require("util");
+  const { isRegExp } = types;
   const { isError } = system;
   const ZarroError = requireModule<ZarroError>("zarro-error");
   const path = require("path");
@@ -376,51 +375,88 @@ import path from "path";
     );
   }
 
+  function stringFor(value: any): Optional<string> {
+    return typeof value === "string"
+      ? value as string
+      : undefined;
+  }
+
   async function tryFindConfiguredNugetSource(
-    find: string | Partial<NugetSource>
+    find: string | Partial<NugetSource> | RegExp
   ): Promise<Optional<NugetSource>> {
     const
       allSources = await listNugetSources(),
-      name = isNugetSource(find) ? find.name : find as string,
-      url = isNugetSource(find) ? find.url : find as string;
+      name = isNugetSource(find) ? find.name : stringFor(find),
+      url = isNugetSource(find) ? find.url : stringFor(find),
+      re = isRegExp(find) ? find as RegExp : undefined;
 
-    const matchByName = allSources.filter(
-      o => o.name.toLowerCase() === name.toLowerCase()
-    );
-    if (matchByName.length === 1) {
-      return matchByName[0];
-    }
-    const matchByUrl = allSources.filter(
-      o => o.url.toLowerCase() === url.toLowerCase()
-    );
-    if (matchByUrl.length === 1) {
-      return matchByUrl[0];
-    }
+    return findNameMatch() ||
+           findUrlOrHostMatch() ||
+           findUrlPartialMatch();
 
-    let matchByHost = [] as NugetSource[];
-    try {
-      const host = hostFor(url);
-      matchByHost = allSources.filter(
-        o => {
-          try {
-            const sourceUrl = new URL(o.url);
-            return sourceUrl.host === host
-          } catch (e) {
-            return false;
-          }
+    function findUrlOrHostMatch() {
+      if (url) {
+        const matchByUrl = allSources.filter(
+          o => o.url.toLowerCase() === url.toLowerCase()
+        );
+        if (!!matchByUrl.length) {
+          return single(matchByUrl);
         }
-      );
-      if (matchByHost.length === 1) {
-        return matchByHost[0];
+
+        try {
+          const host = hostFor(url);
+          const matchByHost = allSources.filter(
+            o => {
+              try {
+                const sourceUrl = new URL(o.url);
+                return sourceUrl.host === host
+              } catch (e) {
+                return false;
+              }
+            }
+          );
+          if (!!matchByHost.length) {
+            return single(matchByHost);
+          }
+        } catch (e) {
+          debugger;
+          // suppress: we probably get here when url is not a valid url
+        }
       }
-    } catch (e) {
-      // suppress: we probably get here when url is not a valid url
     }
 
-    validateEmpty(matchByName, find);
-    validateEmpty(matchByUrl, find);
-    validateEmpty(matchByHost, find);
+    function findUrlPartialMatch() {
+      if (re) {
+        const matchByPartialUrl = allSources.filter(
+          o => !!o.url.match(re)
+        );
+        if (!!matchByPartialUrl.length) {
+          return single(matchByPartialUrl);
+        }
+      }
 
+    }
+
+    function findNameMatch() {
+      if (name) {
+        const matchByName = allSources.filter(
+          o => o.name.toLowerCase() === name.toLowerCase()
+        );
+        if (!!matchByName.length) {
+          return single(matchByName);
+        }
+      }
+    }
+
+    function single(
+      results: NugetSource[]
+    ) {
+      return findSingle(
+        allSources,
+        find,
+        results
+      )
+    }
   }
 
   function hostFor(urlOrHost: string): string {
@@ -432,27 +468,33 @@ import path from "path";
     }
   }
 
-  function validateEmpty(
+  function findSingle(
     sources: NugetSource[],
-    search: string | Partial<NugetSource>
-  ) {
-    if (sources.length !== 0) {
-      throw new Error(`multiple matches for nuget source by name / url / host: ${ JSON.stringify(search) }`);
+    search: string | Partial<NugetSource> | RegExp,
+    result: NugetSource[]
+  ): NugetSource {
+    if (result.length > 1) {
+      throw new Error(`multiple matches for nuget source by name / url / host: ${
+        JSON.stringify(search)
+      }\nfound:\n${
+        JSON.stringify(sources, null, 2)
+      }`);
     }
+    return result[0];
   }
 
   function isNugetSource(obj: any): obj is NugetSource {
     return typeof obj === "object" &&
-      typeof obj.name === "string" &&
-      typeof obj.url === "string";
+           typeof obj.name === "string" &&
+           typeof obj.url === "string";
   }
 
   async function removeNugetSourceByName(
-    name: string
+    find: string | Partial<NugetSource> | RegExp
   ): Promise<SystemResult | SystemError> {
-    const source = await tryFindConfiguredNugetSource(name);
+    const source = await tryFindConfiguredNugetSource(find);
     if (!source) {
-      throw new Error(`Can't find source with '${ name }'`);
+      throw new Error(`Can't find source with '${ find }'`);
     }
     const result = await runDotNetWith(
       [ "nuget", "remove", "source", source.name ],

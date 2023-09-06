@@ -1,7 +1,8 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     const system = requireModule("system");
+    const { types } = require("util");
+    const { isRegExp } = types;
     const { isError } = system;
     const ZarroError = requireModule("zarro-error");
     const path = require("path");
@@ -250,38 +251,62 @@ Object.defineProperty(exports, "__esModule", { value: true });
             suppressOutput: true
         });
     }
+    function stringFor(value) {
+        return typeof value === "string"
+            ? value
+            : undefined;
+    }
     async function tryFindConfiguredNugetSource(find) {
-        const allSources = await listNugetSources(), name = isNugetSource(find) ? find.name : find, url = isNugetSource(find) ? find.url : find;
-        const matchByName = allSources.filter(o => o.name.toLowerCase() === name.toLowerCase());
-        if (matchByName.length === 1) {
-            return matchByName[0];
-        }
-        const matchByUrl = allSources.filter(o => o.url.toLowerCase() === url.toLowerCase());
-        if (matchByUrl.length === 1) {
-            return matchByUrl[0];
-        }
-        let matchByHost = [];
-        try {
-            const host = hostFor(url);
-            matchByHost = allSources.filter(o => {
+        const allSources = await listNugetSources(), name = isNugetSource(find) ? find.name : stringFor(find), url = isNugetSource(find) ? find.url : stringFor(find), re = isRegExp(find) ? find : undefined;
+        return findNameMatch() ||
+            findUrlOrHostMatch() ||
+            findUrlPartialMatch();
+        function findUrlOrHostMatch() {
+            if (url) {
+                const matchByUrl = allSources.filter(o => o.url.toLowerCase() === url.toLowerCase());
+                if (!!matchByUrl.length) {
+                    return single(matchByUrl);
+                }
                 try {
-                    const sourceUrl = new URL(o.url);
-                    return sourceUrl.host === host;
+                    const host = hostFor(url);
+                    const matchByHost = allSources.filter(o => {
+                        try {
+                            const sourceUrl = new URL(o.url);
+                            return sourceUrl.host === host;
+                        }
+                        catch (e) {
+                            return false;
+                        }
+                    });
+                    if (!!matchByHost.length) {
+                        return single(matchByHost);
+                    }
                 }
                 catch (e) {
-                    return false;
+                    debugger;
+                    // suppress: we probably get here when url is not a valid url
                 }
-            });
-            if (matchByHost.length === 1) {
-                return matchByHost[0];
             }
         }
-        catch (e) {
-            // suppress: we probably get here when url is not a valid url
+        function findUrlPartialMatch() {
+            if (re) {
+                const matchByPartialUrl = allSources.filter(o => !!o.url.match(re));
+                if (!!matchByPartialUrl.length) {
+                    return single(matchByPartialUrl);
+                }
+            }
         }
-        validateEmpty(matchByName, find);
-        validateEmpty(matchByUrl, find);
-        validateEmpty(matchByHost, find);
+        function findNameMatch() {
+            if (name) {
+                const matchByName = allSources.filter(o => o.name.toLowerCase() === name.toLowerCase());
+                if (!!matchByName.length) {
+                    return single(matchByName);
+                }
+            }
+        }
+        function single(results) {
+            return findSingle(allSources, find, results);
+        }
     }
     function hostFor(urlOrHost) {
         try {
@@ -292,20 +317,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
             return urlOrHost;
         }
     }
-    function validateEmpty(sources, search) {
-        if (sources.length !== 0) {
-            throw new Error(`multiple matches for nuget source by name / url / host: ${JSON.stringify(search)}`);
+    function findSingle(sources, search, result) {
+        if (result.length > 1) {
+            throw new Error(`multiple matches for nuget source by name / url / host: ${JSON.stringify(search)}\nfound:\n${JSON.stringify(sources, null, 2)}`);
         }
+        return result[0];
     }
     function isNugetSource(obj) {
         return typeof obj === "object" &&
             typeof obj.name === "string" &&
             typeof obj.url === "string";
     }
-    async function removeNugetSourceByName(name) {
-        const source = await tryFindConfiguredNugetSource(name);
+    async function removeNugetSourceByName(find) {
+        const source = await tryFindConfiguredNugetSource(find);
         if (!source) {
-            throw new Error(`Can't find source with '${name}'`);
+            throw new Error(`Can't find source with '${find}'`);
         }
         const result = await runDotNetWith(["nuget", "remove", "source", source.name], { suppressOutput: true });
         if (system.isError(result)) {
