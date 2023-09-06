@@ -161,15 +161,43 @@ ${ tempFileContents }
                     return;
                 }
                 debug(`child exited with code: ${code}`);
+                const moreInfo = generateMoreInfo(result);
                 if (code) {
                     const errResult = generateError(
-                        `Process exited (${ ctx }) with non-zero code: ${ code }`,
+                      `Process exited (${ ctx }) with non-zero code: ${ code }\n${moreInfo}`.trim(),
                         code
                     );
                     return reject(errResult);
                 }
                 result.exitCode = code;
                 return resolve(result);
+            }
+
+            function generateMoreInfo(
+              result: SystemResult
+            ): string {
+              if (!result) {
+                return "(no more info available)";
+              }
+              const lines = [
+                "attempted to run:",
+                generateCommandLineFor(result)
+              ];
+              if (result.stderr && result.stderr.length) {
+                lines.push("stderr:");
+                lines.push(... result.stderr.map(s => `  ${s}`));
+              }
+              if (result.stdout && result.stdout.length) {
+                lines.push("stdout:");
+                lines.push(... result.stdout.map(s => `  ${s}`));
+              }
+              return lines.join("\n");
+            }
+
+            function generateCommandLineFor(
+              info: SystemCommand
+            ): string {
+              return [ info.exe, (info.args || []).map(q) ].join(" ");
             }
 
             function generateError(
