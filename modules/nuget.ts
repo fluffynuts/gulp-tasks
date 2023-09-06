@@ -3,9 +3,12 @@
     resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
     findLocalNuget = requireModule<FindLocalNuget>("find-local-nuget"),
     tryDo = requireModule<TryDo<string>>("try-do"),
-    exec = requireModule<Exec>("exec");
+    exec = requireModule<Exec>("system");
 
-  module.exports = async function(args: string[], execOpts: ExecOpts) {
+  module.exports = async function(
+    args: string[],
+    execOpts?: SystemOptions
+  ) {
     const
       resolvedNuget = resolveNuget(undefined, false),
       nugetPath = resolvedNuget || await findLocalNuget(),

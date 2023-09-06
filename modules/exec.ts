@@ -1,3 +1,5 @@
+import { SpawnOptions } from "child_process";
+
 (function () {
   // this is a convenient wrapper around system()
   const
@@ -8,7 +10,7 @@
     path = require("path"),
     quoteIfRequired = requireModule<QuoteIfRequired>("quote-if-required"),
     failAfter = requireModule<FailAfter>("fail-after"),
-    os = require("os"),
+    isWindows = requireModule<IsWindows>("is-windows"),
     system = requireModule<System>("system"),
     debug = requireModule<DebugFactory>("debug")(__filename),
     which = requireModule<Which>("which"),
@@ -52,25 +54,46 @@
   async function doSystemWin32(
     cmd: string,
     args: string[],
-    opts: ExecOpts,
+    opts?: ExecOpts,
     handlers?: IoHandlers
   ): Promise<string> {
-    if (await isBatchFile(cmd)) {
-      return doSystem(
-        "cmd",
-        ["/c", cmd].concat(args),
-        opts,
-        handlers
-      )
-    }
-    return doSystem(cmd, args, opts, handlers);
+    const
+      {
+        cwd,
+        ...optsWithoutCwd
+      } = (opts || {}),
+      systemOpts = {
+        ...optsWithoutCwd,
+        cwd: `${ cwd }`
+      };
+    return await isBatchFile(cmd)
+      ? runBatchFile(cmd, args, systemOpts, handlers)
+      : doSystem(cmd, args, systemOpts, handlers);
+  }
+
+  async function runBatchFile(
+    cmd: string,
+    args: string[],
+    opts: SystemOptions,
+    handlers?: IoHandlers
+  ) {
+    return doSystem(
+      "cmd",
+      [ "/c", cmd ].concat(args),
+      opts,
+      handlers
+    )
   }
 
   async function isBatchFile(cmd: string): Promise<boolean> {
     const
       resolved = await fullPathTo(cmd),
       ext = path.extname(resolved).toLowerCase();
-    return win32BatchExtensions.has(ext);
+    const result = win32BatchExtensions.has(ext);
+    if (result && isWindows()) {
+      throw new Error(`can't run batch files on current platform`);
+    }
+    return result;
   }
 
   const win32BatchExtensions = new Set<string>([
@@ -80,7 +103,7 @@
 
   async function fullPathTo(cmd: string): Promise<string> {
     if (await folderExists(cmd)) {
-      throw new ZarroError(`'${cmd}' is a folder, not a file (required to execute)`);
+      throw new ZarroError(`'${ cmd }' is a folder, not a file (required to execute)`);
     }
     if (await fileExists(cmd)) {
       return cmd;
@@ -89,7 +112,7 @@
     if (inPath) {
       return inPath;
     }
-    throw new ZarroError(`'${cmd}' not found directly or in the PATH`);
+    throw new ZarroError(`'${ cmd }' not found directly or in the PATH`);
   }
 
   async function doSystem(
@@ -165,10 +188,10 @@
     }
     if (debug) {
       debug("executing:")
-      debug(`- cmd: ${cmd}`);
-      debug(`- args: ${JSON.stringify(args)}`);
-      debug(`- opts: ${JSON.stringify(opts)}`);
-      debug(`- handlers: ${JSON.stringify(handlers)}`);
+      debug(`- cmd: ${ cmd }`);
+      debug(`- args: ${ JSON.stringify(args) }`);
+      debug(`- opts: ${ JSON.stringify(opts) }`);
+      debug(`- handlers: ${ JSON.stringify(handlers) }`);
     }
 
     let timeout = 0;
@@ -179,7 +202,7 @@
       opts.timeout += 50;
     }
     // noinspection ES6MissingAwait
-    const promise = os.platform() === "win32"
+    const promise = isWindows()
       ? doSystemWin32(cmd, args, Object.assign({}, opts), handlers || {})
       : doSystem(cmd, args, Object.assign({}, opts), handlers || {});
 

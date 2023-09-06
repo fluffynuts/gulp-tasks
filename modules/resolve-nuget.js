@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const os = require("os"), debug = requireModule("debug")(__filename), env = requireModule("env"), { chmodSync, writeFileSync, lsSync, fileExistsSync, FsEntities } = require("yafs"), which = requireModule("which"), path = require("path"), configGenerator = requireModule("resolve-nuget-config-generator"), toolsDir = requireModule("get-tools-folder")(), log = requireModule("log"), findNpmBase = requireModule("find-npm-base"), quoteIfRequired = requireModule("quote-if-required"), dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet", ZarroError = requireModule("zarro-error"), nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
+    const isWindows = requireModule("is-windows"), debug = requireModule("debug")(__filename), env = requireModule("env"), { chmodSync, writeFileSync, lsSync, fileExistsSync, FsEntities } = require("yafs"), which = requireModule("which"), path = require("path"), configGenerator = requireModule("resolve-nuget-config-generator"), toolsDir = requireModule("get-tools-folder")(), log = requireModule("log"), findNpmBase = requireModule("find-npm-base"), quoteIfRequired = requireModule("quote-if-required"), dotnetExe = process.platform === "win32" ? "dotnet.exe" : "dotnet", ZarroError = requireModule("zarro-error"), nugetExe = env.resolveFlag("DOTNET_CORE") ? dotnetExe : "nuget.exe";
     env.associate("USE_SYSTEM_NUGET", ["install-default-tools", "nuget-restore"]);
     function findNugetInPath() {
         try {
@@ -86,7 +86,7 @@
     }
     function resolveMonoScriptIfRequiredFor(nugetPath) {
         nugetPath = path.resolve(nugetPath);
-        if (os.platform() === "win32") {
+        if (isWindows()) {
             return nugetPath;
         }
         const ext = path.extname(nugetPath).toLowerCase();

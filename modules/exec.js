@@ -1,7 +1,19 @@
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
     // this is a convenient wrapper around system()
-    const { fileExists, folderExists } = require("yafs"), path = require("path"), quoteIfRequired = requireModule("quote-if-required"), failAfter = requireModule("fail-after"), os = require("os"), system = requireModule("system"), debug = requireModule("debug")(__filename), which = requireModule("which"), ZarroError = requireModule("zarro-error");
+    const { fileExists, folderExists } = require("yafs"), path = require("path"), quoteIfRequired = requireModule("quote-if-required"), failAfter = requireModule("fail-after"), isWindows = requireModule("is-windows"), system = requireModule("system"), debug = requireModule("debug")(__filename), which = requireModule("which"), ZarroError = requireModule("zarro-error");
     function makeDefaultOptions() {
         return {
             cwd: process.cwd(),
@@ -26,14 +38,21 @@
         // intentionally blank
     }
     async function doSystemWin32(cmd, args, opts, handlers) {
-        if (await isBatchFile(cmd)) {
-            return doSystem("cmd", ["/c", cmd].concat(args), opts, handlers);
-        }
-        return doSystem(cmd, args, opts, handlers);
+        const _a = (opts || {}), { cwd } = _a, optsWithoutCwd = __rest(_a, ["cwd"]), systemOpts = Object.assign(Object.assign({}, optsWithoutCwd), { cwd: `${cwd}` });
+        return await isBatchFile(cmd)
+            ? runBatchFile(cmd, args, systemOpts, handlers)
+            : doSystem(cmd, args, systemOpts, handlers);
+    }
+    async function runBatchFile(cmd, args, opts, handlers) {
+        return doSystem("cmd", ["/c", cmd].concat(args), opts, handlers);
     }
     async function isBatchFile(cmd) {
         const resolved = await fullPathTo(cmd), ext = path.extname(resolved).toLowerCase();
-        return win32BatchExtensions.has(ext);
+        const result = win32BatchExtensions.has(ext);
+        if (result && isWindows()) {
+            throw new Error(`can't run batch files on current platform`);
+        }
+        return result;
     }
     const win32BatchExtensions = new Set([
         ".bat",
@@ -113,7 +132,7 @@
             opts.timeout += 50;
         }
         // noinspection ES6MissingAwait
-        const promise = os.platform() === "win32"
+        const promise = isWindows()
             ? doSystemWin32(cmd, args, Object.assign({}, opts), handlers || {})
             : doSystem(cmd, args, Object.assign({}, opts), handlers || {});
         if (!timeout) {
