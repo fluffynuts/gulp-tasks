@@ -226,14 +226,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
         if (!source) {
             return;
         }
-        const toRemove = await tryFindSingleRegisteredNugetSource(source);
+        const toRemove = await tryFindConfiguredNugetSource(source);
         if (!toRemove) {
             return;
         }
         await removeNugetSourceByName(toRemove.name);
     }
     async function enableNugetSource(source) {
-        const toEnable = await tryFindSingleRegisteredNugetSource(source);
+        const toEnable = await tryFindConfiguredNugetSource(source);
         if (!toEnable) {
             throw new Error(`unable to find source matching: ${JSON.stringify(source)}`);
         }
@@ -242,7 +242,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         });
     }
     async function disableNugetSource(source) {
-        const toDisable = await tryFindSingleRegisteredNugetSource(source);
+        const toDisable = await tryFindConfiguredNugetSource(source);
         if (!toDisable) {
             throw new Error(`unable to find source matching: ${JSON.stringify(source)}`);
         }
@@ -250,7 +250,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             suppressOutput: true
         });
     }
-    async function tryFindSingleRegisteredNugetSource(find) {
+    async function tryFindConfiguredNugetSource(find) {
         const allSources = await listNugetSources(), name = isNugetSource(find) ? find.name : find, url = isNugetSource(find) ? find.url : find;
         const matchByName = allSources.filter(o => o.name.toLowerCase() === name.toLowerCase());
         if (matchByName.length === 1) {
@@ -303,7 +303,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             typeof obj.url === "string";
     }
     async function removeNugetSourceByName(name) {
-        const source = await tryFindSingleRegisteredNugetSource(name);
+        const source = await tryFindConfiguredNugetSource(name);
         if (!source) {
             throw new Error(`Can't find source with '${name}'`);
         }
@@ -709,6 +709,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         addNugetSource,
         removeNugetSource,
         disableNugetSource,
-        enableNugetSource
+        enableNugetSource,
+        tryFindConfiguredNugetSource
     };
 })();
