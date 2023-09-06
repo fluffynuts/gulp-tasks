@@ -197,7 +197,7 @@ ${ tempFileContents }
             function generateCommandLineFor(
               info: SystemCommand
             ): string {
-              return [ info.exe, (info.args || []).map(q) ].join(" ");
+              return [ info.exe, (info.args || []).map(q).join(" ") ].join(" ");
             }
 
             function generateError(

@@ -135,7 +135,7 @@ ${tempFileContents}
                 return lines.join("\n");
             }
             function generateCommandLineFor(info) {
-                return [info.exe, (info.args || []).map(q)].join(" ");
+                return [info.exe, (info.args || []).map(q).join(" ")].join(" ");
             }
             function generateError(message, exitCode) {
                 if (system.isError(result)) {
