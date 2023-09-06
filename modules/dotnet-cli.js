@@ -267,9 +267,10 @@
                 if (!!matchByUrl.length) {
                     return single(matchByUrl);
                 }
+                let matchByHost = [];
                 try {
                     const host = hostFor(url);
-                    const matchByHost = allSources.filter(o => {
+                    matchByHost = allSources.filter(o => {
                         try {
                             const sourceUrl = new URL(o.url);
                             return sourceUrl.host === host;
@@ -278,13 +279,12 @@
                             return false;
                         }
                     });
-                    if (!!matchByHost.length) {
-                        return single(matchByHost);
-                    }
                 }
                 catch (e) {
-                    debugger;
                     // suppress: we probably get here when url is not a valid url
+                }
+                if (!!matchByHost.length) {
+                    return single(matchByHost);
                 }
             }
         }
@@ -305,7 +305,10 @@
             }
         }
         function single(results) {
-            return findSingle(allSources, find, results);
+            if (results.length > 1) {
+                throw new Error(`multiple matches for nuget source by name / url / host: ${JSON.stringify(find)}\nfound:\n${JSON.stringify(allSources, null, 2)}`);
+            }
+            return results[0];
         }
     }
     function hostFor(urlOrHost) {
@@ -316,12 +319,6 @@
         catch (e) {
             return urlOrHost;
         }
-    }
-    function findSingle(sources, search, result) {
-        if (result.length > 1) {
-            throw new Error(`multiple matches for nuget source by name / url / host: ${JSON.stringify(search)}\nfound:\n${JSON.stringify(sources, null, 2)}`);
-        }
-        return result[0];
     }
     function isNugetSource(obj) {
         return typeof obj === "object" &&
