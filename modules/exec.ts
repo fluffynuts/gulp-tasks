@@ -90,7 +90,7 @@ import { SpawnOptions } from "child_process";
       resolved = await fullPathTo(cmd),
       ext = path.extname(resolved).toLowerCase();
     const result = win32BatchExtensions.has(ext);
-    if (result && isWindows()) {
+    if (result && !isWindows()) {
       throw new Error(`can't run batch files on current platform`);
     }
     return result;

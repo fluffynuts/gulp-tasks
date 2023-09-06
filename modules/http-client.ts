@@ -1,10 +1,13 @@
 import { RequestResponse, ResponseRequest } from "request";
+import { fileExists } from "yafs";
 
 (function() {
   const
     fs = require("fs"),
     path = require("path"),
     ZarroError = requireModule<ZarroError>("zarro-error"),
+    sleep = requireModule<Sleep>("sleep"),
+    promisifyStream = requireModule<PromisifyStream>("promisify-stream"),
     ensureFolderExists = require("./ensure-folder-exists").sync,
     request = require("request"),
     debug = requireModule<DebugFactory>("debug")(__filename);
@@ -44,9 +47,16 @@ import { RequestResponse, ResponseRequest } from "request";
         return target;
       }
       const partFile = `${ target }.part`;
+      const inFlight = this._request;
+      if (inFlight) {
+        await promisifyStream(inFlight);
+        while (!await fileExists(target)) {
+          await sleep(50);
+        }
+      }
       ensureFolderExists(path.dirname(partFile));
-      return new Promise((resolve, reject) => {
-        this._request = request.get(url, { timeout: 30000 })
+      return new Promise(async (resolve, reject) => {
+        const req = this._request = request.get(url, { timeout: 30000 })
           .on("response", (response: RequestResponse) => {
             this._debug(`got response: ${ JSON.stringify(response) }`);
             this._downloadSize = parseInt(response.headers["content-length"] || "0");
@@ -62,13 +72,15 @@ import { RequestResponse, ResponseRequest } from "request";
           })
           .on("end", () => {
             this._clear();
-            this._rename(
-              resolve,
-              reject,
-              partFile,
-              target
-            );
           }).pipe(fs.createWriteStream(partFile));
+        const promise = promisifyStream(req);
+        try {
+          await promise;
+          await this._rename(partFile, target);
+          resolve(target);
+        } catch (e) {
+          reject(e);
+        }
       });
     }
 
@@ -97,31 +109,25 @@ import { RequestResponse, ResponseRequest } from "request";
       process.stdout.write(msg);
     }
 
-    _rename(
-      resolve: (s: string) => void,
-      reject: (e: Error) => void,
+    async _rename(
       src: string,
       dst: string,
       attempts: number = 0
-    ) {
+    ): Promise<void> {
       try {
         this._debug("attempt rename of temp file");
         fs.renameSync(src, dst);
         this._clearStatus();
         this._info(`-> ${ dst } download complete!`);
-        resolve(dst);
       } catch (e) {
         this._debug("rename error:", e);
         if (attempts > 99) {
-          reject(
-            new ZarroError(
-              [ "Unable to rename \"", src, "\" to \"", dst, "\": ", e ].join("")
-            )
+          throw            new ZarroError(
+            [ "Unable to rename \"", src, "\" to \"", dst, "\": ", e ].join("")
           );
         } else {
-          setTimeout(() => {
-            this._rename(resolve, reject, src, dst, attempts++);
-          }, 100);
+          await sleep(100);
+          return this._rename(src, dst, attempts++);
         }
       }
     }

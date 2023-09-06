@@ -268,7 +268,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
                     return sourceUrl.host === host;
                 }
                 catch (e) {
-                    debugger;
                     return false;
                 }
             });

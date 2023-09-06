@@ -1,7 +1,7 @@
 import { writeTextFile } from "yafs";
 import path from "path";
 
-(function () {
+(function() {
   // TODO: perhaps one day, this should become an npm module of its own
   type PerConfigurationFunction = (configuration: string) => Promise<SystemResult | SystemError>;
   const system = requireModule<System>("system");
@@ -399,10 +399,9 @@ import path from "path";
       matchByHost = allSources.filter(
         o => {
           try {
-          const sourceUrl = new URL(o.url);
-          return sourceUrl.host === host
+            const sourceUrl = new URL(o.url);
+            return sourceUrl.host === host
           } catch (e) {
-            debugger;
             return false;
           }
         }
@@ -434,14 +433,14 @@ import path from "path";
     search: string | NugetSource
   ) {
     if (sources.length !== 0) {
-      throw new Error(`multiple matches for nuget source by name / url / host: ${JSON.stringify(search)}`);
+      throw new Error(`multiple matches for nuget source by name / url / host: ${ JSON.stringify(search) }`);
     }
   }
 
   function isNugetSource(obj: any): obj is NugetSource {
     return typeof obj === "object" &&
-           typeof obj.name === "string" &&
-           typeof obj.url === "string";
+      typeof obj.name === "string" &&
+      typeof obj.url === "string";
   }
 
   async function removeNugetSourceByName(
@@ -871,7 +870,7 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
       });
       return result;
     } catch (e) {
-      console.error(`system error: ${e}`);
+      console.error(`system error: ${ e }`);
       if (opts.suppressErrors) {
         return e as SystemError;
       }

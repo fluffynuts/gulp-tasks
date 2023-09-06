@@ -49,7 +49,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     async function isBatchFile(cmd) {
         const resolved = await fullPathTo(cmd), ext = path.extname(resolved).toLowerCase();
         const result = win32BatchExtensions.has(ext);
-        if (result && isWindows()) {
+        if (result && !isWindows()) {
             throw new Error(`can't run batch files on current platform`);
         }
         return result;

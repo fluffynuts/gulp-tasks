@@ -1,18 +1,13 @@
-(function () {
+(function() {
   const
-    isWindows = requireModule<IsWindows>("is-windows"),
+    os = require("os"),
     debug = requireModule<DebugFactory>("debug")(__filename),
     env = requireModule<Env>("env"),
-    {
-      chmodSync,
-      writeFileSync,
-      lsSync,
-      fileExistsSync,
-      FsEntities
-    } = require("yafs"),
+    { chmodSync, writeFileSync, lsSync, fileExistsSync, FsEntities } = require("yafs"),
     which = requireModule<Which>("which"),
     path = require("path"),
     configGenerator = requireModule<ResolveNugetConfigGenerator>("resolve-nuget-config-generator"),
+    shimNuget = requireModule<ShimNuget>("shim-nuget"),
     toolsDir = requireModule<GetToolsFolder>("get-tools-folder")(),
     log = requireModule<Log>("log"),
     findNpmBase = requireModule<FindNpmBase>("find-npm-base"),
@@ -93,13 +88,13 @@
       findNugetInPath(),
       findDotNetIfRequired(),
       checkExists(config.localNuget)
-    ].reduce(function (acc, cur) {
+    ].reduce(function(acc, cur) {
       return acc || cur;
     }, null);
     if (resolved) {
       log.info(`using restore tool: ${ resolved }`);
       return (lastResolution = quoteIfRequired(
-        resolveMonoScriptIfRequiredFor(resolved)
+        shimNuget(resolved)
       ));
     }
     if (!errorOnMissing) {
@@ -120,7 +115,7 @@
 
   function resolveMonoScriptIfRequiredFor(nugetPath: string) {
     nugetPath = path.resolve(nugetPath);
-    if (isWindows()) {
+    if (os.platform() === "win32") {
       return nugetPath;
     }
     const ext = path.extname(nugetPath).toLowerCase();
