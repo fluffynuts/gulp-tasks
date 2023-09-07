@@ -1,9 +1,9 @@
 "use strict";
 (function () {
     const packageLookup = {
-        [`${ZarroTestPackage.local}`]: undefined,
-        [`${ZarroTestPackage.beta}`]: "zarro@beta",
-        [`${ZarroTestPackage.latest}`]: "zarro@latest"
+        [`local`]: undefined,
+        [`beta`]: "zarro@beta",
+        [`latest`]: "zarro@latest"
     };
     async function testZarro(opts) {
         const log = requireModule("log"), system = requireModule("system");
@@ -26,7 +26,7 @@
             await system("npm", ["install", "--no-save", toInstall]);
         }
         try {
-            for (const task of tasks) {
+            for (const task of taskArray) {
                 await system("npm", ["run", task]);
             }
         }

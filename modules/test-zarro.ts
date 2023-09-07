@@ -1,9 +1,9 @@
 (function () {
     const
         packageLookup = {
-            [`${ ZarroTestPackage.local }`]: undefined,
-            [`${ ZarroTestPackage.beta }`]: "zarro@beta",
-            [`${ ZarroTestPackage.latest }`]: "zarro@latest"
+            [`local`]: undefined,
+            [`beta`]: "zarro@beta",
+            [`latest`]: "zarro@latest"
         } as Dictionary<Optional<string>>;
 
     async function testZarro(opts: TestZarroOptions): Promise<void> {
@@ -35,7 +35,7 @@
         }
 
         try {
-            for (const task of tasks) {
+            for (const task of taskArray) {
                 await system(
                     "npm",
                     [ "run", task ]
