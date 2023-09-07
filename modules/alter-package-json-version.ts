@@ -1,6 +1,4 @@
-import { boolean } from "yargs";
-
-(function() {
+(function () {
 
     interface CompleteOptions extends AlterPackageJsonVersionOptions {
         packageJsonPath: string;
@@ -16,7 +14,18 @@ import { boolean } from "yargs";
         ZarroError = requireModule<ZarroError>("zarro-error"),
         validVersionStrategies = new Set([ "major", "minor", "patch" ]),
         gutil = requireModule<GulpUtil>("gulp-util"),
-        env = requireModule<Env>("env"),
+        // env = requireModule<Env>("env"),
+        {
+            resolve,
+            resolveNumber,
+            resolveFlag,
+            INITIAL_RELEASE,
+            PACKAGE_JSON,
+            DRY_RUN,
+            VERSION_INCREMENT_STRATEGY,
+            VERSION_INCREMENT_ZERO,
+            PACK_INCREMENT_VERSION_BY
+        } = requireModule<Env>("env"),
         { stat } = require("fs").promises,
         { readTextFile, writeTextFile } = require("yafs"),
         incrementVersion = requireModule<IncrementVersion>("increment-version");
@@ -31,7 +40,7 @@ import { boolean } from "yargs";
     async function alterPackageJsonVersion(
         inputOpts?: AlterPackageJsonVersionOptions
     ) {
-        if (env.resolveFlag(env.INITIAL_RELEASE)) {
+        if (resolveFlag(INITIAL_RELEASE)) {
             return;
         }
         return new Promise<void>(async (resolve, reject) => {
@@ -87,19 +96,19 @@ import { boolean } from "yargs";
         }
         const result = { ...opts } as CompleteOptions;
         if (result.packageJsonPath === undefined) {
-            result.packageJsonPath = env.resolve(env.PACKAGE_JSON);
+            result.packageJsonPath = resolve(PACKAGE_JSON);
         }
         if (result.dryRun === undefined) {
-            result.dryRun = env.resolveFlag(env.DRY_RUN)
+            result.dryRun = resolveFlag(DRY_RUN)
         }
         if (result.strategy === undefined) {
-            result.strategy = env.resolve(env.VERSION_INCREMENT_STRATEGY);
+            result.strategy = resolve(VERSION_INCREMENT_STRATEGY);
         }
         if (result.zero === undefined) {
-            result.zero = env.resolveFlag(env.VERSION_INCREMENT_ZERO);
+            result.zero = resolveFlag(VERSION_INCREMENT_ZERO);
         }
         if (result.incrementBy === undefined) {
-            result.incrementBy = env.resolveNumber(env.PACK_INCREMENT_VERSION_BY);
+            result.incrementBy = resolveNumber(PACK_INCREMENT_VERSION_BY);
         }
         return result as CompleteOptions;
     }
