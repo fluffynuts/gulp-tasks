@@ -63,7 +63,7 @@
         });
         return xml;
     }
-    async function incrementPackageVersionInNuspec(xml, file) {
+    async function incrementPackageVersionInNuspec(xml) {
         const meta = xml.package.metadata[0], packageName = meta.id[0], node = meta.version, current = node[0];
         const newVersion = incrementVersion(current, env.resolve("VERSION_INCREMENT_STRATEGY"));
         node[0] = newVersion;
@@ -73,7 +73,7 @@
     function incrementPackageVersion() {
         return editXml((xml, file) => {
             if (xml.package) {
-                return incrementPackageVersionInNuspec(xml, file);
+                return incrementPackageVersionInNuspec(xml);
             }
             else if (xml.Project) {
                 return incrementPackageVersionInCsProj(xml, file);
