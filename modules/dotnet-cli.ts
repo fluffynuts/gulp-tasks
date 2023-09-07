@@ -533,7 +533,8 @@
         let revert = undefined as Optional<RevertVersion>;
 
         try {
-          if (opts.nuspec && await shouldIncludeNuspec(copy, copy.target)) {
+          if (opts.nuspec && await shouldIncludeNuspec(copy)) {
+            debugger;
             const absoluteNuspecPath = await resolveAbsoluteNuspecPath(opts);
             copy.msbuildProperties = copy.msbuildProperties || {};
             copy.msbuildProperties["NuspecFile"] = `${ copy.nuspec }`;
@@ -571,23 +572,36 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
     );
   }
 
+  function parseNuspecPath(
+    p: Optional<string>
+  ): { resolvedPath: Optional<string>, isOptional: boolean } {
+    if (!p) {
+      return { resolvedPath: p, isOptional: false };
+    }
+    const
+      isOptional = !!p.match(/\?$/),
+      resolvedPath = p.replace(/\?$/, "");
+    return { isOptional, resolvedPath };
+  }
+
   async function tryResolveValidPathToNuspec(
     opts: DotNetPackOptions
   ): Promise<Optional<string>> {
     if (!opts.nuspec) {
       return opts.nuspec;
     }
-    if (path.isAbsolute(opts.nuspec) && await fileExists(opts.nuspec)) {
+    const { isOptional, resolvedPath } = parseNuspecPath(opts.nuspec);
+    if (path.isAbsolute(resolvedPath) && await fileExists(resolvedPath)) {
       return opts.nuspec;
     }
     const
       containerDir = path.dirname(opts.target),
-      resolvedRelativeToProjectPath = path.resolve(path.join(containerDir, opts.nuspec));
+      resolvedRelativeToProjectPath = path.resolve(path.join(containerDir, resolvedPath));
     if (await fileExists(resolvedRelativeToProjectPath)) {
       return opts.nuspec;
     }
 
-    const resolvedRelativeToCwd = path.join(process.cwd(), opts.nuspec);
+    const resolvedRelativeToCwd = path.join(process.cwd(), resolvedPath);
     if (await fileExists(resolvedRelativeToCwd)) {
       return resolvedRelativeToCwd;
     }
@@ -597,22 +611,22 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
   async function resolveAbsoluteNuspecPath(
     opts: DotNetPackOptions
   ): Promise<string> {
-    const nuspec = opts.nuspec as string;
-    if (!nuspec) {
+    const { resolvedPath, isOptional } = parseNuspecPath(opts.nuspec);
+    if (!resolvedPath) {
       throw new ZarroError(`unable to resolve path to nuspec: no nuspec provided`);
     }
-    return path.isAbsolute(nuspec)
-      ? nuspec
+    return path.isAbsolute(resolvedPath)
+      ? resolvedPath
       : await resolveNuspecRelativeToProject();
 
     async function resolveNuspecRelativeToProject(): Promise<string> {
       const
         containerDir = path.dirname(opts.target);
-      const test = path.resolve(path.join(containerDir, nuspec));
+      const test = path.resolve(path.join(containerDir, resolvedPath));
       if (await fileExists(test)) {
         return test;
       }
-      throw new Error(`Unable to resolve '${ nuspec }' relative to '${ containerDir }'`);
+      throw new Error(`Unable to resolve '${ resolvedPath }' relative to '${ containerDir }'`);
     }
   }
 
@@ -623,29 +637,37 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
   }
 
   async function shouldIncludeNuspec(
-    opts: DotNetPackOptions,
-    target: string
+    opts: DotNetPackOptions
   ): Promise<boolean> {
     if (!opts.nuspec) {
       return false;
     }
 
-    if (await fileExists(opts.nuspec)) {
+    const { isOptional, resolvedPath } = parseNuspecPath(opts.nuspec);
+
+    const
+      target = opts.target;
+
+    if (await fileExists(resolvedPath)) {
+      opts.nuspec = resolvedPath;
+      debugger;
       return true;
     }
 
     const
       container = path.dirname(target),
-      resolved = path.resolve(path.join(container, opts.nuspec));
+      resolved = path.resolve(path.join(container, resolvedPath));
     if (await fileExists(resolved)) {
+      opts.nuspec = resolvedPath;
+      debugger;
       return true;
     }
 
-    if (opts.ignoreMissingNuspec) {
+    if (opts.ignoreMissingNuspec || isOptional) {
       return false;
     }
     throw new ZarroError(
-      `nuspec file not found at '${ opts.nuspec }' (from cwd: '${ process.cwd() }`
+      `nuspec file not found at '${ test }' (from cwd: '${ process.cwd() }`
     );
   }
 

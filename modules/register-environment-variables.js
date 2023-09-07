@@ -458,7 +458,7 @@
         env.register({
             name: "PACK_SUPPLEMENTARY_NUSPEC",
             help: "Relative path to use when packing with dotnet: look for this .nuspec relative to the current .csproj to supply to dotnet pack. If it is found, it will be used.",
-            default: "Package.nuspec"
+            default: "Package.nuspec?"
         });
         env.register({
             name: "PACK_IGNORE_MISSING_DEFAULT_NUSPEC",
