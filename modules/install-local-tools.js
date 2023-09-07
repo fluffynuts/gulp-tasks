@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const resolveNuget = require("./resolve-nuget"), downloadNuget = require("./download-nuget"), nugetUpdateSelf = require("./nuget-update-self"), debug = requireModule("debug")(__filename), gutil = requireModule("gulp-util"), path = require("path"), { ls, FsEntities } = require("yafs"), getToolsFolder = require("./get-tools-folder"), nuget = require("./nuget"), ensureFolderExists = require("./ensure-folder-exists"), ZarroError = requireModule("zarro-error"), env = requireModule("env"), del = require("del"), vars = {
+    const resolveNuget = requireModule("resolve-nuget"), downloadNuget = requireModule("download-nuget"), nugetUpdateSelf = requireModule("nuget-update-self"), debug = requireModule("debug")(__filename), gutil = requireModule("gulp-util"), path = require("path"), { ls, FsEntities } = require("yafs"), getToolsFolder = requireModule("get-tools-folder"), nuget = requireModule("nuget"), { mkdir } = require("yafs"), ZarroError = requireModule("zarro-error"), env = requireModule("env"), del = require("del"), vars = {
         SKIP_NUGET_UPDATES: "SKIP_NUGET_UPDATES",
         NUGET_SOURCES: "NUGET_SOURCES"
     };
@@ -36,7 +36,8 @@
             .split(",")
             .reduce((acc, cur) => acc.concat(cur ? ["-source", cur] : []), []);
     }
-    function generateNugetInstallArgsFor(toolSpec) {
+    function generateNugetInstallArgsFor(toolSpec, outputDirectory) {
+        const quoteIfRequired = requireModule("quote-if-required");
         // accept a tool package in the formats:
         // packagename (eg 'nunit')
         //  - retrieves the package according to the system config (original & default behavior)
@@ -46,7 +47,9 @@
         //  - allows third-parties to be specific about their packages being from, eg, nuget.org
         const parts = toolSpec.split("/");
         const toolPackage = parts.splice(parts.length - 1);
-        return ["install", toolPackage].concat(generateNugetSourcesOptions(parts[0]));
+        return [
+            "install", toolPackage[0], "-OutputDirectory", quoteIfRequired(outputDirectory)
+        ].concat(generateNugetSourcesOptions(parts[0]));
     }
     // gulp4 doesn't seem to protect against repeated dependencies, so this is a safeguard
     //  here to prevent accidental parallel installation
@@ -71,7 +74,7 @@
         const requiredTools = Array.isArray(required)
             ? required
             : [required].sort();
-        const target = overrideToolsFolder || getToolsFolder();
+        const toolsFolder = overrideToolsFolder || getToolsFolder();
         // TODO: should allow subsequent installations, ie if
         //       a prior install asked for tools "A" and "B", a subsequent
         //       request for "C" should just wait and then do the work
@@ -100,18 +103,42 @@
             }
         }
         const inProgressKey = makeKey(stillRequired);
-        return inProgress[inProgressKey] = ensureFolderExists(target)
-            .then(async () => await cleanFoldersFrom(target))
-            .then(() => downloadOrUpdateNuget(target))
-            .then(() => Promise.all((requiredTools || []).map(tool => {
+        // return inProgress[inProgressKey] = mkdir(toolsFolder)
+        //     .then(async () => await cleanFoldersFrom(toolsFolder))
+        //     .then(() => downloadOrUpdateNuget(toolsFolder))
+        //     .then(() =>
+        //         Promise.all(
+        //             (requiredTools || []).map(tool => {
+        //                 debug(`install: ${ tool }`);
+        //                 return nuget(
+        //                     generateNugetInstallArgsFor(tool, toolsFolder)
+        //                 ).then(() => {
+        //                     gutil.log(
+        //                         gutil.colors.cyan(
+        //                             `installed local tool: ${ tool }`
+        //                         )
+        //                     );
+        //                 });
+        //             })
+        //         )
+        //     )
+        //     .then(() => {
+        //         debug("tool installation complete");
+        //     });
+        return inProgress[inProgressKey] = doInstall(toolsFolder, requiredTools);
+    }
+    async function doInstall(toolsFolder, requiredTools) {
+        const findLocalNuget = requireModule("find-local-nuget");
+        await mkdir(toolsFolder);
+        await cleanFoldersFrom(toolsFolder);
+        await findLocalNuget(); // ensure it's downloaded, no need to keep reference tho
+        await Promise.all((requiredTools || []).map(tool => {
             debug(`install: ${tool}`);
-            return nuget(generateNugetInstallArgsFor(tool), { cwd: target }).then(() => {
+            return nuget(generateNugetInstallArgsFor(tool, toolsFolder)).then(() => {
                 gutil.log(gutil.colors.cyan(`installed local tool: ${tool}`));
             });
-        })))
-            .then(() => {
-            debug("tool installation complete");
-        });
+        }));
+        debug("tool installation complete");
     }
     function clean(overrideToolsFolder) {
         const target = overrideToolsFolder || getToolsFolder();
