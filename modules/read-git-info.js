@@ -11,6 +11,10 @@ const path_1 = __importDefault(require("path"));
         return fs.folderExists(dotGit);
     }
     module.exports = async function readGitInfo(at) {
+        await readCurrentBranch(at);
+        await readAllGitBranches(at);
+        await readGitRemote(at);
+        await readAllGitRemotes(at);
         const [currentBranch, branches, primaryRemote, remotes] = await Promise.all([
             readCurrentBranch(at),
             readAllGitBranches(at),
