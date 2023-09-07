@@ -18,6 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if (!file) {
                 fail(stream, "file may not be empty or undefined");
             }
+            debug(`will restore packages for: ${file.path}`);
             solutionFiles.push(file.path);
             this.emit("data", file);
         }, async function end() {
@@ -51,11 +52,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
         try {
             for (const item of solutions) {
                 currentItem = item;
-                log.info("Restoring packages for: " + item);
-                const pathParts = item.split(/[\\|\/]/g);
-                const sln = pathParts[pathParts.length - 1];
-                const slnFolder = pathParts.slice(0, pathParts.length - 1).join(path.sep);
-                const args = ["restore", sln];
+                log.info(`Restoring packages for: ${item}`);
+                const args = ["restore", item];
                 if (env.resolveFlag("ENABLE_NUGET_PARALLEL_PROCESSING")) {
                     log.warn("Processing restore in parallel. If you get strange build errors, unset ENABLE_NUGET_PARALLEL_PROCESSING");
                 }
@@ -67,9 +65,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
                         args.push("-DisableParallelProcessing");
                     }
                 }
-                await system(restoreCommand, args, {
-                    cwd: slnFolder
-                });
+                await system(restoreCommand, args);
                 log.info(`Packages restored for: ${item}`);
             }
             end(stream);
