@@ -3,7 +3,7 @@
   const os = require("os");
 
   module.exports = function quoteIfRequired(arg: string): string {
-    arg = arg || "";
+    arg = `${arg}`;
     const hasSemiColon = arg.indexOf(";") > -1;
     if (!hasWhitespace(arg) && !hasSemiColon) {
       return arg;
