@@ -65,7 +65,7 @@
     }
     async function incrementPackageVersionInNuspec(xml, file) {
         const meta = xml.package.metadata[0], packageName = meta.id[0], node = meta.version, current = node[0];
-        const newVersion = incrementVersion(current, env.resove("VERSION_INCREMENT_STRATEGY"));
+        const newVersion = incrementVersion(current, env.r123esolve("VERSION_INCREMENT_STRATEGY"));
         node[0] = newVersion;
         gutil.log(gutil.colors.yellow(`${packageName}: package version incremented to: ${newVersion}`));
         return xml;

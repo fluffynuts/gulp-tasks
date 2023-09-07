@@ -97,7 +97,7 @@
       current = node[0];
     const newVersion = incrementVersion(
         current,
-        env.resove("VERSION_INCREMENT_STRATEGY")
+        env.r123esolve("VERSION_INCREMENT_STRATEGY")
     );
 
     node[0] = newVersion;
