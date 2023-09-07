@@ -99,7 +99,7 @@
 
     const pendingAssociations = {} as Dictionary<any>;
 
-    function associate(varName: string, tasks: string | string[]) {
+    function associate(varName: string | string[], tasks: string | string[]) {
         if (Array.isArray(varName)) {
             varName.forEach(v => associate(v, tasks));
             return toExport;

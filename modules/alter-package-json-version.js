@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
-    const ZarroError = requireModule("zarro-error"), validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, { readTextFile, writeTextFile } = require("yafs"), incrementVersion = requireModule("increment-version");
+    const guessIndent = requireModule("guess-indent"), ZarroError = requireModule("zarro-error"), validVersionStrategies = new Set(["major", "minor", "patch"]), gutil = requireModule("gulp-util"), env = requireModule("env"), { stat } = require("fs").promises, { readTextFile, writeTextFile } = require("yafs"), incrementVersion = requireModule("increment-version");
     function validateVersioningStrategy(configuredStrategy) {
         if (validVersionStrategies.has(configuredStrategy)) {
             return;
@@ -19,7 +19,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }
             validateVersioningStrategy(opts.strategy);
             try {
-                const json = await readTextFile(opts.packageJsonPath), indent = guessIndent(json), index = JSON.parse(json), currentVersion = index.version || "0.0.0", incremented = await incrementVersion(currentVersion, opts.strategy, opts.zero, opts.incrementBy);
+                const json = await readTextFile(opts.packageJsonPath), indent = guessIndent(json), index = JSON.parse(json), currentVersion = index.version || "0.0.0", incremented = incrementVersion(currentVersion, opts.strategy, opts.zero, opts.incrementBy);
                 index.version = incremented;
                 const newJson = JSON.stringify(index, null, indent);
                 if (opts.dryRun) {
@@ -63,14 +63,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
             result.incrementBy = env.resolveNumber(env.PACK_INCREMENT_VERSION_BY);
         }
         return result;
-    }
-    function guessIndent(text) {
-        const lines = text.split("\n"), firstIndented = lines.find(line => line.match(/^\s+/));
-        if (!firstIndented) {
-            return 2; // guess
-        }
-        const firstMatch = firstIndented.match(/(^\s+)/) || [], leadingWhitespace = firstMatch[0] || "  ", asSpaces = leadingWhitespace.replace(/\t/g, "  ");
-        return asSpaces.length;
     }
     module.exports = alterPackageJsonVersion;
 })();

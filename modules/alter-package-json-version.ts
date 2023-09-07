@@ -12,6 +12,7 @@ import { boolean } from "yargs";
     }
 
     const
+        guessIndent = requireModule<GuessIndent>("guess-indent"),
         ZarroError = requireModule<ZarroError>("zarro-error"),
         validVersionStrategies = new Set([ "major", "minor", "patch" ]),
         gutil = requireModule<GulpUtil>("gulp-util"),
@@ -47,7 +48,7 @@ import { boolean } from "yargs";
                     indent = guessIndent(json),
                     index = JSON.parse(json),
                     currentVersion = index.version || "0.0.0",
-                    incremented = await incrementVersion(
+                    incremented = incrementVersion(
                         currentVersion,
                         opts.strategy,
                         opts.zero,
@@ -101,20 +102,6 @@ import { boolean } from "yargs";
             result.incrementBy = env.resolveNumber(env.PACK_INCREMENT_VERSION_BY);
         }
         return result as CompleteOptions;
-    }
-
-    function guessIndent(text: string) {
-        const
-            lines = text.split("\n"),
-            firstIndented = lines.find(line => line.match(/^\s+/));
-        if (!firstIndented) {
-            return 2; // guess
-        }
-        const
-            firstMatch = firstIndented.match(/(^\s+)/) || [],
-            leadingWhitespace = firstMatch[0] || "  ",
-            asSpaces = leadingWhitespace.replace(/\t/g, "  ");
-        return asSpaces.length;
     }
 
     module.exports = alterPackageJsonVersion;

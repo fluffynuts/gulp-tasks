@@ -4,6 +4,7 @@ export interface RimrafOptions {
   disableGlob?: boolean;
 }
 (function() {
+  console.warn(`The zarro 'rimraf' module is deprecated. Rather use 'rm' from the "yafs" module.`);
   const _rimraf = require("rimraf");
 
   module.exports = function rimraf(at: string, opts?: RimrafOptions): Promise<void> {

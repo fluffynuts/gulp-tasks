@@ -362,7 +362,6 @@
             let revert = undefined;
             try {
                 if (opts.nuspec && await shouldIncludeNuspec(copy)) {
-                    debugger;
                     const absoluteNuspecPath = await resolveAbsoluteNuspecPath(opts);
                     copy.msbuildProperties = copy.msbuildProperties || {};
                     copy.msbuildProperties["NuspecFile"] = `${copy.nuspec}`;
@@ -447,13 +446,11 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
         const target = opts.target;
         if (await fileExists(resolvedPath)) {
             opts.nuspec = resolvedPath;
-            debugger;
             return true;
         }
         const container = path.dirname(target), resolved = path.resolve(path.join(container, resolvedPath));
         if (await fileExists(resolved)) {
             opts.nuspec = resolvedPath;
-            debugger;
             return true;
         }
         if (opts.ignoreMissingNuspec || isOptional) {

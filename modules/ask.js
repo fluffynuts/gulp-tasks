@@ -1,29 +1,47 @@
 "use strict";
 (function () {
     const readline = require("readline");
+    function defaultValidator(s) {
+        return true;
+    }
     const defaultOptions = {
         inputStream: process.stdin,
         outputStream: process.stdout,
-        validator: (s) => true // grab only the first answer, irrespective of what it is
+        validator: defaultValidator // grab only the first answer, irrespective of what it is
     };
     async function ask(message, opts) {
         opts = Object.assign({}, defaultOptions, opts || {});
         const { validator } = opts;
+        const validatorFn = !!validator
+            ? validator
+            : defaultValidator;
         const rl = readline.createInterface({
             input: opts.inputStream,
             output: opts.outputStream
         });
         const lines = [];
-        return new Promise((resolve, reject) => {
-            rl.question(format(message), (line) => {
-                lines.push(line);
-                const all = lines.join("\n");
-                if (validator(all)) {
-                    rl.close();
-                    resolve(all);
-                }
-            });
-        });
+        while (true) {
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    rl.question(format(message), (line) => {
+                        lines.push(line);
+                        const all = lines.join("\n");
+                        if (validatorFn(all)) {
+                            rl.close();
+                            resolve(all);
+                        }
+                        else {
+                            lines.splice(0, lines.length);
+                            reject();
+                        }
+                    });
+                });
+                return result;
+            }
+            catch (e) {
+                console.error(`invalid answer - try again or press ctrl-c to exit`);
+            }
+        }
     }
     function format(message) {
         if (!message) {

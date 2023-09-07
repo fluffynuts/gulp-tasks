@@ -4,10 +4,7 @@
     module.exports = async function (args, opts) {
         const resolvedNuget = resolveNuget(undefined, false), nugetPath = resolvedNuget || await findLocalNuget(), argsCopy = args.slice();
         return await tryDo(async () => {
-            debugger;
-            const result = await exec(nugetPath, argsCopy, opts);
-            debugger;
-            return result;
+            return await exec(nugetPath, argsCopy, opts);
         }, "RESTORE_RETRIES");
     };
 })();

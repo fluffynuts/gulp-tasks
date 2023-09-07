@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 (function () {
+    console.warn(`The zarro 'rimraf' module is deprecated. Rather use 'rm' from the "yafs" module.`);
     const _rimraf = require("rimraf");
     module.exports = function rimraf(at, opts) {
         return new Promise((resolve, reject) => {
