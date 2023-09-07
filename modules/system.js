@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const yafs_1 = require("yafs");
 (function () {
     const os = require("os"), debug = requireModule("debug")(__filename), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SystemError = requireModule("system-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), SystemResult = requireModule("system-result");
     function fillOut(opts) {
@@ -19,6 +20,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
         return cmd;
     }
+    function looksLikeSingleCommandLine(program, args, opts) {
+        const noArgs = (args || []).length === 0;
+        return !which(program) && noArgs;
+    }
+    async function wrapLongCommandIntoScript(program, 
+    // NB: program args will be modified
+    programArgs) {
+        // assume it's a long commandline
+        const search = isWindows
+            ? "cmd.exe"
+            : "sh";
+        const exe = which(search);
+        if (!exe) {
+            throw new SystemError(`Unable to find system shell '${search}' in path`, program, programArgs, -1, [], []);
+        }
+        const tempFileContents = [program].concat(programArgs.map(quoteIfRequired)).join(" ");
+        const pre = isWindows
+            ? "@echo off"
+            : "";
+        const tempFile = await createTempFile(`
+${pre}
+${tempFileContents}
+        `.trim());
+        programArgs.splice(0, programArgs.length);
+        if (isWindows) {
+            programArgs.push("/c");
+        }
+        programArgs.push(tempFile.path);
+        return exe;
+    }
     async function system(program, args, options) {
         let alreadyExited = false;
         const opts = fillOut(options);
@@ -28,26 +59,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
         let exe = trimQuotes(program), programArgs = args || [];
         const noArgs = !args || args.length === 0;
         if (!which(program) && noArgs) {
-            // assume it's a long commandline
-            const search = isWindows
-                ? "cmd.exe"
-                : "sh";
-            exe = which(search);
-            if (!exe) {
-                throw new SystemError(`Unable to find system shell '${search}' in path`, program, args || [], -1, [], []);
-            }
-            const tempFileContents = [program].concat(programArgs.map(quoteIfRequired)).join(" ");
-            const pre = isWindows
-                ? "@echo off"
-                : "";
-            const tempFile = await createTempFile(`
-${pre}
-${tempFileContents}
-        `.trim());
-            programArgs = isWindows
-                ? ["/c"]
-                : [];
-            programArgs.push(tempFile.path);
+            exe = await wrapLongCommandIntoScript(program, programArgs);
+        }
+        if (!await (0, yafs_1.fileExists)(`${exe}`)) {
+            exe = which(`${exe}`);
         }
         const spawnOptions = {
             windowsHide: opts.windowsHide,

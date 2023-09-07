@@ -1,6 +1,7 @@
 import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
+import { fileExists } from "yafs";
 
-(function() {
+(function () {
     const
         os = require("os"),
         debug = requireModule<DebugFactory>("debug")(__filename),
@@ -35,11 +36,61 @@ import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
         if (!cmd) {
             return cmd;
         }
-        if (cmd[0] === '"' && cmd[cmd.length-1] === '"') {
+        if (cmd[0] === '"' && cmd[cmd.length - 1] === '"') {
             return cmd.substring(1, cmd.length - 1);
         }
         return cmd;
     }
+
+    function looksLikeSingleCommandLine(
+        program: string,
+        args?: string[],
+        opts?: SystemOptions
+    ) {
+        const noArgs = (args || []).length === 0;
+        return !which(program) && noArgs;
+    }
+
+    async function wrapLongCommandIntoScript(
+        program: string,
+        // NB: program args will be modified
+        programArgs: string[]
+    ): Promise<string> {
+        // assume it's a long commandline
+        const search = isWindows
+            ? "cmd.exe"
+            : "sh";
+        const exe = which(search);
+        if (!exe) {
+            throw new SystemError(
+                `Unable to find system shell '${ search }' in path`,
+                program,
+                programArgs,
+                -1,
+                [],
+                []
+            );
+        }
+        const tempFileContents = [ program ].concat(
+            programArgs.map(quoteIfRequired)
+        ).join(" ");
+        const pre = isWindows
+            ? "@echo off"
+            : "";
+        const tempFile = await createTempFile(
+            `
+${ pre }
+${ tempFileContents }
+        `.trim()
+        );
+        programArgs.splice(0, programArgs.length);
+        if (isWindows) {
+            programArgs.push("/c");
+        }
+        programArgs.push(tempFile.path);
+        return exe;
+    }
+
 
     async function system(
         program: string,
@@ -56,37 +107,13 @@ import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
             programArgs = args || [] as string[];
         const noArgs = !args || args.length === 0;
         if (!which(program) && noArgs) {
-            // assume it's a long commandline
-            const search = isWindows
-                ? "cmd.exe"
-                : "sh";
-            exe = which(search);
-            if (!exe) {
-                throw new SystemError(
-                    `Unable to find system shell '${ search }' in path`,
-                    program,
-                    args || [],
-                    -1,
-                    [],
-                    []
-                );
-            }
-            const tempFileContents = [ program ].concat(
-                programArgs.map(quoteIfRequired)
-            ).join(" ");
-            const pre = isWindows
-                ? "@echo off"
-                : "";
-            const tempFile = await createTempFile(
-                `
-${ pre }
-${ tempFileContents }
-        `.trim()
+            exe = await wrapLongCommandIntoScript(
+                program,
+                programArgs
             );
-            programArgs = isWindows
-                ? [ "/c" ]
-                : [];
-            programArgs.push(tempFile.path);
+        }
+        if (!await fileExists(`${exe}`)) {
+            exe = which(`${exe}`);
         }
         const spawnOptions = {
             windowsHide: opts.windowsHide,
@@ -149,7 +176,7 @@ ${ tempFileContents }
                 }
                 debug("child errors", e);
                 return reject(generateError(
-                    `Error spawning process: ${ e }\n${exe} ${programArgs.map(q)}`
+                    `Error spawning process: ${ e }\n${ exe } ${ programArgs.map(q) }`
                 ));
             }
 
@@ -160,11 +187,11 @@ ${ tempFileContents }
                 if (hasExited()) {
                     return;
                 }
-                debug(`child exited with code: ${code}`);
+                debug(`child exited with code: ${ code }`);
                 const moreInfo = generateMoreInfo(result);
                 if (code) {
                     const errResult = generateError(
-                      `Process exited (${ ctx }) with non-zero code: ${ code }\n${moreInfo}`.trim(),
+                        `Process exited (${ ctx }) with non-zero code: ${ code }\n${ moreInfo }`.trim(),
                         code
                     );
                     return reject(errResult);
@@ -174,42 +201,42 @@ ${ tempFileContents }
             }
 
             function generateMoreInfo(
-              result: SystemResult
+                result: SystemResult
             ): string {
-              if (!result) {
-                return "(no more info available)";
-              }
-              const lines = [
-                "attempted to run:",
-                generateCommandLineFor(result)
-              ];
-              if (result.stderr && result.stderr.length) {
-                lines.push("stderr:");
-                lines.push(... result.stderr.map(s => `  ${s}`));
-              }
-              if (result.stdout && result.stdout.length) {
-                lines.push("stdout:");
-                lines.push(... result.stdout.map(s => `  ${s}`));
-              }
-              return lines.join("\n");
+                if (!result) {
+                    return "(no more info available)";
+                }
+                const lines = [
+                    "attempted to run:",
+                    generateCommandLineFor(result)
+                ];
+                if (result.stderr && result.stderr.length) {
+                    lines.push("stderr:");
+                    lines.push(...result.stderr.map(s => `  ${ s }`));
+                }
+                if (result.stdout && result.stdout.length) {
+                    lines.push("stdout:");
+                    lines.push(...result.stdout.map(s => `  ${ s }`));
+                }
+                return lines.join("\n");
             }
 
             function generateCommandLineFor(
-              info: SystemCommand
+                info: SystemCommand
             ): string {
-              return [ info.exe, (info.args || []).map(q).join(" ") ].join(" ");
+                return [ info.exe, (info.args || []).map(q).join(" ") ].join(" ");
             }
 
             function generateError(
                 message: string,
                 exitCode?: number
             ) {
-              if (system.isError(result)) {
-                const errorDetails = gatherErrorDetails(result);
-                if (errorDetails) {
-                  message = `${message}\n${errorDetails}`;
+                if (system.isError(result)) {
+                    const errorDetails = gatherErrorDetails(result);
+                    if (errorDetails) {
+                        message = `${ message }\n${ errorDetails }`;
+                    }
                 }
-              }
                 return new SystemError(
                     message,
                     program,
@@ -223,19 +250,19 @@ ${ tempFileContents }
             const q = requireModule<QuoteIfRequired>("quote-if-required");
 
             function gatherErrorDetails(
-              err: SystemError
+                err: SystemError
             ): string {
-              const parts = [];
-              if (err) {
-                parts.push(`(cmd: ${err.exe} ${err.args.map(q).join(" ")})`);
-              }
-              if (err && err.stderr && err.stderr.length > 0) {
-                parts.push(err.stderr[err.stderr.length-1]);
-              }
-              if (err && err.stdout && err.stdout.length > 0) {
-                parts.push(err.stdout[err.stdout.length-1]);
-              }
-              return parts.join("\n");
+                const parts = [];
+                if (err) {
+                    parts.push(`(cmd: ${ err.exe } ${ err.args.map(q).join(" ") })`);
+                }
+                if (err && err.stderr && err.stderr.length > 0) {
+                    parts.push(err.stderr[err.stderr.length - 1]);
+                }
+                if (err && err.stdout && err.stdout.length > 0) {
+                    parts.push(err.stdout[err.stdout.length - 1]);
+                }
+                return parts.join("\n");
             }
 
             function hasExited() {
