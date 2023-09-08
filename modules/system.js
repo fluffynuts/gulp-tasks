@@ -58,7 +58,11 @@ ${tempFileContents}
             exe = await wrapLongCommandIntoScript(program, programArgs);
         }
         if (!await (0, yafs_1.fileExists)(`${exe}`)) {
-            exe = which(`${exe}`);
+            const pathed = which(`${exe}`);
+            if (!pathed) {
+                throw new Error(`${exe}: file not found and not in the PATH`);
+            }
+            exe = pathed;
         }
         if (opts.shell) {
             exe = quoteIfRequired(exe);

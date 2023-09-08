@@ -104,7 +104,11 @@ ${ tempFileContents }
             );
         }
         if (!await fileExists(`${ exe }`)) {
-            exe = which(`${ exe }`);
+            const pathed = which(`${ exe }`);
+            if (!pathed) {
+                throw new Error(`${exe}: file not found and not in the PATH`);
+            }
+            exe = pathed;
         }
         if (opts.shell) {
             exe = quoteIfRequired(exe);

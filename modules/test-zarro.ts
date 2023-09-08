@@ -56,7 +56,7 @@
         }
         await system(
             "npm",
-            [ "install", "--no-save", version ]
+            [ "install", "--no-save", `zarro@${version}` ]
         );
     }
 

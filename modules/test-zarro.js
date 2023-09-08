@@ -42,7 +42,7 @@
         if (!version) {
             return;
         }
-        await system("npm", ["install", "--no-save", version]);
+        await system("npm", ["install", "--no-save", `zarro@${version}`]);
     }
     async function readCurrentZarroVersion() {
         const { readTextFile } = require("yafs"), log = requireModule("log");
