@@ -108,13 +108,30 @@
         }, "nunit-console runner");
     }
     function findTool(exeName, underFolder) {
+        const { chopExtension } = requireModule("path-utils"), withoutExtension = chopExtension(exeName), exeHasExtension = exeName !== withoutExtension;
         const allResults = lsSync(underFolder || getToolsFolder(), {
             recurse: true,
-            entities: FsEntities.files
+            entities: FsEntities.files,
+            fullPaths: true
         })
-            .filter((p) => p.toLowerCase()
-            .endsWith(exeName.toLowerCase()))
+            .filter((p) => {
+            const thisFileExtension = path.extname(p), parts = p.split(/[\\\/]/g), filename = parts[parts.length - 1];
+            debugger;
+            if (thisFileExtension) {
+                if (exeHasExtension) {
+                    return filename.toLowerCase() === exeName.toLowerCase();
+                }
+                else {
+                    const chopped = chopExtension(filename);
+                    return chopped.toLowerCase() === withoutExtension.toLowerCase();
+                }
+            }
+            else {
+                return filename.toLowerCase() === withoutExtension.toLowerCase();
+            }
+        })
             .sort();
+        debugger;
         return allResults[0] || which(exeName);
     }
     function locateDotCover(options) {
