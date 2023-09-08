@@ -107,6 +107,8 @@
             return findInstalledNUnit3() || nunit2Finder(runner, options);
         }, "nunit-console runner");
     }
+    // FIXME: should ignore, eg, foo.csproj, to find foo.exe|bat|com on windows
+    // FIXME: when not on windows, should always do exact match
     function findTool(exeName, underFolder) {
         const { chopExtension } = requireModule("path-utils"), withoutExtension = chopExtension(exeName), exeHasExtension = exeName !== withoutExtension;
         const allResults = lsSync(underFolder || getToolsFolder(), {

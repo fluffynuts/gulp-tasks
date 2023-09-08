@@ -194,6 +194,8 @@
         );
     }
 
+    // FIXME: should ignore, eg, foo.csproj, to find foo.exe|bat|com on windows
+    // FIXME: when not on windows, should always do exact match
     function findTool(
         exeName: string,
         underFolder?: string
