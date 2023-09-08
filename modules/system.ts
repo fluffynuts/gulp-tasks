@@ -42,15 +42,6 @@ import { fileExists } from "yafs";
         return cmd;
     }
 
-    function looksLikeSingleCommandLine(
-        program: string,
-        args?: string[],
-        opts?: SystemOptions
-    ) {
-        const noArgs = (args || []).length === 0;
-        return !which(program) && noArgs;
-    }
-
     async function wrapLongCommandIntoScript(
         program: string,
         // NB: program args will be modified
@@ -112,8 +103,11 @@ ${ tempFileContents }
                 programArgs
             );
         }
-        if (!await fileExists(`${exe}`)) {
-            exe = which(`${exe}`);
+        if (!await fileExists(`${ exe }`)) {
+            exe = which(`${ exe }`);
+        }
+        if (opts.shell) {
+            exe = quoteIfRequired(exe);
         }
         const spawnOptions = {
             windowsHide: opts.windowsHide,
@@ -138,12 +132,14 @@ ${ tempFileContents }
             spawnOptions
         });
         const result = new SystemResult(`${ exe }`, programArgs, undefined, [], []);
+        debugger;
         return new Promise<SystemResult>((resolve, reject) => {
             const child = child_process.spawn(
                 exe,
                 programArgs as ReadonlyArray<string>,
                 spawnOptions
             );
+            debugger;
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const

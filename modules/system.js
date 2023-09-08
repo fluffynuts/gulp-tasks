@@ -20,10 +20,6 @@ const yafs_1 = require("yafs");
         }
         return cmd;
     }
-    function looksLikeSingleCommandLine(program, args, opts) {
-        const noArgs = (args || []).length === 0;
-        return !which(program) && noArgs;
-    }
     async function wrapLongCommandIntoScript(program, 
     // NB: program args will be modified
     programArgs) {
@@ -64,6 +60,9 @@ ${tempFileContents}
         if (!await (0, yafs_1.fileExists)(`${exe}`)) {
             exe = which(`${exe}`);
         }
+        if (opts.shell) {
+            exe = quoteIfRequired(exe);
+        }
         const spawnOptions = {
             windowsHide: opts.windowsHide,
             windowsVerbatimArguments: opts.windowsVerbatimArguments,
@@ -87,8 +86,10 @@ ${tempFileContents}
             spawnOptions
         });
         const result = new SystemResult(`${exe}`, programArgs, undefined, [], []);
+        debugger;
         return new Promise((resolve, reject) => {
             const child = child_process.spawn(exe, programArgs, spawnOptions);
+            debugger;
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const stdoutLineBuffer = new LineBuffer(s => {
