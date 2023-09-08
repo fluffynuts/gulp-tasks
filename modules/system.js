@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const yafs_1 = require("yafs");
 (function () {
-    const os = require("os"), debug = requireModule("debug")(__filename), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SystemError = requireModule("system-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), SystemResult = requireModule("system-result");
+    const os = require("os"), debug = requireModule("debug")(__filename), isWindows = os.platform() === "win32", which = requireModule("which"), createTempFile = requireModule("create-temp-file"), quoteIfRequired = requireModule("quote-if-required"), SystemError = requireModule("system-error"), LineBuffer = requireModule("line-buffer"), child_process = require("child_process"), { fileExists } = require("yafs"), SystemResult = requireModule("system-result");
     function fillOut(opts) {
         const result = (opts || {});
         result.collectors = {
@@ -57,7 +56,7 @@ ${tempFileContents}
         if (!which(program) && noArgs) {
             exe = await wrapLongCommandIntoScript(program, programArgs);
         }
-        if (!await (0, yafs_1.fileExists)(`${exe}`)) {
+        if (!await fileExists(`${exe}`)) {
             const pathed = which(`${exe}`);
             if (!pathed) {
                 throw new Error(`${exe}: file not found and not in the PATH`);

@@ -1,5 +1,4 @@
-import { ChildProcess, SpawnOptionsWithStdioTuple } from "child_process";
-import { fileExists } from "yafs";
+import { ChildProcess, SpawnOptionsWithStdioTuple, StdioNull } from "child_process";
 
 (function () {
     const
@@ -12,6 +11,7 @@ import { fileExists } from "yafs";
         SystemError = requireModule<SystemError>("system-error"),
         LineBuffer = requireModule<LineBuffer>("line-buffer"),
         child_process = require("child_process"),
+        { fileExists } = require("yafs"),
         SystemResult = requireModule<SystemResult>("system-result");
 
     interface StdIoCollectors {
@@ -141,7 +141,7 @@ ${ tempFileContents }
             const child = child_process.spawn(
                 exe,
                 programArgs as ReadonlyArray<string>,
-                spawnOptions
+                spawnOptions as SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioNull>
             );
             debugger;
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
