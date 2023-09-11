@@ -646,7 +646,6 @@ WARNING: 'dotnet pack' ignores --version-suffix when a nuspec file is provided.
             return result;
         }
         catch (e) {
-            console.error(`system error: ${e}`);
             if (opts.suppressErrors) {
                 return e;
             }
