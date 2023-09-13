@@ -12,7 +12,7 @@
       If you just want to disable the functionality, an empty file will do
     */
     const path = require("path"), debug = requireModule("debug")(__filename), { fileExistsSync } = require("yafs"), search = ["local-tasks", "override-tasks"];
-    module.exports = function () {
+    function importNpmTasks() {
         let overridden = false;
         search.forEach(function (dir) {
             const lookFor = path.join("..", dir, __filename);
@@ -24,10 +24,13 @@
         });
         if (!overridden) {
             debug("importing npm scripts as gulp tasks");
-            const gulpNpmRun = requireModule("gulp-npm-run");
+            const { gulpNpmRun } = requireModule("gulp-npm-run");
             const gulp = requireModule("gulp");
             gulpNpmRun(gulp);
             debug("-> done");
         }
+    }
+    module.exports = {
+        importNpmTasks
     };
 })();

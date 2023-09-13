@@ -180,7 +180,7 @@ function installGulpTaskDependencies() {
 }
 
 function bootstrapGulp() {
-  const importNpmTasks = requireModule("import-npm-tasks");
+  const { importNpmTasks } = requireModule("import-npm-tasks");
   try {
     importNpmTasks();
     const

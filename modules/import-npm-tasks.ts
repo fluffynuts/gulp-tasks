@@ -15,22 +15,27 @@
         debug = requireModule<DebugFactory>("debug")(__filename),
         { fileExistsSync } = require("yafs"),
         search = [ "local-tasks", "override-tasks" ];
-    module.exports = function() {
-        let overridden = false;
-        search.forEach(function(dir) {
-            const lookFor = path.join("..", dir, __filename);
-            if (fileExistsSync(lookFor)) {
-                console.log("overriding gulp-npm-run default behaviour with: ", lookFor);
-                require(lookFor);
-                overridden = true;
-            }
-        });
-        if (!overridden) {
-            debug("importing npm scripts as gulp tasks");
-            const gulpNpmRun = requireModule<GulpNpmRun>("gulp-npm-run") ;
-            const gulp = requireModule<Gulp>("gulp");
-            gulpNpmRun(gulp);
-            debug("-> done");
+
+    function importNpmTasks() {
+      let overridden = false;
+      search.forEach(function(dir) {
+        const lookFor = path.join("..", dir, __filename);
+        if (fileExistsSync(lookFor)) {
+          console.log("overriding gulp-npm-run default behaviour with: ", lookFor);
+          require(lookFor);
+          overridden = true;
         }
-    };
+      });
+      if (!overridden) {
+        debug("importing npm scripts as gulp tasks");
+        const { gulpNpmRun } = requireModule<GulpNpmRun>("gulp-npm-run") ;
+        const gulp = requireModule<Gulp>("gulp");
+        gulpNpmRun(gulp);
+        debug("-> done");
+      }
+    }
+
+    module.exports = {
+      importNpmTasks
+    }
 })();
