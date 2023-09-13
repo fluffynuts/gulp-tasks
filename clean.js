@@ -2,16 +2,18 @@
 (function () {
     const gulp = requireModule("gulp"), promisifyStream = requireModule("promisify-stream"), tryDo = requireModule("try-do"), debug = requireModule("debug")(__filename), throwIfNoFiles = requireModule("throw-if-no-files"), msbuild = requireModule("gulp-msbuild"), dotnetClean = requireModule("gulp-dotnet-cli").clean, resolveMasks = requireModule("resolve-masks"), env = requireModule("env"), chalk = requireModule("ansi-colors");
     const myVars = [
-        "BUILD_TOOLSVERSION",
-        "BUILD_CONFIGURATION",
-        "BUILD_VERBOSITY",
-        "BUILD_MAX_CPU_COUNT",
-        "BUILD_FAIL_ON_ERROR",
-        "BUILD_PLATFORM",
-        "BUILD_ARCHITECTURE",
-        "BUILD_MSBUILD_NODE_REUSE",
-        "BUILD_RETRIES",
-        "BUILD_TARGETS"
+        env.BUILD_TOOLSVERSION,
+        env.BUILD_CONFIGURATION,
+        env.BUILD_VERBOSITY,
+        env.BUILD_MAX_CPU_COUNT,
+        env.BUILD_FAIL_ON_ERROR,
+        env.BUILD_PLATFORM,
+        env.BUILD_ARCHITECTURE,
+        env.BUILD_MSBUILD_NODE_REUSE,
+        env.BUILD_RETRIES,
+        env.BUILD_TARGETS,
+        env.BUILD_FRAMEWORK,
+        env.BUILD_RUNTIME
     ];
     env.associate(myVars, "clean");
     gulp.task("clean", "Invokes the 'Clean' target on all solutions in the tree", tryClean);
@@ -40,7 +42,10 @@
         await promisifyStream(solutions.pipe(dotnetClean({
             target: "(not set)",
             configuration,
-            msbuildProperties: env.resolveMap("MSBUILD_PROPERTIES")
+            msbuildProperties: env.resolveMap(env.MSBUILD_PROPERTIES),
+            verbosity: env.resolve(env.BUILD_VERBOSITY),
+            framework: env.resolve(env.BUILD_FRAMEWORK),
+            runtime: env.resolve(env.BUILD_RUNTIME)
         })));
     }
     function resolveBuildSolutionMasks() {

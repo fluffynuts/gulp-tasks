@@ -114,6 +114,14 @@
             help: "mask of extra exclusions on top of the default set"
         });
         env.register({
+            name: "BUILD_FRAMEWORK",
+            help: "set the .net framework to build with (optional)"
+        });
+        env.register({
+            name: "BUILD_RUNTIME",
+            help: "set the runtime to build .net projects against"
+        });
+        env.register({
             name: "DOTNET_CORE",
             default: "false",
             help: "set to a truthy value to guide build to use 'dotnet build'"
