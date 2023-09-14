@@ -3,9 +3,11 @@
     os = require("os"),
     path = require("path"),
     { fileExistsSync, writeTextFileSync, chmodSync } = require("yafs"),
+    pathUnquote = requireModule<PathUnquote>("path-unquote"),
     isWindows = os.platform() === "win32";
 
-  function shimNuget(pathToNuget: string): string {
+  function shimNuget(nugetPath: string): string {
+    const pathToNuget = pathUnquote(nugetPath || "");
     if (!fileExistsSync(pathToNuget)) {
       throw new Error(`file not found: ${pathToNuget}`);
     }
