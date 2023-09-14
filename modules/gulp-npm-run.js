@@ -10,14 +10,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
         Object.keys(scripts).forEach(k => {
             npmScripts.add(k);
             gulp.task(k, `npm script: ${k}`, async () => {
-                if (process.env.ZARRO_RUNNING_NPM_SCRIPT ) {
+                if (alreadyRunningScript(k)) {
                     throw new ZarroError(`cyclic npm script import: ${k} - did you forget to define a task in local-tasks?`);
                 }
+                storeRunningScript(k);
                 // npm run produces extra output, prefixed with >
                 // at the start, including package information and the script line
                 // -> we'll ignore it unless someone _really_ wants it
                 let ignoredFirstLine = false;
-                process.env.ZARRO_RUNNING_NPM_SCRIPT = "1";
                 await exec("npm", ["run", k], undefined, {
                     stderr: (d) => console.error(d),
                     stdout: (d) => {
@@ -31,6 +31,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 });
             });
         });
+    }
+    const scriptMarkerVar = "ZARRO_RUNNING_NPM_SCRIPTS";
+    function alreadyRunningScript(k) {
+        return (process.env[scriptMarkerVar] || "")
+            .split(",")
+            .includes(k);
+    }
+    function storeRunningScript(k) {
+        const existing = (process.env[scriptMarkerVar] || ""), update = !!existing
+            ? `${existing},${k}`
+            : k;
+        process.env[scriptMarkerVar] = update;
     }
     function findPackageIndex() {
         const packageIndexFolder = findNpmBase(), packageIndexPath = path.join(packageIndexFolder, "package.json");
