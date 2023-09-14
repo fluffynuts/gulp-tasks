@@ -10,7 +10,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
         Object.keys(scripts).forEach(k => {
             npmScripts.add(k);
             gulp.task(k, `npm script: ${k}`, async () => {
-                if (process.env.ZARRO_RUNNING_NPM_SCRIPT) {
+                if (process.env.ZARRO_RUNNING_NPM_SCRIPT ) {
                     throw new ZarroError(`cyclic npm script import: ${k} - did you forget to define a task in local-tasks?`);
                 }
                 // npm run produces extra output, prefixed with >
