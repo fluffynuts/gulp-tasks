@@ -1,7 +1,8 @@
 "use strict";
 (function () {
-    const os = require("os"), path = require("path"), { fileExistsSync, writeTextFileSync, chmodSync } = require("yafs"), isWindows = os.platform() === "win32";
-    function shimNuget(pathToNuget) {
+    const os = require("os"), path = require("path"), { fileExistsSync, writeTextFileSync, chmodSync } = require("yafs"), pathUnquote = requireModule("path-unquote"), isWindows = os.platform() === "win32";
+    function shimNuget(nugetPath) {
+        const pathToNuget = pathUnquote(nugetPath || "");
         if (!fileExistsSync(pathToNuget)) {
             throw new Error(`file not found: ${pathToNuget}`);
         }
