@@ -9,10 +9,14 @@
     shimNuget = requireModule<ShimNuget>("shim-nuget"),
     url = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe";
 
-  async function downloadNugetTo(targetFolder: string): Promise<string> {
+  async function downloadNugetTo(
+    targetFolder: string,
+    quiet?: boolean
+  ): Promise<string> {
     logger.debug(`Attempting to download nuget.exe to ${ targetFolder }`);
     const
       downloader = HttpClient.create();
+    downloader.suppressProgress = !!quiet;
     const downloaded = shimNuget(
       await downloader.download(
         url,

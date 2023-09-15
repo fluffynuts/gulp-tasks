@@ -3,11 +3,11 @@
     path = require("path"),
     log = requireModule<Log>("log"),
     { fileExists, writeTextFile, chmod } = require("yafs"),
-    resolveNuget = require("./resolve-nuget"),
+    resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
     shimNuget = requireModule<ShimNuget>("shim-nuget"),
-    pathUnquote = require("./path-unquote"),
-    downloadNuget = require("./download-nuget"),
-    env = require("./env");
+    pathUnquote = requireModule<PathUnquote>("path-unquote"),
+    downloadNuget = requireModule<DownloadNuget>("download-nuget"),
+    env = requireModule<Env>("env");
 
   let
     startedDownload = false,
@@ -17,8 +17,9 @@
       resolver = resolve;
     });
 
-  async function findLocalNuget(): Promise<string> {
+  async function findLocalNuget(quiet?: boolean): Promise<string> {
     const
+      beQuiet = !!quiet,
       targetFolder = env.resolve("BUILD_TOOLS_FOLDER"),
       localNuget = resolveNuget(undefined, false) || path.join(targetFolder, "nuget.exe");
     if (startedDownload) {
@@ -29,7 +30,7 @@
     }
     startedDownload = true;
     try {
-      const result = await downloadNuget(targetFolder);
+      const result = await downloadNuget(targetFolder, beQuiet);
       resolver(result); // catch up any other code waiting on this
       return result;
     } catch (err) {
