@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const resolveNuget = requireModule("resolve-nuget"), downloadNuget = requireModule("download-nuget"), nugetUpdateSelf = requireModule("nuget-update-self"), debug = requireModule("debug")(__filename), gutil = requireModule("gulp-util"), path = require("path"), { ls, FsEntities } = require("yafs"), getToolsFolder = requireModule("get-tools-folder"), nuget = requireModule("nuget"), { mkdir } = require("yafs"), ZarroError = requireModule("zarro-error"), env = requireModule("env"), del = require("del"), vars = {
+    const debug = requireModule("debug")(__filename), gutil = requireModule("gulp-util"), { ls, FsEntities } = require("yafs"), getToolsFolder = requireModule("get-tools-folder"), nuget = requireModule("nuget"), { mkdir } = require("yafs"), ZarroError = requireModule("zarro-error"), env = requireModule("env"), del = require("del"), vars = {
         SKIP_NUGET_UPDATES: "SKIP_NUGET_UPDATES",
         NUGET_SOURCES: "NUGET_SOURCES"
     };
@@ -13,20 +13,6 @@
             });
         }
         return del(dirs);
-    }
-    function downloadOrUpdateNuget(targetFolder) {
-        const nugetPath = path.join(targetFolder, "nuget.exe");
-        const nuget = resolveNuget(nugetPath, false);
-        if (nuget && !nuget.match(/dotnet/i)) {
-            if (!env.resolveFlag(vars.SKIP_NUGET_UPDATES)) {
-                gutil.log("nuget.exe already exists... attempting self-update");
-                debug(`using nuget at: (${nuget})`);
-                return nugetUpdateSelf(nuget);
-            }
-            return nuget;
-        }
-        debug(`Attempting to get tools nuget to: ${targetFolder}`);
-        return downloadNuget(targetFolder);
     }
     function generateNugetSourcesOptions(toolSpecifiedSource) {
         if (toolSpecifiedSource) {
@@ -103,28 +89,6 @@
             }
         }
         const inProgressKey = makeKey(stillRequired);
-        // return inProgress[inProgressKey] = mkdir(toolsFolder)
-        //     .then(async () => await cleanFoldersFrom(toolsFolder))
-        //     .then(() => downloadOrUpdateNuget(toolsFolder))
-        //     .then(() =>
-        //         Promise.all(
-        //             (requiredTools || []).map(tool => {
-        //                 debug(`install: ${ tool }`);
-        //                 return nuget(
-        //                     generateNugetInstallArgsFor(tool, toolsFolder)
-        //                 ).then(() => {
-        //                     gutil.log(
-        //                         gutil.colors.cyan(
-        //                             `installed local tool: ${ tool }`
-        //                         )
-        //                     );
-        //                 });
-        //             })
-        //         )
-        //     )
-        //     .then(() => {
-        //         debug("tool installation complete");
-        //     });
         return inProgress[inProgressKey] = doInstall(toolsFolder, requiredTools);
     }
     async function doInstall(toolsFolder, requiredTools) {

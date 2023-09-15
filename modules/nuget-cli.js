@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const resolveNuget = requireModule("resolve-nuget"), log = requireModule("log"), { mkdir } = require("yafs"), system = requireModule("system"), { pushFlag, pushIfSet } = requireModule("cli-support");
+    const resolveNuget = requireModule("resolve-nuget"), findLocalNuget = requireModule("find-local-nuget"), log = requireModule("log"), { mkdir } = require("yafs"), system = requireModule("system"), { pushFlag, pushIfSet } = requireModule("cli-support");
     const defaultInstallOptions = {
         nonInteractive: true
     };
@@ -60,7 +60,8 @@
     }
     async function runNugetWith(label, args, opts) {
         log.info(label);
-        const nuget = resolveNuget();
+        const nuget = resolveNuget(undefined, false) ||
+            await findLocalNuget();
         await system(nuget, args, opts);
     }
     module.exports = {
