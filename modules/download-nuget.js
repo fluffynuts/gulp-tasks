@@ -1,9 +1,10 @@
 "use strict";
 (function () {
     const retry = requireModule("retry"), ZarroError = requireModule("zarro-error"), HttpClient = requireModule("http-client"), nugetUpdateSelf = requireModule("nuget-update-self"), logger = requireModule("./log"), path = require("path"), shimNuget = requireModule("shim-nuget"), url = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe";
-    async function downloadNugetTo(targetFolder) {
+    async function downloadNugetTo(targetFolder, quiet) {
         logger.debug(`Attempting to download nuget.exe to ${targetFolder}`);
         const downloader = HttpClient.create();
+        downloader.suppressProgress = !!quiet;
         const downloaded = shimNuget(await downloader.download(url, path.join(targetFolder, "nuget.exe")));
         await validateCanRunExe(downloaded);
         return downloaded;

@@ -1,12 +1,12 @@
 "use strict";
 (function () {
-    const path = require("path"), log = requireModule("log"), { fileExists, writeTextFile, chmod } = require("yafs"), resolveNuget = require("./resolve-nuget"), shimNuget = requireModule("shim-nuget"), pathUnquote = require("./path-unquote"), downloadNuget = require("./download-nuget"), env = require("./env");
+    const path = require("path"), log = requireModule("log"), { fileExists, writeTextFile, chmod } = require("yafs"), resolveNuget = requireModule("resolve-nuget"), shimNuget = requireModule("shim-nuget"), pathUnquote = requireModule("path-unquote"), downloadNuget = requireModule("download-nuget"), env = requireModule("env");
     let startedDownload = false, resolver = (_) => {
     }, lastResolution = new Promise(function (resolve) {
         resolver = resolve;
     });
-    async function findLocalNuget() {
-        const targetFolder = env.resolve("BUILD_TOOLS_FOLDER"), localNuget = resolveNuget(undefined, false) || path.join(targetFolder, "nuget.exe");
+    async function findLocalNuget(quiet) {
+        const beQuiet = !!quiet, targetFolder = env.resolve("BUILD_TOOLS_FOLDER"), localNuget = resolveNuget(undefined, false) || path.join(targetFolder, "nuget.exe");
         if (startedDownload) {
             return lastResolution;
         }
@@ -15,7 +15,7 @@
         }
         startedDownload = true;
         try {
-            const result = await downloadNuget(targetFolder);
+            const result = await downloadNuget(targetFolder, beQuiet);
             resolver(result); // catch up any other code waiting on this
             return result;
         }
