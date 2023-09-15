@@ -1,11 +1,7 @@
 (function () {
     const
-        resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
-        downloadNuget = requireModule<DownloadNuget>("download-nuget"),
-        nugetUpdateSelf = requireModule<NugetUpdateSelf>("nuget-update-self"),
         debug = requireModule<DebugFactory>("debug")(__filename),
         gutil = requireModule<GulpUtil>("gulp-util"),
-        path = require("path"),
         {
             ls,
             FsEntities
@@ -34,21 +30,6 @@
             });
         }
         return del(dirs);
-    }
-
-    function downloadOrUpdateNuget(targetFolder: string) {
-        const nugetPath = path.join(targetFolder, "nuget.exe");
-        const nuget = resolveNuget(nugetPath, false);
-        if (nuget && !nuget.match(/dotnet/i)) {
-            if (!env.resolveFlag(vars.SKIP_NUGET_UPDATES)) {
-                gutil.log("nuget.exe already exists... attempting self-update");
-                debug(`using nuget at: (${ nuget })`);
-                return nugetUpdateSelf(nuget);
-            }
-            return nuget;
-        }
-        debug(`Attempting to get tools nuget to: ${ targetFolder }`);
-        return downloadNuget(targetFolder);
     }
 
     function generateNugetSourcesOptions(toolSpecifiedSource?: string) {
@@ -144,28 +125,6 @@
             }
         }
         const inProgressKey = makeKey(stillRequired);
-        // return inProgress[inProgressKey] = mkdir(toolsFolder)
-        //     .then(async () => await cleanFoldersFrom(toolsFolder))
-        //     .then(() => downloadOrUpdateNuget(toolsFolder))
-        //     .then(() =>
-        //         Promise.all(
-        //             (requiredTools || []).map(tool => {
-        //                 debug(`install: ${ tool }`);
-        //                 return nuget(
-        //                     generateNugetInstallArgsFor(tool, toolsFolder)
-        //                 ).then(() => {
-        //                     gutil.log(
-        //                         gutil.colors.cyan(
-        //                             `installed local tool: ${ tool }`
-        //                         )
-        //                     );
-        //                 });
-        //             })
-        //         )
-        //     )
-        //     .then(() => {
-        //         debug("tool installation complete");
-        //     });
         return inProgress[inProgressKey] = doInstall(
             toolsFolder,
             requiredTools
