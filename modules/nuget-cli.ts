@@ -1,6 +1,7 @@
 (function () {
   const
     resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
+    findLocalNuget = requireModule<FindLocalNuget>("find-local-nuget"),
     log = requireModule<Log>("log"),
     { mkdir } = require("yafs"),
     system = requireModule<System>("system"),
@@ -94,7 +95,8 @@
     opts: SystemOptions
   ): Promise<void> {
     log.info(label)
-    const nuget = resolveNuget()
+    const nuget = resolveNuget(undefined, false) ||
+                  await findLocalNuget();
     await system(
       nuget,
       args,
