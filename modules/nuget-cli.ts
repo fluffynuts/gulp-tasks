@@ -113,6 +113,21 @@
       throw new Error(`url not specified`);
     }
 
+    const
+      existing = await listSources(),
+      haveByName = existing.find(o => o.name === src.name),
+      isEnabled = haveByName && haveByName.enabled,
+      sameUrl = haveByName && haveByName.url == src.url;
+
+    debugger;
+    if (haveByName && sameUrl) {
+      log.info(`Nuget source '${ src.name }' already registered`);
+      if (!isEnabled) {
+        await enableSource(src.name);
+      }
+      return;
+    }
+
     const args = [
       "add", "source"
     ];
@@ -125,7 +140,51 @@
     pushIfSet(args, src.validAuthenticationTypes, "-ValidAuthenticationTypes");
     pushIfSet(args, src.configFile, "-ConfigFile");
     args.push("-ForceEnglishOutput");
-    await runNugetWith(`Adding nuget source: [${src.name}]: ${src.url}`, args, { suppressOutput: true });
+    await runNugetWith(`Adding nuget source: [${ src.name }]: ${ src.url }`, args, { suppressOutput: true });
+  }
+
+  async function enableSource(name: string): Promise<void> {
+    const existing = await findSourceByName(name);
+    if (!existing) {
+      const all = await listSources();
+      throw new Error(`cannot enable nuget source: ${ name } (source is unknown)\n${ JSON.stringify(all, null, 2) }`);
+    }
+    if (existing.enabled) {
+      // already enabled; nothing to do
+      return;
+    }
+    const args = [ "source", "enable", "-Name", name ];
+    await runNugetWith(`Enable nuget source: ${ name }`, args, { suppressOutput: true });
+  }
+
+  async function disableSource(name: string): Promise<void> {
+    const existing = await findSourceByName(name);
+    if (!existing) {
+      const all = await listSources();
+      throw new Error(`cannot disable nuget source: ${ name } (source is unknown)\n${ JSON.stringify(all, null, 2) }`);
+    }
+    if (!existing.enabled) {
+      // already disabled; nothing to do
+      return;
+    }
+    const args = [ "source", "disable", "-Name", name ];
+    await runNugetWith(`Disable nuget source: ${ name }`, args, { suppressOutput: true });
+  }
+
+  async function findSourceByName(name: string): Promise<Optional<NugetSource>> {
+    if (!name) {
+      throw new Error(`source name not set`);
+    }
+    const lowerCaseName = name.toLowerCase();
+    return await findSource(
+      o => `${ o.name }`.toLowerCase() === lowerCaseName
+    );
+  }
+
+
+  async function findSource(match: ((o: NugetSource) => boolean)): Promise<Optional<NugetSource>> {
+    const allSources = await listSources();
+    return allSources.find(match);
   }
 
   async function runNugetWith(
@@ -150,6 +209,8 @@
     clearAllCache,
     clearHttpCache,
     listSources,
-    addSource
+    addSource,
+    enableSource,
+    disableSource
   };
 })();
