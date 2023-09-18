@@ -65,18 +65,43 @@
         }
         return parseNugetSources(sysResult.stdout);
     }
+    async function addSource(src) {
+        if (!src) {
+            throw new Error(`new nuget source options not specified`);
+        }
+        if (!src.name) {
+            throw new Error(`name not specified`);
+        }
+        if (!src.url) {
+            throw new Error(`url not specified`);
+        }
+        const args = [
+            "add", "source"
+        ];
+        pushIfSet(args, src.name, "-Name");
+        pushIfSet(args, src.url, "-Source");
+        pushIfSet(args, src.username, "-Username");
+        pushIfSet(args, src.password, "-Password");
+        pushFlag(args, src.storePasswordInClearText, "-StorePasswordInClearText");
+        args.push("-NonInteractive");
+        pushIfSet(args, src.validAuthenticationTypes, "-ValidAuthenticationTypes");
+        pushIfSet(args, src.configFile, "-ConfigFile");
+        args.push("-ForceEnglishOutput");
+        await runNugetWith(`Adding nuget source: [${src.name}]: ${src.url}`, args, { suppressOutput: true });
+    }
     async function runNugetWith(label, args, opts) {
         if (label) {
             log.info(label);
         }
         const nuget = resolveNuget(undefined, false) ||
-            await findLocalNuget();
+            await findLocalNuget(true);
         return await system(nuget, args, opts);
     }
     module.exports = {
         install,
         clearAllCache,
         clearHttpCache,
-        listSources
+        listSources,
+        addSource
     };
 })();

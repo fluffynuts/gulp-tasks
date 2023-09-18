@@ -288,7 +288,7 @@
   }
 
   async function addNugetSource(
-    opts: DotNetNugetAddSourceOptions
+    opts: NugetAddSourceOptions
   ): Promise<void> {
     validateConfig(
       opts,
