@@ -129,7 +129,7 @@
     }
 
     const args = [
-      "add", "source"
+      "source", "add"
     ];
     pushIfSet(args, src.name, "-Name");
     pushIfSet(args, src.url, "-Source");
