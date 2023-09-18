@@ -12,6 +12,7 @@
     const { pushIfSet, pushFlag } = requireModule("cli-support");
     const parseXml = requireModule("parse-xml");
     const { readAssemblyVersion, readCsProjProperty, readAssemblyName } = requireModule("csproj-utils");
+    const parseNugetSources = requireModule("parse-nuget-sources");
     const updateNuspecVersion = requireModule("update-nuspec-version");
     const readNuspecVersion = requireModule("read-nuspec-version");
     const log = requireModule("log");
@@ -188,25 +189,8 @@
         if (system.isError(raw)) {
             throw raw;
         }
-        let current = undefined;
-        const result = [];
-        for (const line of raw.stdout || []) {
-            const firstLine = line.match(firstLineOfPackageSource), secondLine = line.match(secondLineOfPackageSource);
-            if (firstLine && firstLine.groups) {
-                current = {
-                    name: `${(firstLine.groups["name"] || "(not set)").trim()}`,
-                    url: "(not set)",
-                    enabled: `${firstLine.groups["enabled"]}`.toLowerCase() === "enabled"
-                };
-                result.push(current);
-            }
-            else if (current && secondLine && secondLine.groups) {
-                current.url = secondLine.groups["url"];
-            }
-        }
-        return result;
+        return parseNugetSources(raw.stdout);
     }
-    const firstLineOfPackageSource = /\s*(?<index>[\d+])\.\s*(?<name>[^\[\]]+)\[(?<enabled>[^\[\]]+)]/, secondLineOfPackageSource = /\s*(?<url>.*)/;
     async function addNugetSource(opts) {
         validateConfig(opts, o => !!o ? undefined : "no options provided", o => !!o.name ? undefined : "name not provided", o => !!o.url ? undefined : "url not provided");
         const args = [];

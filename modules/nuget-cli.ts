@@ -2,6 +2,7 @@
   const
     resolveNuget = requireModule<ResolveNuget>("resolve-nuget"),
     findLocalNuget = requireModule<FindLocalNuget>("find-local-nuget"),
+    parseNugetSources = requireModule<ParseNugetSources>("parse-nuget-sources"),
     log = requireModule<Log>("log"),
     { mkdir } = require("yafs"),
     system = requireModule<System>("system"),
@@ -89,15 +90,25 @@
       : `${ opts.packageId }-${ opts.version }`;
   }
 
+  async function listSources(): Promise<NugetSource[]> {
+    const sysResult = await runNugetWith("", [ "sources", "list" ], { suppressOutput: true });
+    if (system.isError(sysResult)) {
+      throw sysResult;
+    }
+    return parseNugetSources(sysResult.stdout);
+  }
+
   async function runNugetWith(
     label: string,
     args: string[],
     opts: SystemOptions
-  ): Promise<void> {
-    log.info(label)
+  ): Promise<SystemResult | SystemError> {
+    if (label) {
+      log.info(label)
+    }
     const nuget = resolveNuget(undefined, false) ||
                   await findLocalNuget();
-    await system(
+    return await system(
       nuget,
       args,
       opts
@@ -107,6 +118,7 @@
   module.exports = {
     install,
     clearAllCache,
-    clearHttpCache
+    clearHttpCache,
+    listSources
   };
 })();

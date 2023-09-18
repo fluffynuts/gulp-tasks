@@ -1,6 +1,6 @@
 "use strict";
 (function () {
-    const resolveNuget = requireModule("resolve-nuget"), findLocalNuget = requireModule("find-local-nuget"), log = requireModule("log"), { mkdir } = require("yafs"), system = requireModule("system"), { pushFlag, pushIfSet } = requireModule("cli-support");
+    const resolveNuget = requireModule("resolve-nuget"), findLocalNuget = requireModule("find-local-nuget"), parseNugetSources = requireModule("parse-nuget-sources"), log = requireModule("log"), { mkdir } = require("yafs"), system = requireModule("system"), { pushFlag, pushIfSet } = requireModule("cli-support");
     const defaultInstallOptions = {
         nonInteractive: true
     };
@@ -58,15 +58,25 @@
             ? opts.packageId
             : `${opts.packageId}-${opts.version}`;
     }
+    async function listSources() {
+        const sysResult = await runNugetWith("", ["sources", "list"], { suppressOutput: true });
+        if (system.isError(sysResult)) {
+            throw sysResult;
+        }
+        return parseNugetSources(sysResult.stdout);
+    }
     async function runNugetWith(label, args, opts) {
-        log.info(label);
+        if (label) {
+            log.info(label);
+        }
         const nuget = resolveNuget(undefined, false) ||
             await findLocalNuget();
-        await system(nuget, args, opts);
+        return await system(nuget, args, opts);
     }
     module.exports = {
         install,
         clearAllCache,
-        clearHttpCache
+        clearHttpCache,
+        listSources
     };
 })();
