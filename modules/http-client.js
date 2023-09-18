@@ -72,6 +72,7 @@ const yafs_1 = require("yafs");
             }
         }
         _updateStatus(data) {
+            debugger;
             if (this.suppressProgress || process.env.SUPPRESS_DOWNLOAD_PROGRESS || process.env.BUILD_NUMBER /* automatically disable at Jenkins CI */) {
                 return;
             }

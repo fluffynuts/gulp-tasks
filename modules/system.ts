@@ -136,14 +136,12 @@ ${ tempFileContents }
             spawnOptions
         });
         const result = new SystemResult(`${ exe }`, programArgs, undefined, [], []);
-        debugger;
         return new Promise<SystemResult>((resolve, reject) => {
             const child = child_process.spawn(
                 exe,
                 programArgs as ReadonlyArray<string>,
                 spawnOptions as SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioNull>
             );
-            debugger;
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const

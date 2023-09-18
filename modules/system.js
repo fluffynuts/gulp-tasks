@@ -89,10 +89,8 @@ ${tempFileContents}
             spawnOptions
         });
         const result = new SystemResult(`${exe}`, programArgs, undefined, [], []);
-        debugger;
         return new Promise((resolve, reject) => {
             const child = child_process.spawn(exe, programArgs, spawnOptions);
-            debugger;
             const stdoutFn = typeof opts.stdout === "function" ? opts.stdout : noop;
             const stderrFn = typeof opts.stderr === "function" ? opts.stderr : noop;
             const stdoutLineBuffer = new LineBuffer(s => {
