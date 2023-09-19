@@ -26,7 +26,7 @@
         if (opts.rollback) {
             restoreVersion = await readCurrentZarroVersion();
         }
-        const toInstall = packageLookup[opts.package];
+        const toInstall = packageLookup[opts.packageVersion];
         if (toInstall) {
             await system(
                 "npm",
